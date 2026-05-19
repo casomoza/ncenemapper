@@ -21,7 +21,9 @@ export function CourseCard({ course }: { course: Course }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="group relative w-full overflow-hidden rounded-md border border-border bg-card text-left shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md"
+        className={`group relative w-full overflow-hidden rounded-md border bg-card text-left shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md ${
+          course.optional ? "border-dashed border-accent/70" : "border-border"
+        }`}
       >
         <div
           className={`h-1 w-full ${isCore ? "bg-primary" : "bg-accent"}`}
@@ -49,6 +51,11 @@ export function CourseCard({ course }: { course: Course }) {
             >
               {isCore ? "Core" : "GE"}
             </span>
+            {course.optional && (
+              <span className="rounded-full bg-accent/20 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-accent-foreground">
+                Optional
+              </span>
+            )}
             {course.prerequisite && (
               <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
                 Prereq: {course.prerequisite}
@@ -73,6 +80,12 @@ export function CourseCard({ course }: { course: Course }) {
           </DialogHeader>
 
           <div className="space-y-3 text-sm">
+            {course.note && (
+              <div className="rounded-md border border-accent/50 bg-accent/15 p-3 text-xs leading-relaxed text-accent-foreground">
+                <span className="font-semibold uppercase tracking-wide">Note · </span>
+                {course.note}
+              </div>
+            )}
             {course.prerequisite && (
               <div>
                 <span className="font-semibold text-foreground">Prerequisite: </span>

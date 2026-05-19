@@ -310,6 +310,36 @@
           "UC Pathways+"
         ],
         "description": "Examines elementary vector space concepts and geometric interpretations and develops the techniques and theory to solve and classify systems of linear equations. Solution techniques include Gaussian and Gauss-Jordan elimination, Cramer's rule and inverse matrices. Investigates the properties of vectors in two, three and finite dimensions, leading to the notion of an abstract vector space. Vector space and matrix theory are presented including topics such as determinants, linear independence, bases and dimension of a vector space, linear transformations and their matrix representations, inner products, norms, orthogonality, eigenvalues, eigenvectors, and eigenspaces. Selected applications of linear algebra are included."
+      },
+      {
+        "code": "CHE-2A",
+        "title": "Preparation for General Chemistry",
+        "units": 4,
+        "semester": "Summer",
+        "year": 1,
+        "category": "core",
+        "optional": true,
+        "prerequisite": null,
+        "satisfies": [
+          "Prerequisite for CHE-1A"
+        ],
+        "note": "Required prerequisite for CHE-1A unless you pass the Chemistry Diagnostic Exam. Take in Summer Year 1 if you do not pass the exam before Fall.",
+        "description": "Preparation for General Chemistry. Covers fundamental chemistry concepts needed to succeed in CHE-1A. Can be waived by passing the Chemistry Diagnostic Exam."
+      },
+      {
+        "code": "ENE-10",
+        "title": "Introduction to Engineering",
+        "units": 3,
+        "semester": "Summer",
+        "year": 1,
+        "category": "core",
+        "optional": true,
+        "prerequisite": null,
+        "satisfies": [
+          "A.S. Pre-Engineering Elective"
+        ],
+        "note": "Optional but recommended. Introduces core engineering principles, problem-solving, and the engineering profession.",
+        "description": "An introduction to the engineering profession and the principles, methods, and tools used by engineers. Recommended for students new to engineering."
       }
     ]
   },

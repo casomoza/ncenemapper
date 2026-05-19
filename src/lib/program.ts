@@ -10,6 +10,8 @@ export type Course = {
   prerequisite: string | null;
   satisfies: string[];
   description: string | null;
+  optional?: boolean;
+  note?: string;
 };
 
 export type Program = {
