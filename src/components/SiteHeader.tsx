@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import logo from "@/assets/norco-logo.png";
+import ieppLogo from "@/assets/iepp-logo.png";
 
 export function SiteHeader() {
   return (
