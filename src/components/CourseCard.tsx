@@ -80,6 +80,12 @@ export function CourseCard({ course }: { course: Course }) {
           </DialogHeader>
 
           <div className="space-y-3 text-sm">
+            {course.note && (
+              <div className="rounded-md border border-accent/50 bg-accent/15 p-3 text-xs leading-relaxed text-accent-foreground">
+                <span className="font-semibold uppercase tracking-wide">Note · </span>
+                {course.note}
+              </div>
+            )}
             {course.prerequisite && (
               <div>
                 <span className="font-semibold text-foreground">Prerequisite: </span>
