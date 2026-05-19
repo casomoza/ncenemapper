@@ -10,12 +10,25 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as GeRouteImport } from './routes/ge'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProgramsProgramIdRouteImport } from './routes/programs.$programId'
+import { Route as AdminProgramsProgramIdRouteImport } from './routes/admin.programs.$programId'
 
 const GeRoute = GeRouteImport.update({
   id: '/ge',
   path: '/ge',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -28,33 +41,68 @@ const ProgramsProgramIdRoute = ProgramsProgramIdRouteImport.update({
   path: '/programs/$programId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminProgramsProgramIdRoute = AdminProgramsProgramIdRouteImport.update({
+  id: '/programs/$programId',
+  path: '/programs/$programId',
+  getParentRoute: () => AdminRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
+  '/auth': typeof AuthRoute
   '/ge': typeof GeRoute
   '/programs/$programId': typeof ProgramsProgramIdRoute
+  '/admin/programs/$programId': typeof AdminProgramsProgramIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
+  '/auth': typeof AuthRoute
   '/ge': typeof GeRoute
   '/programs/$programId': typeof ProgramsProgramIdRoute
+  '/admin/programs/$programId': typeof AdminProgramsProgramIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
+  '/auth': typeof AuthRoute
   '/ge': typeof GeRoute
   '/programs/$programId': typeof ProgramsProgramIdRoute
+  '/admin/programs/$programId': typeof AdminProgramsProgramIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/ge' | '/programs/$programId'
+  fullPaths:
+    | '/'
+    | '/admin'
+    | '/auth'
+    | '/ge'
+    | '/programs/$programId'
+    | '/admin/programs/$programId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/ge' | '/programs/$programId'
-  id: '__root__' | '/' | '/ge' | '/programs/$programId'
+  to:
+    | '/'
+    | '/admin'
+    | '/auth'
+    | '/ge'
+    | '/programs/$programId'
+    | '/admin/programs/$programId'
+  id:
+    | '__root__'
+    | '/'
+    | '/admin'
+    | '/auth'
+    | '/ge'
+    | '/programs/$programId'
+    | '/admin/programs/$programId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRouteWithChildren
+  AuthRoute: typeof AuthRoute
   GeRoute: typeof GeRoute
   ProgramsProgramIdRoute: typeof ProgramsProgramIdRoute
 }
@@ -66,6 +114,20 @@ declare module '@tanstack/react-router' {
       path: '/ge'
       fullPath: '/ge'
       preLoaderRoute: typeof GeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -82,11 +144,30 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProgramsProgramIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/programs/$programId': {
+      id: '/admin/programs/$programId'
+      path: '/programs/$programId'
+      fullPath: '/admin/programs/$programId'
+      preLoaderRoute: typeof AdminProgramsProgramIdRouteImport
+      parentRoute: typeof AdminRoute
+    }
   }
 }
 
+interface AdminRouteChildren {
+  AdminProgramsProgramIdRoute: typeof AdminProgramsProgramIdRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminProgramsProgramIdRoute: AdminProgramsProgramIdRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRouteWithChildren,
+  AuthRoute: AuthRoute,
   GeRoute: GeRoute,
   ProgramsProgramIdRoute: ProgramsProgramIdRoute,
 }

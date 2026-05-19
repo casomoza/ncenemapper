@@ -1,46 +1,15 @@
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { getProgram, groupByTerm } from "@/lib/program";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { fetchProgramBySlug } from "@/lib/api";
+import { groupByTerm } from "@/lib/program";
 import { SiteHeader, SiteFooter } from "@/components/SiteHeader";
 import { CourseCard } from "@/components/CourseCard";
 import { ArrowLeft, Printer, GraduationCap, Award } from "lucide-react";
 
 export const Route = createFileRoute("/programs/$programId")({
-  loader: ({ params }) => {
-    const p = getProgram(params.programId);
-    if (!p) throw notFound();
-    return { program: p };
-  },
   component: ProgramPage,
-  notFoundComponent: () => (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="font-serif text-3xl text-foreground">Program not found</h1>
-        <Link to="/" className="mt-4 inline-block text-primary hover:underline">
-          ← Back to programs
-        </Link>
-      </div>
-    </div>
-  ),
-  errorComponent: ({ error }) => (
-    <div className="flex min-h-screen items-center justify-center bg-background p-6">
-      <div className="max-w-md text-center">
-        <h1 className="font-serif text-2xl text-foreground">Something went wrong</h1>
-        <p className="mt-2 text-sm text-muted-foreground">{error.message}</p>
-        <Link to="/" className="mt-4 inline-block text-primary hover:underline">
-          ← Back to programs
-        </Link>
-      </div>
-    </div>
-  ),
-  head: ({ loaderData }) => ({
-    meta: [
-      { title: `${loaderData?.program.name ?? "Program"} — Norco College Engineering` },
-      {
-        name: "description",
-        content:
-          loaderData?.program.description ?? "Program pathway at Norco College Engineering.",
-      },
-    ],
+  head: () => ({
+    meta: [{ title: "Program — Norco College Engineering" }],
   }),
 });
 
@@ -52,7 +21,33 @@ const TERM_STYLE: Record<string, { bg: string; ring: string; text: string }> = {
 };
 
 function ProgramPage() {
-  const { program } = Route.useLoaderData();
+  const { programId } = Route.useParams();
+  const { data: program, isLoading, error } = useQuery({
+    queryKey: ["program", programId],
+    queryFn: () => fetchProgramBySlug(programId),
+  });
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen flex-col">
+        <SiteHeader />
+        <main className="mx-auto flex-1 px-6 py-16 text-muted-foreground">Loading…</main>
+        <SiteFooter />
+      </div>
+    );
+  }
+  if (error || !program) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="text-center">
+          <h1 className="font-serif text-3xl text-foreground">Program not found</h1>
+          <Link to="/" className="mt-4 inline-block text-primary hover:underline">
+            ← Back to programs
+          </Link>
+        </div>
+      </div>
+    );
+  }
   const terms = groupByTerm(program.courses);
   const years = Array.from(new Set(terms.map((t) => t.year))).sort();
 

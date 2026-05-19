@@ -24,6 +24,13 @@ export function SiteHeader() {
           >
             GE Requirements
           </Link>
+          <Link
+            to="/admin"
+            className="text-foreground/60 transition-colors hover:text-primary"
+            activeProps={{ className: "text-primary" }}
+          >
+            Admin
+          </Link>
         </nav>
       </div>
     </header>

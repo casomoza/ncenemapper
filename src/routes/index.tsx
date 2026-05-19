@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { programs } from "@/lib/program";
+import { useQuery } from "@tanstack/react-query";
+import { fetchPrograms } from "@/lib/api";
 import { SiteHeader, SiteFooter } from "@/components/SiteHeader";
 import { ArrowRight, GraduationCap, Layers } from "lucide-react";
 
@@ -18,6 +19,10 @@ export const Route = createFileRoute("/")({
 });
 
 function HomePage() {
+  const { data: programs = [], isLoading } = useQuery({
+    queryKey: ["programs"],
+    queryFn: fetchPrograms,
+  });
   return (
     <div className="flex min-h-screen flex-col">
       <SiteHeader />
@@ -48,41 +53,47 @@ function HomePage() {
             </div>
           </div>
 
-          <div className="grid gap-5 md:grid-cols-2">
-            {programs.map((p) => (
-              <Link
-                key={p.id}
-                to="/programs/$programId"
-                params={{ programId: p.id }}
-                className="group relative overflow-hidden rounded-lg border border-border bg-card p-6 shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-lg"
-              >
-                <div className="absolute inset-x-0 top-0 h-1 bg-primary" />
-                <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-primary">
-                  <Layers className="h-3.5 w-3.5" />
-                  {p.cluster}
-                </div>
-                <h3 className="mt-2 font-serif text-2xl font-semibold leading-tight text-foreground">
-                  {p.name}
-                </h3>
-                <p className="mt-1 text-sm text-muted-foreground">{p.degreeType}</p>
-                <p className="mt-4 line-clamp-2 text-sm text-foreground/75">
-                  {p.description}
-                </p>
-                <div className="mt-5 flex items-center justify-between border-t border-border pt-4 text-sm">
-                  <div className="flex items-center gap-4 text-muted-foreground">
-                    <span className="flex items-center gap-1.5">
-                      <GraduationCap className="h-4 w-4" />
-                      {p.totalUnits} units
-                    </span>
-                    <span>{p.courses.length} courses</span>
+          {isLoading ? (
+            <p className="text-sm text-muted-foreground">Loading programs…</p>
+          ) : programs.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No programs yet.</p>
+          ) : (
+            <div className="grid gap-5 md:grid-cols-2">
+              {programs.map((p) => (
+                <Link
+                  key={p.id}
+                  to="/programs/$programId"
+                  params={{ programId: p.id }}
+                  className="group relative overflow-hidden rounded-lg border border-border bg-card p-6 shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-lg"
+                >
+                  <div className="absolute inset-x-0 top-0 h-1 bg-primary" />
+                  <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-primary">
+                    <Layers className="h-3.5 w-3.5" />
+                    {p.cluster}
                   </div>
-                  <span className="flex items-center gap-1 font-medium text-primary transition-transform group-hover:translate-x-0.5">
-                    View pathway <ArrowRight className="h-4 w-4" />
-                  </span>
-                </div>
-              </Link>
-            ))}
-          </div>
+                  <h3 className="mt-2 font-serif text-2xl font-semibold leading-tight text-foreground">
+                    {p.name}
+                  </h3>
+                  <p className="mt-1 text-sm text-muted-foreground">{p.degreeType}</p>
+                  <p className="mt-4 line-clamp-2 text-sm text-foreground/75">
+                    {p.description}
+                  </p>
+                  <div className="mt-5 flex items-center justify-between border-t border-border pt-4 text-sm">
+                    <div className="flex items-center gap-4 text-muted-foreground">
+                      <span className="flex items-center gap-1.5">
+                        <GraduationCap className="h-4 w-4" />
+                        {p.totalUnits} units
+                      </span>
+                      <span>{p.courses.length} courses</span>
+                    </div>
+                    <span className="flex items-center gap-1 font-medium text-primary transition-transform group-hover:translate-x-0.5">
+                      View pathway <ArrowRight className="h-4 w-4" />
+                    </span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
         </section>
       </main>
 
