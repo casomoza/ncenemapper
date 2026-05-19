@@ -32,7 +32,7 @@ export type GeArea = {
   courses: string[];
 };
 
-const TERM_ORDER: Record<string, number> = { Fall: 0, Winter: 1, Spring: 2, Summer: 3 };
+const TERM_ORDER: Record<string, number> = { Summer: 0, Fall: 1, Winter: 2, Spring: 3 };
 
 export const program = data.program as Program;
 export const geAreas = data.geAreas as GeArea[];
