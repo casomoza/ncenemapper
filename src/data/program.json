@@ -1,0 +1,537 @@
+{
+  "program": {
+    "id": "mech-eng-ucr",
+    "name": "Mechanical Engineering (UCR)",
+    "degreeType": "A.S. Pre-Engineering (MIN) + TAG to UCR (MAX) + Pathway+",
+    "totalUnits": 79,
+    "description": "Prepares students for transfer to Mechincal Engineering at UC Riverside",
+    "outcomes": [
+      "Transfer to UC Riverside",
+      "Mechanical Engineer",
+      "A.S. in Pre-Engineering"
+    ],
+    "cluster": "Engineering & Manufacturing",
+    "courses": [
+      {
+        "code": "CHE-1A",
+        "title": "General Chemistry",
+        "units": 5,
+        "semester": "Fall",
+        "year": 1,
+        "category": "core",
+        "prerequisite": "CHE-2A",
+        "satisfies": [
+          "UCR TAG Requirements",
+          "A.S. Pre-Engineering",
+          "UC Pathways +"
+        ],
+        "description": "An exploration of simple chemical systems, their properties, and how they can be investigated and understood in terms of stoichiometry, gas laws, elementary thermodynamics, atomic structure, and bonding. Laboratory techniques in the investigation of chemical systems."
+      },
+      {
+        "code": "ENGL-C1000",
+        "title": "Academic Reading and Writing",
+        "units": 4,
+        "semester": "Fall",
+        "year": 1,
+        "category": "ge",
+        "prerequisite": null,
+        "satisfies": [
+          "A.S. Pre-Engineering GE",
+          "UC 7-Course Pattern"
+        ],
+        "description": "In this course, students receive instruction in academic reading and writing, including writing processes, effective use of language, analytical thinking, and the foundations of academic research. Integrated reading and writing assignments respond to various rhetorical situations. Students will produce a minimum of 7500 words of writing, inclusive of 5000 words of assessed formal writing and 2500 words of other kinds of instructor-reviewed writing. Classroom instruction integrates writing lab activities."
+      },
+      {
+        "code": "MAT-1A",
+        "title": "Calculus I",
+        "units": 4,
+        "semester": "Fall",
+        "year": 1,
+        "category": "core",
+        "prerequisite": null,
+        "satisfies": [
+          "UCR TAG Requirements",
+          "A.S. Pre-Engineering GE",
+          "UC 7-Course Pattern",
+          "UC Pathways+"
+        ],
+        "description": "Functions, limits, continuity, techniques and applications of differentiation, the Fundamental Theorem of Calculus, and basic integration."
+      },
+      {
+        "code": "ENGL-1B",
+        "title": "Critical Thinking and Writing",
+        "units": 4,
+        "semester": "Winter",
+        "year": 1,
+        "category": "ge",
+        "prerequisite": "ENGL-C1000",
+        "satisfies": [
+          "A.S. Pre-Engineering GE",
+          "UC 7-Course Pattern"
+        ],
+        "description": "Students will critically read diverse literary texts in order to compose inquiry-driven writing. Students will write a minimum of 7500 words of assessed writing. Classroom instruction integrates writing lab activities."
+      },
+      {
+        "code": "RCCD GE 6",
+        "title": "Ethnic Studies",
+        "units": 3,
+        "semester": "Winter",
+        "year": 1,
+        "category": "ge",
+        "prerequisite": null,
+        "satisfies": [
+          "A.S. Pre-Engineering GE"
+        ],
+        "description": null
+      },
+      {
+        "code": "CHE-1B",
+        "title": "General Chemistry II",
+        "units": 5,
+        "semester": "Spring",
+        "year": 1,
+        "category": "core",
+        "prerequisite": "CHE-1A",
+        "satisfies": [
+          "UCR TAG Requirements",
+          "A.S. Pre-Engineering GE",
+          "UC Pathways+"
+        ],
+        "description": "Continued exploration of the principles of chemistry with emphasis on kinetics, thermodynamics, acid-base theory, equilibrium, and electrochemistry. Special topics from descriptive inorganic chemistry, nuclear chemistry, and introductory organic chemistry. Laboratory techniques in the investigation of chemical systems. Students may not receive credit for both CHE-1B and CHE-1BH."
+      },
+      {
+        "code": "MAT-1B",
+        "title": "Calculus II",
+        "units": 4,
+        "semester": "Spring",
+        "year": 1,
+        "category": "core",
+        "prerequisite": "MAT-1A",
+        "satisfies": [
+          "UCR TAG Requirements",
+          "A.S. Pre-Engineering GE",
+          "UC Pathways+"
+        ],
+        "description": "Techniques of integration, applications of integration, improper integrals, parametric equations, polar coordinates, infinite sequences and series."
+      },
+      {
+        "code": "PHY-4A",
+        "title": "Mechanics",
+        "units": 4,
+        "semester": "Spring",
+        "year": 1,
+        "category": "core",
+        "prerequisite": null,
+        "satisfies": [
+          "UCR TAG Requirements",
+          "A.S. Pre-Engineering GE",
+          "UC 7-Course Pattern",
+          "UC Pathways+"
+        ],
+        "description": "Examines vectors, particle kinematics and dynamics, work and power, conservation of energy and momentum, rotation, oscillations and gravitation."
+      },
+      {
+        "code": "PSYC-11",
+        "title": "Psychology of Human Sexuality",
+        "units": 3,
+        "semester": "Spring",
+        "year": 1,
+        "category": "ge",
+        "prerequisite": null,
+        "satisfies": [
+          "A.S. Pre-Engineering GE",
+          "UC 7-Course Pattern"
+        ],
+        "description": "Explores empirical findings and theories about topics related to human sexuality and intimate relationships from the areas of clinical, developmental, evolutionary, biological, and social psychology. Examines sexual attitudes, values and behaviors in the context of the student's own moral framework, cultural norms, and contemporary society."
+      },
+      {
+        "code": "ENE-30",
+        "title": "Computer Aided Drafting (CAD)",
+        "units": 3,
+        "semester": "Summer",
+        "year": 2,
+        "category": "core",
+        "prerequisite": null,
+        "satisfies": [
+          "UCR TAG Requirements",
+          "UC Pathways+"
+        ],
+        "description": "A two-dimensional computer aided drafting class for drafters. Students will use an AUTOCAD computer drafting system to develop \"computer drawn\" drawings, which are typical to the various fields of drafting"
+      },
+      {
+        "code": "RCCD GE 3",
+        "title": "Arts & Humanities",
+        "units": 3,
+        "semester": "Summer",
+        "year": 2,
+        "category": "ge",
+        "prerequisite": null,
+        "satisfies": [
+          "A.S. Pre-Engineering GE"
+        ],
+        "description": null
+      },
+      {
+        "code": "ENE-35",
+        "title": "Statics",
+        "units": 3,
+        "semester": "Fall",
+        "year": 2,
+        "category": "core",
+        "prerequisite": null,
+        "satisfies": [
+          "UCR TAG Requirements",
+          "UC Pathways+"
+        ],
+        "description": "A study of force and equilibrium problems; free body diagram techniques, friction problems, second moments and moments of interia, and their application to engineering. Algebraic, vector and classical, and graphical methods of calculation."
+      },
+      {
+        "code": "MAT-1C",
+        "title": "Calculus II",
+        "units": 4,
+        "semester": "Fall",
+        "year": 2,
+        "category": "core",
+        "prerequisite": "MAT-1A",
+        "satisfies": [
+          "A.S Pre-Engineering",
+          "UC TAG Requirements",
+          "UC Pathways+"
+        ],
+        "description": "Vectors in a plane and in space, vector functions, calculus on functions of multiple variables, partial derivatives, multiple integrals, line and surface integrals, Green's theorem, Stokes' theorem, Divergence theorem, and elementary applications to the physical and life sciences."
+      },
+      {
+        "code": "MAT-70A or MAT-70B",
+        "title": "Foundations for Data Science OR Statistics for Engineers",
+        "units": 4,
+        "semester": "Fall",
+        "year": 2,
+        "category": "core",
+        "prerequisite": null,
+        "satisfies": [
+          "UCR Tag Requirement"
+        ],
+        "description": "Basic programming and statistical concepts. Includes programming for data cleansing, manipulation, visualization, and statistical computation for intelligence gathering. Students will apply common built-in language functions for analysis of real-world datasets, including global and local economic data, commercial business, document collections, and social networks. Also delves into machine learning and data driven decision-making using statistical concepts like hypothesis testing, confidence intervals via bootstrapping, regression and inference for regression, and predictive modeling. Students will also learn about social issues surrounding data privacy and ownership.\nOR\nAn introduction to descriptive and inferential statistics, emphasizing the combined use of mathematics and programming for Data Science applications. A hands-on experience with data analysis using modern statistical software, including the interpretation of statistical findings. Topics include numerical and graphical summarization of central tendency and spread, probability, normal, binomial, and Poisson distributions. This course also addresses sampling distributions, t-distribution, the chi-squared distribution, estimation, hypothesis testing, Analysis of Variance, linear and multiple regression, and non-parametric tests. Students will work with big data and complete a research project employing simple statistical inference and advanced modeling techniques."
+      },
+      {
+        "code": "PHY-4B",
+        "title": "Electricity and Magnetism",
+        "units": 4,
+        "semester": "Fall",
+        "year": 2,
+        "category": "core",
+        "prerequisite": "Physics-4A",
+        "satisfies": [
+          "UCR Tag Requirement",
+          "UC 7-Course Pattern",
+          "UC Pathways+"
+        ],
+        "description": "Study of electric fields, voltage, current, magnetic fields, electromagnetic induction, alternating currents and electromagnetic waves."
+      },
+      {
+        "code": "MAT-2",
+        "title": "Differential Equations",
+        "units": 4,
+        "semester": "Winter",
+        "year": 2,
+        "category": "core",
+        "prerequisite": "MAT-1B",
+        "satisfies": [
+          "UCR TAG Requirement",
+          "UC Pathways+"
+        ],
+        "description": "This is a course in differential equations including both quantitative and qualitative methods as well as applications from a variety of disciplines. Introduces the theoretical aspects of differential equations, including establishing when solution(s) exists, and techniques for obtaining solutions, including linear first and second order differential equations, series solutions, Laplace transforms, linear systems, and elementary applications to the physical and biological sciences."
+      },
+      {
+        "code": "RCCD GE 4",
+        "title": "Social & Behavioral Sciences",
+        "units": 3,
+        "semester": "Winter",
+        "year": 2,
+        "category": "ge",
+        "prerequisite": null,
+        "satisfies": [
+          "A.S. Pre-Engineering GE"
+        ],
+        "description": null
+      },
+      {
+        "code": "ENE-38 or ENE-48",
+        "title": "Introduction to Programming Concepts and Methodologies for Engineering OR Programming and Problem-Solving in MATLAB",
+        "units": 4,
+        "semester": "Spring",
+        "year": 2,
+        "category": "core",
+        "prerequisite": null,
+        "satisfies": [
+          "UCR TAG Requirement",
+          "UC Pathways+"
+        ],
+        "description": "Introduces the basics of software development using a high level language utilizing programming and the interface of software with the physical world (e.g., the use of sensors).\nOR\nUsing MATLAB to analyze and solve problems relevant to science and engineering. Introduces the fundamentals of procedural and object-oriented programming, numerical analysis, and data structures. Content is drawn from practical applications in engineering, physics, and mathematics."
+      },
+      {
+        "code": "ENE-39",
+        "title": "Engineering Circuit Analysis",
+        "units": 4,
+        "semester": "Spring",
+        "year": 2,
+        "category": "core",
+        "prerequisite": null,
+        "satisfies": [
+          "UCR TAG Requirement",
+          "UC Pathways+"
+        ],
+        "description": "An introduction to the analysis of electrical circuits. Use of analytical techniques based on the application of circuit laws and network theorems. Analysis of DC and AC circuits containing resistors, capacitors, inductors, dependent sources, operational amplifiers, and/or switches. Natural and forced responses of first and second order RLC circuits; the use of phasors; AC power calculations; power transfer; and energy concepts."
+      },
+      {
+        "code": "PHY-4C",
+        "title": "Heat, Light and Waves",
+        "units": 4,
+        "semester": "Spring",
+        "year": 2,
+        "category": "core",
+        "prerequisite": "Physics-4A",
+        "satisfies": [
+          "UCR Tag Requirement",
+          "UC 7-Course Pattern",
+          "UC Pathways+"
+        ],
+        "description": "Examines fluid mechanics; temperature, heat transfer, thermal properties of matter, laws of thermodynamics; oscillations and waves; reflection, refraction, lenses and mirrors, interference, and diffraction; introduction to special relativity and modern physics."
+      },
+      {
+        "code": "MAT-3",
+        "title": "Linear Algebra",
+        "units": 4,
+        "semester": "Spring",
+        "year": 2,
+        "category": "core",
+        "prerequisite": null,
+        "satisfies": [
+          "UC Pathways+"
+        ],
+        "description": "Examines elementary vector space concepts and geometric interpretations and develops the techniques and theory to solve and classify systems of linear equations. Solution techniques include Gaussian and Gauss-Jordan elimination, Cramer's rule and inverse matrices. Investigates the properties of vectors in two, three and finite dimensions, leading to the notion of an abstract vector space. Vector space and matrix theory are presented including topics such as determinants, linear independence, bases and dimension of a vector space, linear transformations and their matrix representations, inner products, norms, orthogonality, eigenvalues, eigenvectors, and eigenspaces. Selected applications of linear algebra are included."
+      }
+    ]
+  },
+  "geAreas": [
+    {
+      "id": "1",
+      "title": "English Composition, Oral Communication and Critical Thinking",
+      "courses": [
+        "1A. English Composition (4 units)",
+        "ENG 1A/1AH"
+      ],
+      "unitsNote": ""
+    },
+    {
+      "id": "1B",
+      "title": "Oral Communications and Critical Thinking",
+      "courses": [
+        "English 1B/1BH"
+      ],
+      "unitsNote": "3-4 units"
+    },
+    {
+      "id": "2",
+      "title": "Mathematical Concepts and Quantitative Reasoning",
+      "courses": [
+        "Mathematics 1A/1AH"
+      ],
+      "unitsNote": "3-4 units"
+    },
+    {
+      "id": "3",
+      "title": "Arts and Humanities",
+      "courses": [
+        "ARE-36 History of Architecture: Renaissance to Modern",
+        "ART-6/6H Art Appreciation",
+        "AHS-1/1H History of Western Art: Prehistoric",
+        "Ancient",
+        "and Medieval",
+        "AHS-2 History of Western Art: Renaissance through Contemporary",
+        "AHS-3",
+        "AHS-4 Introduction to Visual Culture",
+        "AHS-5 Arts of Africa",
+        "Oceania",
+        "and Indigenous North America",
+        "AHS-6 Art Appreciation",
+        "AHS-7 Women Artists in History",
+        "AHS-8 Art History of the Photographic Image",
+        "AHS-9 African Art History",
+        "AHS-10 Modern and Contemporary Art History",
+        "AHS-12 Asian Art History",
+        "AHS-13 Pre-Columbian Art History",
+        "AHS-14 Latin American Art: Colonial to the Present",
+        "CHI-11 Chinese Culture and Civilization",
+        "COMM-12 Intercultural Communication",
+        "DAN-6 Dance Appreciation",
+        "ENGL-6 British Literature I: Anglo-Saxon through Eighteenth Century",
+        "ENGL-7 British Literature II: Romanticism through Modernism/Post-Modernism",
+        "ENGL-8 Introduction to Mythology",
+        "ENGL-9 Introduction to Shakespeare",
+        "ENGL-14 American Literature I: Pre-Contact through Civil War",
+        "ENGL-15 American Literature II: 1865 to the Present",
+        "ENGL-16 Introduction to Linguistics",
+        "ENGL-18 Survey of Native American Literature",
+        "ENGL-20 Survey of African American Literature",
+        "ENGL-23 The Bible As Literature",
+        "ENGL-24 Survey of Asian American Literature",
+        "ENGL-25 Latinx Literature of the United States",
+        "ENGL-30 Children's Literature",
+        "ENGL-35 Women in Literature",
+        "ENGL-40 World Literature I: From Ancient Literatures to the Seventeenth Century",
+        "ENGL-41 World Literature II: Seventeenth Century Through the Present",
+        "ENGL-44 Poetry from the Twentieth Century to the Present",
+        "ENGL-45 Modern Drama",
+        "ENGL-48 Short Story and Novel from the Twentieth Century to the Present",
+        "FRE-1 French 1",
+        "FRE-2 French 2",
+        "FRE-8 Intermediate Conversation",
+        "GAM-2 History of Video Games",
+        "HIS-1 World History to 1500",
+        "HIS-2 World History since 1500",
+        "HUM-4 Arts and Ideas: Ancient World Through the Late Medieval Period",
+        "HUM-5 Arts & Ideas: Renaissance through the Modern Era",
+        "HUM-8 Introduction to Mythology",
+        "HUM-9 American Voices",
+        "HUM-10 World Religions",
+        "HUM-11 Cults",
+        "Crosses",
+        "& Colonialism: Religion in America",
+        "HUM-16 Arts and Ideas: American Culture",
+        "HUM-18 Walking with the Dead: An Interdisciplinary Perspective on Death and Dying",
+        "HUM-23 The Bible As Literature",
+        "HUM-35 Philosophy of Religion",
+        "MUS-3 Fundamentals of Music",
+        "MUS-19 Music Appreciation",
+        "MUS-23 History of Rock and Roll",
+        "MUS-25 Jazz Appreciation",
+        "MUS-89 Music of Multicultural America",
+        "PHI-10 Introduction to Philosophy",
+        "PHI-12 Introduction to Ethics",
+        "PHI-19 Native American Thought",
+        "PHI-22 Philosophy of Science",
+        "PHI-33 Introduction to Social and Political Philosophy",
+        "PHI-34 Philosophical Survey of Sex",
+        "Gender",
+        "and Sexuality",
+        "PHI-35 Philosophy of Religion",
+        "PHI-36 Asian Philosophy",
+        "SPA-2 Spanish 2",
+        "SPA-3 Spanish 3",
+        "SPA-4 Spanish 4",
+        "SPA-8 Intermediate Conversation",
+        "SPA-11 Spanish Culture and Civilization",
+        "SPA-12 Latin American Culture and Civilization",
+        "THE-3 Introduction to the Theater",
+        "THE-9 Dramatic Literature-Script Analysis",
+        "THE-29 Musical Theater Appreciation"
+      ],
+      "unitsNote": "3-5 units"
+    },
+    {
+      "id": "4",
+      "title": "Social and Behavioral Sciences",
+      "courses": [
+        "ADJ-1 Introduction to the Administration of Justice",
+        "ADJ-3 Concepts of Criminal Law",
+        "ADJ-9 Law In American Society",
+        "ANT-2 Cultural Anthropology",
+        "ANT-3 Prehistoric Cultures",
+        "ANT-4 Native American Cultures",
+        "ANT-5 Cultures of Ancient Mexico",
+        "ANT-6 Introduction to Archaeology",
+        "ANT-7 Anthropology of Religion",
+        "ANT-8\u00a0 Language and Culture",
+        "COMM-12 Intercultural Communication",
+        "COMM-13 Gender and Communication",
+        "COMM-20 Introduction to Communication Theory",
+        "EAR-20 Child Growth and Development",
+        "ECO-4 Introduction to Economics",
+        "ETS-2 Introduction to Chicanx and Latinx Studies",
+        "ETS-14 African American History I",
+        "ETS-21 Latinx Politics",
+        "ETS-23 Race",
+        "Ethnicity",
+        "and Politics in America",
+        "ETS-27 Native American Cultures",
+        "GEG-2 Human Geography",
+        "GEG-3 World Regional Geography",
+        "GEG-4 Geography of California",
+        "GEG-6 Geography of the United States and Canada",
+        "HIS-1 World History to 1500",
+        "HIS-2 World History since 1500",
+        "HIS-6 United States History to 1877",
+        "HIS-7 United States History from 1865",
+        "HIS-14 African American History I",
+        "HIS-25 History of Mexico",
+        "HIS-26 History of California",
+        "HIS-31 Introduction to Chicanx and Latinx Studies",
+        "HIS-34 History of Women in the United States",
+        "POLS-C1000 American Government and Politics",
+        "POLS-2 Comparative Politics",
+        "POLS-4 Introduction to World Politics",
+        "POLS-5 Introduction to Law",
+        "POLS-11 Political Theory",
+        "POLS-13 Introduction American Foreign Policy",
+        "POLS-20 Latin American Politics",
+        "POLS-21 Latinx Politics",
+        "POLS-22 Politics of the Middle East",
+        "POLS-23 Race",
+        "Ethnicity and Politics in America",
+        "PSYC-C1000",
+        "PSYC-8 Social Psychology",
+        "PSYC-9 Developmental Psychology",
+        "PSYC-11 Psychology of Human Sexuality",
+        "PSYC-33 Theories of Personality",
+        "PSYC-35 Abnormal Psychology",
+        "PSYC-50 Research Methods in Psychology",
+        "SOC-1 Introduction to Sociology",
+        "SOC-2 American Social Problems",
+        "SOC-3 Social Inequality",
+        "SOC-10 Race and Ethnic Relations",
+        "SOC-12 Marriage and Family Relations",
+        "SOC-15 Introduction to Women's Studies",
+        "SOC-20 Introduction To Criminology",
+        "SOC-50 Introduction to Social Research Methods"
+      ],
+      "unitsNote": "3 units"
+    },
+    {
+      "id": "5",
+      "title": "Natural Sciences",
+      "courses": [
+        "Physics  4A"
+      ],
+      "unitsNote": "3-5 units"
+    },
+    {
+      "id": "6",
+      "title": "Ethnic Studies",
+      "courses": [
+        "ETS-1 Introduction to Ethnic Studies",
+        "ETS-3 Introduction to African American Studies",
+        "ETS-7 Women of Color in the United States",
+        "ETS-8 Introduction to Black Feminism",
+        "ETS-14 African American History I",
+        "ETS-21 Latinx Politics",
+        "ETS-23 Race",
+        "Ethnicity",
+        "and Politics in America",
+        "HIS-14 African American History I",
+        "POLS-21 Latinx Politics",
+        "POLS-23 Race",
+        "Ethnicity and Politics in America"
+      ],
+      "unitsNote": "3 units"
+    },
+    {
+      "id": "7",
+      "title": "Lifelong Learning and Self Development",
+      "courses": [
+        "Psychology 11"
+      ],
+      "unitsNote": "Choose one Option for 2-3 units"
+    }
+  ]
+}
