@@ -122,7 +122,7 @@ function ProgramPage() {
                   Outcomes
                 </p>
                 <div className="mt-2 flex flex-wrap gap-2">
-                  {program.outcomes.map((o, i) => (
+                  {program.outcomes.map((o: string, i: number) => (
                     <span
                       key={i}
                       className="inline-flex items-center gap-1.5 rounded-full border border-accent/50 bg-accent/15 px-3 py-1 text-sm text-accent-foreground"
