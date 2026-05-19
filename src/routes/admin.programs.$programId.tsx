@@ -111,8 +111,8 @@ function ProgramForm({ program }: { program: DbProgram }) {
           name: form.name,
           degree_type: form.degree_type,
           total_units: form.total_units,
-          cluster: form.cluster,
-          description: form.description,
+          cluster: form.cluster ?? undefined,
+          description: form.description ?? undefined,
           outcomes: form.outcomes,
         })
         .eq("id", program.id);
