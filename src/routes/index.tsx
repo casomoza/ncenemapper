@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { programs } from "@/lib/program";
+import { useQuery } from "@tanstack/react-query";
+import { fetchPrograms } from "@/lib/api";
 import { SiteHeader, SiteFooter } from "@/components/SiteHeader";
 import { ArrowRight, GraduationCap, Layers } from "lucide-react";
 
@@ -18,6 +19,10 @@ export const Route = createFileRoute("/")({
 });
 
 function HomePage() {
+  const { data: programs = [], isLoading } = useQuery({
+    queryKey: ["programs"],
+    queryFn: fetchPrograms,
+  });
   return (
     <div className="flex min-h-screen flex-col">
       <SiteHeader />
