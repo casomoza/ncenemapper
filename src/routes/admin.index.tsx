@@ -7,7 +7,7 @@ import { SiteHeader, SiteFooter } from "@/components/SiteHeader";
 import { fetchPrograms } from "@/lib/api";
 import { LogOut, Plus, Pencil, Trash2 } from "lucide-react";
 
-export const Route = createFileRoute("/admin")({
+export const Route = createFileRoute("/admin/")({
   component: AdminPage,
   head: () => ({ meta: [{ title: "Admin — Norco College Pathways" }] }),
 });
