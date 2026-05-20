@@ -214,7 +214,9 @@ function CourseRow({ course }: { course: DbCourse }) {
   const [expanded, setExpanded] = useState(false);
   const dirty = JSON.stringify(c) !== JSON.stringify(course);
 
-  useEffect(() => setC(course), [course]);
+  // Only re-sync when this row's id changes (i.e. a different course),
+  // so refetches don't wipe out the admin's in-progress edits.
+  useEffect(() => setC(course), [course.id]);
 
   const save = useMutation({
     mutationFn: async () => {
@@ -238,6 +240,7 @@ function CourseRow({ course }: { course: DbCourse }) {
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-courses", course.program_id] }),
+    onError: (e: Error) => alert(`Save failed: ${e.message}`),
   });
   const del = useMutation({
     mutationFn: async () => {
