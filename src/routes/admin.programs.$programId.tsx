@@ -100,8 +100,11 @@ function ProgramForm({ program }: { program: DbProgram }) {
   const qc = useQueryClient();
   const [form, setForm] = useState(program);
   const [error, setError] = useState<string | null>(null);
+  const [savedAt, setSavedAt] = useState<number | null>(null);
 
-  useEffect(() => setForm(program), [program]);
+  // Only reset the form when we switch to a different program (not on every refetch),
+  // otherwise an auto-refetch would wipe out the admin's in-progress edits.
+  useEffect(() => setForm(program), [program.id]);
 
   const save = useMutation({
     mutationFn: async () => {
