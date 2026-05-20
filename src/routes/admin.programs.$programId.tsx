@@ -121,7 +121,10 @@ function ProgramForm({ program }: { program: DbProgram }) {
         .eq("id", program.id);
       if (error) throw error;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-program", program.slug] }),
+    onSuccess: () => {
+      setSavedAt(Date.now());
+      qc.invalidateQueries({ queryKey: ["admin-program", program.slug] });
+    },
     onError: (e: Error) => setError(e.message),
   });
 
