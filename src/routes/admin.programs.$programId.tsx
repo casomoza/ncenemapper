@@ -162,7 +162,10 @@ function ProgramForm({ program }: { program: DbProgram }) {
       {error && (
         <p className="md:col-span-2 rounded bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>
       )}
-      <div className="md:col-span-2 flex justify-end">
+      <div className="md:col-span-2 flex items-center justify-end gap-3">
+        {savedAt && !save.isPending && (
+          <span className="text-xs text-muted-foreground">Saved</span>
+        )}
         <button
           onClick={() => {
             setError(null);
@@ -171,7 +174,7 @@ function ProgramForm({ program }: { program: DbProgram }) {
           disabled={save.isPending}
           className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-burgundy disabled:opacity-60"
         >
-          <Save className="h-4 w-4" /> Save program
+          <Save className="h-4 w-4" /> {save.isPending ? "Saving…" : "Save program"}
         </button>
       </div>
     </div>
