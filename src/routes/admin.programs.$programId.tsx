@@ -100,8 +100,11 @@ function ProgramForm({ program }: { program: DbProgram }) {
   const qc = useQueryClient();
   const [form, setForm] = useState(program);
   const [error, setError] = useState<string | null>(null);
+  const [savedAt, setSavedAt] = useState<number | null>(null);
 
-  useEffect(() => setForm(program), [program]);
+  // Only reset the form when we switch to a different program (not on every refetch),
+  // otherwise an auto-refetch would wipe out the admin's in-progress edits.
+  useEffect(() => setForm(program), [program.id]);
 
   const save = useMutation({
     mutationFn: async () => {
@@ -118,7 +121,10 @@ function ProgramForm({ program }: { program: DbProgram }) {
         .eq("id", program.id);
       if (error) throw error;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-program", program.slug] }),
+    onSuccess: () => {
+      setSavedAt(Date.now());
+      qc.invalidateQueries({ queryKey: ["admin-program", program.slug] });
+    },
     onError: (e: Error) => setError(e.message),
   });
 
@@ -156,7 +162,10 @@ function ProgramForm({ program }: { program: DbProgram }) {
       {error && (
         <p className="md:col-span-2 rounded bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>
       )}
-      <div className="md:col-span-2 flex justify-end">
+      <div className="md:col-span-2 flex items-center justify-end gap-3">
+        {savedAt && !save.isPending && (
+          <span className="text-xs text-muted-foreground">Saved</span>
+        )}
         <button
           onClick={() => {
             setError(null);
@@ -165,7 +174,7 @@ function ProgramForm({ program }: { program: DbProgram }) {
           disabled={save.isPending}
           className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-burgundy disabled:opacity-60"
         >
-          <Save className="h-4 w-4" /> Save program
+          <Save className="h-4 w-4" /> {save.isPending ? "Saving…" : "Save program"}
         </button>
       </div>
     </div>
@@ -205,7 +214,9 @@ function CourseRow({ course }: { course: DbCourse }) {
   const [expanded, setExpanded] = useState(false);
   const dirty = JSON.stringify(c) !== JSON.stringify(course);
 
-  useEffect(() => setC(course), [course]);
+  // Only re-sync when this row's id changes (i.e. a different course),
+  // so refetches don't wipe out the admin's in-progress edits.
+  useEffect(() => setC(course), [course.id]);
 
   const save = useMutation({
     mutationFn: async () => {
@@ -229,6 +240,7 @@ function CourseRow({ course }: { course: DbCourse }) {
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-courses", course.program_id] }),
+    onError: (e: Error) => alert(`Save failed: ${e.message}`),
   });
   const del = useMutation({
     mutationFn: async () => {
