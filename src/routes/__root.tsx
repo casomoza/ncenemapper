@@ -72,14 +72,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
+      { title: "NC Engineering Pathway Mapper" },
+      { name: "description", content: "Start your Norco College Engineering journey here!" },
       { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { property: "og:title", content: "NC Engineering Pathway Mapper" },
+      { property: "og:description", content: "Start your Norco College Engineering journey here!" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "NC Engineering Pathway Mapper" },
+      { name: "twitter:description", content: "Start your Norco College Engineering journey here!" },
+      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/bKvl6CzrRnOV0uZGusOUR9ohrWh2/social-images/social-1779303409681-NC_Engineering_Logo_Transparent.webp" },
+      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/bKvl6CzrRnOV0uZGusOUR9ohrWh2/social-images/social-1779303409681-NC_Engineering_Logo_Transparent.webp" },
     ],
     links: [
       {
