@@ -79,6 +79,39 @@ export type Database = {
           },
         ]
       }
+      ge_areas: {
+        Row: {
+          area_code: string
+          courses: string[]
+          created_at: string
+          id: string
+          sort_order: number
+          title: string
+          units_note: string
+          updated_at: string
+        }
+        Insert: {
+          area_code: string
+          courses?: string[]
+          created_at?: string
+          id?: string
+          sort_order?: number
+          title?: string
+          units_note?: string
+          updated_at?: string
+        }
+        Update: {
+          area_code?: string
+          courses?: string[]
+          created_at?: string
+          id?: string
+          sort_order?: number
+          title?: string
+          units_note?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       programs: {
         Row: {
           cluster: string
