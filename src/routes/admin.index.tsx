@@ -94,6 +94,12 @@ function AdminPage() {
             <p className="text-sm text-muted-foreground">Signed in as {user.email}</p>
           </div>
           <div className="flex gap-2">
+            <Link
+              to="/admin/ge"
+              className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-2 text-sm hover:bg-accent/30"
+            >
+              Edit GE areas
+            </Link>
             <button
               onClick={() => setShowNew(true)}
               className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-burgundy"

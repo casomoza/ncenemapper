@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { geAreas } from "@/lib/program";
+import { useQuery } from "@tanstack/react-query";
+import { fetchGeAreas } from "@/lib/api";
 import { SiteHeader, SiteFooter } from "@/components/SiteHeader";
 import { BookOpen } from "lucide-react";
 
@@ -18,6 +19,7 @@ export const Route = createFileRoute("/ge")({
 });
 
 function GePage() {
+  const { data: geAreas = [] } = useQuery({ queryKey: ["ge_areas"], queryFn: fetchGeAreas });
   return (
     <div className="flex min-h-screen flex-col">
       <SiteHeader />

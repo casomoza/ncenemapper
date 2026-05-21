@@ -1,6 +1,7 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import type { Course } from "@/lib/program";
-import { findGeArea } from "@/lib/program";
+import { fetchGeAreas } from "@/lib/api";
 import {
   Dialog,
   DialogContent,
@@ -13,7 +14,17 @@ const isGeSlot = (code: string) => /^RCCD GE/i.test(code);
 
 export function CourseCard({ course }: { course: Course }) {
   const [open, setOpen] = useState(false);
-  const geArea = isGeSlot(course.code) ? findGeArea(course.code) : undefined;
+  const { data: geAreas } = useQuery({
+    queryKey: ["ge_areas"],
+    queryFn: fetchGeAreas,
+    staleTime: 5 * 60 * 1000,
+  });
+  const geArea = (() => {
+    if (!isGeSlot(course.code) || !geAreas) return undefined;
+    const m = course.code.match(/(\d+[A-Za-z]?)/);
+    if (!m) return undefined;
+    return geAreas.find((a) => a.id === m[1]);
+  })();
   const isCore = course.category === "core";
 
   return (
