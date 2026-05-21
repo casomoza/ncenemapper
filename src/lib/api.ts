@@ -113,3 +113,26 @@ export async function fetchDbCourses(programId: string): Promise<DbCourse[]> {
   if (error) throw error;
   return (data as DbCourse[]) ?? [];
 }
+
+export type DbGeArea = {
+  id: string;
+  area_code: string;
+  title: string;
+  units_note: string;
+  courses: string[];
+  sort_order: number;
+};
+
+export async function fetchGeAreas(): Promise<GeArea[]> {
+  const { data, error } = await supabase
+    .from("ge_areas")
+    .select("*")
+    .order("sort_order");
+  if (error) throw error;
+  return (data as DbGeArea[]).map((a) => ({
+    id: a.area_code,
+    title: a.title,
+    unitsNote: a.units_note ?? "",
+    courses: a.courses ?? [],
+  }));
+}
