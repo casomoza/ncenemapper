@@ -14,6 +14,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as ProgramsProgramIdRouteImport } from './routes/programs.$programId'
+import { Route as AdminGeRouteImport } from './routes/admin.ge'
 import { Route as AdminProgramsProgramIdRouteImport } from './routes/admin.programs.$programId'
 
 const GeRoute = GeRouteImport.update({
@@ -41,6 +42,11 @@ const ProgramsProgramIdRoute = ProgramsProgramIdRouteImport.update({
   path: '/programs/$programId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminGeRoute = AdminGeRouteImport.update({
+  id: '/admin/ge',
+  path: '/admin/ge',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminProgramsProgramIdRoute = AdminProgramsProgramIdRouteImport.update({
   id: '/admin/programs/$programId',
   path: '/admin/programs/$programId',
@@ -51,6 +57,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/ge': typeof GeRoute
+  '/admin/ge': typeof AdminGeRoute
   '/programs/$programId': typeof ProgramsProgramIdRoute
   '/admin/': typeof AdminIndexRoute
   '/admin/programs/$programId': typeof AdminProgramsProgramIdRoute
@@ -59,6 +66,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/ge': typeof GeRoute
+  '/admin/ge': typeof AdminGeRoute
   '/programs/$programId': typeof ProgramsProgramIdRoute
   '/admin': typeof AdminIndexRoute
   '/admin/programs/$programId': typeof AdminProgramsProgramIdRoute
@@ -68,6 +76,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/ge': typeof GeRoute
+  '/admin/ge': typeof AdminGeRoute
   '/programs/$programId': typeof ProgramsProgramIdRoute
   '/admin/': typeof AdminIndexRoute
   '/admin/programs/$programId': typeof AdminProgramsProgramIdRoute
@@ -78,6 +87,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/ge'
+    | '/admin/ge'
     | '/programs/$programId'
     | '/admin/'
     | '/admin/programs/$programId'
@@ -86,6 +96,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/ge'
+    | '/admin/ge'
     | '/programs/$programId'
     | '/admin'
     | '/admin/programs/$programId'
@@ -94,6 +105,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/ge'
+    | '/admin/ge'
     | '/programs/$programId'
     | '/admin/'
     | '/admin/programs/$programId'
@@ -103,6 +115,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
   GeRoute: typeof GeRoute
+  AdminGeRoute: typeof AdminGeRoute
   ProgramsProgramIdRoute: typeof ProgramsProgramIdRoute
   AdminIndexRoute: typeof AdminIndexRoute
   AdminProgramsProgramIdRoute: typeof AdminProgramsProgramIdRoute
@@ -145,6 +158,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProgramsProgramIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/ge': {
+      id: '/admin/ge'
+      path: '/admin/ge'
+      fullPath: '/admin/ge'
+      preLoaderRoute: typeof AdminGeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/programs/$programId': {
       id: '/admin/programs/$programId'
       path: '/admin/programs/$programId'
@@ -159,6 +179,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
   GeRoute: GeRoute,
+  AdminGeRoute: AdminGeRoute,
   ProgramsProgramIdRoute: ProgramsProgramIdRoute,
   AdminIndexRoute: AdminIndexRoute,
   AdminProgramsProgramIdRoute: AdminProgramsProgramIdRoute,
@@ -166,3 +187,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
