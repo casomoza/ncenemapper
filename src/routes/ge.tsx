@@ -19,6 +19,7 @@ export const Route = createFileRoute("/ge")({
 });
 
 function GePage() {
+  const { data: geAreas = [] } = useQuery({ queryKey: ["ge_areas"], queryFn: fetchGeAreas });
   return (
     <div className="flex min-h-screen flex-col">
       <SiteHeader />
