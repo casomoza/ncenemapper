@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import type { Course, Program } from "@/lib/program";
+import type { Course, GeArea, Program } from "@/lib/program";
 
 export type DbProgram = {
   id: string;
