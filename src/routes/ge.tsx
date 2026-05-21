@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { geAreas } from "@/lib/program";
+import { useQuery } from "@tanstack/react-query";
+import { fetchGeAreas } from "@/lib/api";
 import { SiteHeader, SiteFooter } from "@/components/SiteHeader";
 import { BookOpen } from "lucide-react";
 
