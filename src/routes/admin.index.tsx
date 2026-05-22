@@ -65,8 +65,8 @@ function AdminPage() {
         <main className="mx-auto max-w-2xl flex-1 px-6 py-16">
           <h1 className="font-serif text-3xl text-foreground">No admin access</h1>
           <p className="mt-3 text-sm text-muted-foreground">
-            Your account ({user.email}) is signed in but does not have the admin role.
-            Ask the project owner to grant you admin access. Your user id:
+            Your account ({user.email}) is signed in but does not have the admin role. Ask the
+            project owner to grant you admin access. Your user id:
           </p>
           <code className="mt-3 block break-all rounded-md bg-muted px-3 py-2 text-xs">
             {user.id}
@@ -246,7 +246,11 @@ function NewProgramForm({ onClose }: { onClose: () => void }) {
         </p>
       )}
       <div className="md:col-span-2 flex justify-end gap-2">
-        <button type="button" onClick={onClose} className="rounded-md border border-border px-3 py-1.5 text-sm">
+        <button
+          type="button"
+          onClick={onClose}
+          className="rounded-md border border-border px-3 py-1.5 text-sm"
+        >
           Cancel
         </button>
         <button
