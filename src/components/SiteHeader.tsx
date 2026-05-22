@@ -1,15 +1,17 @@
 import { Link } from "@tanstack/react-router";
 import logo from "@/assets/norco-logo.png";
 import ieppLogo from "@/assets/iepp-logo.png";
+import { useAuth } from "@/hooks/useAuth";
 
 export function SiteHeader() {
+  const { isAdmin } = useAuth();
   return (
     <header className="border-b border-border bg-card">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-6 py-4">
         <Link to="/" className="flex items-center gap-3">
           <img src={logo} alt="Norco College Engineering" className="h-20 w-auto sm:h-24" />
         </Link>
-        <nav className="flex items-center gap-6 text-sm font-medium">
+        <nav className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm font-medium">
           <Link
             to="/"
             className="text-foreground/80 transition-colors hover:text-primary"
@@ -31,6 +33,15 @@ export function SiteHeader() {
           >
             Admin
           </Link>
+          {isAdmin && (
+            <Link
+              to="/admin/ge"
+              className="rounded-md border border-primary/40 px-2 py-1 text-primary transition-colors hover:bg-primary/10"
+              activeProps={{ className: "bg-primary/10" }}
+            >
+              Edit GE
+            </Link>
+          )}
         </nav>
       </div>
     </header>
