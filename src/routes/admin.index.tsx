@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { SiteHeader, SiteFooter } from "@/components/SiteHeader";
 import { fetchPrograms } from "@/lib/api";
-import { LogOut, Plus, Pencil, Trash2 } from "lucide-react";
+import { BookOpenCheck, LogOut, Plus, Pencil, Trash2 } from "lucide-react";
 
 export const Route = createFileRoute("/admin/")({
   component: AdminPage,
@@ -93,19 +93,19 @@ function AdminPage() {
             <h1 className="font-serif text-3xl font-semibold text-foreground">Programs</h1>
             <p className="text-sm text-muted-foreground">Signed in as {user.email}</p>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <Link
-              to="/admin/ge"
-              className="inline-flex items-center gap-1.5 rounded-md border border-primary bg-primary/10 px-3 py-2 text-sm font-medium text-primary hover:bg-primary/20"
-            >
-              <Pencil className="h-4 w-4" /> Edit GE areas
-            </Link>
+          <div className="flex w-full flex-wrap gap-2 sm:w-auto">
             <button
               onClick={() => setShowNew(true)}
               className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-burgundy"
             >
               <Plus className="h-4 w-4" /> New program
             </button>
+            <Link
+              to="/admin/ge"
+              className="inline-flex items-center gap-1.5 rounded-md border border-primary bg-primary/10 px-3 py-2 text-sm font-medium text-primary hover:bg-primary/20"
+            >
+              <Pencil className="h-4 w-4" /> Edit GE areas
+            </Link>
             <button
               onClick={() => supabase.auth.signOut().then(() => navigate({ to: "/" }))}
               className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-2 text-sm hover:bg-accent/30"
@@ -114,6 +114,28 @@ function AdminPage() {
             </button>
           </div>
         </div>
+
+        <section className="mt-6 rounded-lg border border-primary/40 bg-primary/10 p-5">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex gap-3">
+              <BookOpenCheck className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+              <div>
+                <h2 className="font-serif text-xl font-semibold text-foreground">
+                  RCCD GE area editor
+                </h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Manage the GE drop-down area names, unit notes, and course lists.
+                </p>
+              </div>
+            </div>
+            <Link
+              to="/admin/ge"
+              className="inline-flex w-full items-center justify-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-burgundy sm:w-auto"
+            >
+              <Pencil className="h-4 w-4" /> Edit GE areas
+            </Link>
+          </div>
+        </section>
 
         {showNew && <NewProgramForm onClose={() => setShowNew(false)} />}
 
