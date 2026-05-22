@@ -87,18 +87,18 @@ function AdminPage() {
     <div className="flex min-h-screen flex-col">
       <SiteHeader />
       <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-10">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <p className="font-mono text-xs uppercase tracking-wider text-primary">Admin</p>
             <h1 className="font-serif text-3xl font-semibold text-foreground">Programs</h1>
             <p className="text-sm text-muted-foreground">Signed in as {user.email}</p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Link
               to="/admin/ge"
-              className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-2 text-sm hover:bg-accent/30"
+              className="inline-flex items-center gap-1.5 rounded-md border border-primary bg-primary/10 px-3 py-2 text-sm font-medium text-primary hover:bg-primary/20"
             >
-              Edit GE areas
+              <Pencil className="h-4 w-4" /> Edit GE areas
             </Link>
             <button
               onClick={() => setShowNew(true)}
