@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import type { Course } from "@/lib/program";
 import { fetchGeAreas } from "@/lib/api";
@@ -9,23 +9,64 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const isGeSlot = (code: string) => /^RCCD GE/i.test(code);
+const storageKey = (programId: string | undefined, code: string) =>
+  `ge-choice:${programId ?? "_"}:${code}`;
 
-export function CourseCard({ course }: { course: Course }) {
+export function CourseCard({
+  course,
+  programId,
+}: {
+  course: Course;
+  programId?: string;
+}) {
   const [open, setOpen] = useState(false);
+  const [choice, setChoice] = useState<string>("");
+
   const { data: geAreas } = useQuery({
     queryKey: ["ge_areas"],
     queryFn: fetchGeAreas,
     staleTime: 5 * 60 * 1000,
   });
+
   const geArea = (() => {
     if (!isGeSlot(course.code) || !geAreas) return undefined;
     const m = course.code.match(/(\d+[A-Za-z]?)/);
     if (!m) return undefined;
     return geAreas.find((a) => a.id === m[1]);
   })();
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !geArea) return;
+    const saved = window.localStorage.getItem(storageKey(programId, course.code));
+    if (saved) setChoice(saved);
+  }, [geArea, programId, course.code]);
+
+  const handleChoice = (value: string) => {
+    setChoice(value);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(storageKey(programId, course.code), value);
+    }
+  };
+
+  const handleClear = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setChoice("");
+    if (typeof window !== "undefined") {
+      window.localStorage.removeItem(storageKey(programId, course.code));
+    }
+  };
+
   const isCore = course.category === "core";
+  const displayTitle = choice || course.title;
 
   return (
     <>
@@ -50,7 +91,7 @@ export function CourseCard({ course }: { course: Course }) {
             </span>
           </div>
           <p className="mt-1 line-clamp-2 text-sm font-medium leading-snug text-foreground">
-            {course.title}
+            {displayTitle}
           </p>
           <div className="mt-2 flex flex-wrap gap-1">
             <span
@@ -72,7 +113,42 @@ export function CourseCard({ course }: { course: Course }) {
                 Prereq: {course.prerequisite}
               </span>
             )}
+            {choice && (
+              <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary">
+                Selected
+              </span>
+            )}
           </div>
+
+          {geArea && (
+            <div
+              className="mt-2"
+              onClick={(e) => e.stopPropagation()}
+              onKeyDown={(e) => e.stopPropagation()}
+            >
+              <Select value={choice} onValueChange={handleChoice}>
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue placeholder="Choose a GE course…" />
+                </SelectTrigger>
+                <SelectContent>
+                  {geArea.courses.map((c) => (
+                    <SelectItem key={c} value={c} className="text-xs">
+                      {c}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {choice && (
+                <button
+                  type="button"
+                  onClick={handleClear}
+                  className="mt-1 text-[10px] font-medium text-muted-foreground hover:text-primary hover:underline"
+                >
+                  Clear selection
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </button>
 
@@ -82,7 +158,7 @@ export function CourseCard({ course }: { course: Course }) {
             <p className="font-mono text-xs font-semibold text-primary">
               {course.code} &middot; {course.units} units &middot; Year {course.year} {course.semester}
             </p>
-            <DialogTitle className="font-serif text-2xl">{course.title}</DialogTitle>
+            <DialogTitle className="font-serif text-2xl">{displayTitle}</DialogTitle>
             {course.description && (
               <DialogDescription className="text-sm leading-relaxed text-foreground/80">
                 {course.description}
@@ -124,20 +200,31 @@ export function CourseCard({ course }: { course: Course }) {
                   GE Area {geArea.id} · {geArea.title}
                 </p>
                 <p className="mt-2 text-xs text-foreground/80">
-                  {geArea.courses.length} eligible course{geArea.courses.length === 1 ? "" : "s"}. Choose one with your counselor.
+                  {geArea.courses.length} eligible course{geArea.courses.length === 1 ? "" : "s"}. Pick one from the dropdown to set it on your map.
                 </p>
-                <details className="mt-2">
-                  <summary className="cursor-pointer text-xs font-medium text-primary hover:underline">
-                    See options
-                  </summary>
-                  <ul className="mt-2 max-h-48 space-y-1 overflow-y-auto text-xs text-foreground/80">
-                    {geArea.courses.map((c, i) => (
-                      <li key={i} className="border-b border-border/60 pb-1 last:border-0">
-                        {c}
-                      </li>
-                    ))}
-                  </ul>
-                </details>
+                <div className="mt-3">
+                  <Select value={choice} onValueChange={handleChoice}>
+                    <SelectTrigger className="h-9 text-sm">
+                      <SelectValue placeholder="Choose a GE course…" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {geArea.courses.map((c) => (
+                        <SelectItem key={c} value={c}>
+                          {c}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {choice && (
+                    <button
+                      type="button"
+                      onClick={handleClear}
+                      className="mt-2 text-xs font-medium text-muted-foreground hover:text-primary hover:underline"
+                    >
+                      Clear selection
+                    </button>
+                  )}
+                </div>
               </div>
             )}
           </div>
