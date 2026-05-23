@@ -120,6 +120,7 @@ export type DbGeArea = {
   title: string;
   units_note: string;
   courses: string[];
+  course_descriptions: Record<string, string> | null;
   sort_order: number;
 };
 
@@ -129,10 +130,11 @@ export async function fetchGeAreas(): Promise<GeArea[]> {
     .select("*")
     .order("sort_order");
   if (error) throw error;
-  return (data as DbGeArea[]).map((a) => ({
+  return (data as unknown as DbGeArea[]).map((a) => ({
     id: a.area_code,
     title: a.title,
     unitsNote: a.units_note ?? "",
     courses: a.courses ?? [],
+    courseDescriptions: (a.course_descriptions ?? {}) as Record<string, string>,
   }));
 }
