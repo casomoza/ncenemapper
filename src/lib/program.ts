@@ -30,6 +30,7 @@ export type GeArea = {
   title: string;
   unitsNote: string;
   courses: string[];
+  courseDescriptions: Record<string, string>;
 };
 
 const TERM_ORDER: Record<string, number> = { Summer: 0, Fall: 1, Winter: 2, Spring: 3 };

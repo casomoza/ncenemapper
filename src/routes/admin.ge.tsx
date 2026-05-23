@@ -18,6 +18,7 @@ type EditableArea = {
   title: string;
   units_note: string;
   courses: string[];
+  course_descriptions: Record<string, string>;
   sort_order: number;
 };
 
@@ -46,6 +47,7 @@ function AdminGePage() {
         title: "New GE Area",
         units_note: "",
         courses: [],
+        course_descriptions: {},
         sort_order: nextOrder,
       });
       if (error) throw error;
@@ -125,21 +127,28 @@ function AdminGePage() {
 
 function AreaEditor({ area }: { area: DbGeArea }) {
   const qc = useQueryClient();
-  const [form, setForm] = useState<EditableArea>(area);
-  const [coursesText, setCoursesText] = useState((area.courses ?? []).join("\n"));
+  const toEditable = (a: DbGeArea): EditableArea => ({
+    ...a,
+    course_descriptions: (a.course_descriptions ?? {}) as Record<string, string>,
+  });
+  const [form, setForm] = useState<EditableArea>(toEditable(area));
   const [savedAt, setSavedAt] = useState<number | null>(null);
 
   useEffect(() => {
-    setForm(area);
-    setCoursesText((area.courses ?? []).join("\n"));
+    setForm(toEditable(area));
   }, [area.id]);
 
   const save = useMutation({
     mutationFn: async () => {
-      const courses = coursesText
-        .split("\n")
+      const courses = form.courses
         .map((s) => s.trim())
         .filter((s) => s.length > 0);
+      // Drop descriptions for codes no longer in the list
+      const descriptions: Record<string, string> = {};
+      for (const code of courses) {
+        const v = form.course_descriptions[code];
+        if (v && v.trim().length > 0) descriptions[code] = v;
+      }
       const { error } = await supabase
         .from("ge_areas")
         .update({
@@ -147,6 +156,7 @@ function AreaEditor({ area }: { area: DbGeArea }) {
           title: form.title,
           units_note: form.units_note,
           courses,
+          course_descriptions: descriptions,
           sort_order: form.sort_order,
         })
         .eq("id", area.id);
@@ -213,15 +223,79 @@ function AreaEditor({ area }: { area: DbGeArea }) {
         />
       </div>
       <div className="mt-3">
-        <label className="block text-xs font-medium">
-          Courses (one per line)
-        </label>
-        <textarea
-          value={coursesText}
-          onChange={(e) => setCoursesText(e.target.value)}
-          rows={Math.min(20, Math.max(4, coursesText.split("\n").length))}
-          className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 font-mono text-xs"
-        />
+        <div className="flex items-center justify-between">
+          <label className="block text-xs font-medium">Courses</label>
+          <button
+            type="button"
+            onClick={() =>
+              setForm({ ...form, courses: [...form.courses, ""] })
+            }
+            className="text-xs font-medium text-primary hover:underline"
+          >
+            + Add course
+          </button>
+        </div>
+        <div className="mt-2 space-y-3">
+          {form.courses.length === 0 && (
+            <p className="text-xs text-muted-foreground">
+              No courses yet. Click "Add course" to add one.
+            </p>
+          )}
+          {form.courses.map((code, idx) => (
+            <div
+              key={idx}
+              className="rounded-md border border-border bg-background/40 p-3"
+            >
+              <div className="flex items-start gap-2">
+                <input
+                  value={code}
+                  onChange={(e) => {
+                    const next = [...form.courses];
+                    const oldCode = next[idx];
+                    next[idx] = e.target.value;
+                    const desc = { ...form.course_descriptions };
+                    if (oldCode && oldCode !== e.target.value) {
+                      const prev = desc[oldCode];
+                      delete desc[oldCode];
+                      if (prev) desc[e.target.value] = prev;
+                    }
+                    setForm({ ...form, courses: next, course_descriptions: desc });
+                  }}
+                  placeholder="e.g. ENG 1A — College Composition"
+                  className="flex-1 rounded-md border border-input bg-background px-3 py-1.5 font-mono text-xs"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    const next = form.courses.filter((_, i) => i !== idx);
+                    const desc = { ...form.course_descriptions };
+                    delete desc[code];
+                    setForm({ ...form, courses: next, course_descriptions: desc });
+                  }}
+                  className="rounded-md border border-destructive/40 px-2 py-1.5 text-xs text-destructive hover:bg-destructive/10"
+                  aria-label="Remove course"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              </div>
+              <textarea
+                value={form.course_descriptions[code] ?? ""}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    course_descriptions: {
+                      ...form.course_descriptions,
+                      [code]: e.target.value,
+                    },
+                  })
+                }
+                placeholder="Course description shown when a student opens this course on a program map."
+                rows={2}
+                className="mt-2 w-full rounded-md border border-input bg-background px-3 py-2 text-xs"
+              />
+            </div>
+          ))}
+        </div>
       </div>
       <div className="mt-3 flex items-center justify-between">
         <button
