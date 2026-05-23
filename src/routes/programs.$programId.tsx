@@ -167,7 +167,7 @@ function ProgramPage() {
                         </div>
                         <div className="space-y-2">
                           {t.courses.map((c) => (
-                            <CourseCard key={c.code} course={c} />
+                            <CourseCard key={c.code} course={c} programId={programId} />
                           ))}
                         </div>
                       </div>
