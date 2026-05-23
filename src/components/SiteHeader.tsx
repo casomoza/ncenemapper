@@ -31,15 +31,6 @@ export function SiteHeader() {
           >
             Admin
           </Link>
-          {isAdmin && (
-            <Link
-              to="/admin/ge"
-              className="rounded-md border border-primary/40 px-2 py-1 text-primary transition-colors hover:bg-primary/10"
-              activeProps={{ className: "bg-primary/10" }}
-            >
-              Edit GE
-            </Link>
-          )}
         </nav>
       </div>
     </header>
