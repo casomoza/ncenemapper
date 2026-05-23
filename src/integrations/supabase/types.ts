@@ -82,6 +82,7 @@ export type Database = {
       ge_areas: {
         Row: {
           area_code: string
+          course_descriptions: Json
           courses: string[]
           created_at: string
           id: string
@@ -92,6 +93,7 @@ export type Database = {
         }
         Insert: {
           area_code: string
+          course_descriptions?: Json
           courses?: string[]
           created_at?: string
           id?: string
@@ -102,6 +104,7 @@ export type Database = {
         }
         Update: {
           area_code?: string
+          course_descriptions?: Json
           courses?: string[]
           created_at?: string
           id?: string

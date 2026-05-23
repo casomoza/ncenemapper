@@ -1,0 +1,1 @@
+ALTER TABLE public.ge_areas ADD COLUMN IF NOT EXISTS course_descriptions jsonb NOT NULL DEFAULT '{}'::jsonb;
