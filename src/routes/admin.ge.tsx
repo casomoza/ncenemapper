@@ -18,6 +18,7 @@ type EditableArea = {
   title: string;
   units_note: string;
   courses: string[];
+  course_descriptions: Record<string, string>;
   sort_order: number;
 };
 
