@@ -47,6 +47,7 @@ function AdminGePage() {
         title: "New GE Area",
         units_note: "",
         courses: [],
+        course_descriptions: {},
         sort_order: nextOrder,
       });
       if (error) throw error;
