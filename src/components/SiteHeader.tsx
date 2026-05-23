@@ -1,10 +1,8 @@
 import { Link } from "@tanstack/react-router";
 import logo from "@/assets/norco-logo.png";
 import ieppLogo from "@/assets/iepp-logo.png";
-import { useAuth } from "@/hooks/useAuth";
 
 export function SiteHeader() {
-  const { isAdmin } = useAuth();
   return (
     <header className="border-b border-border bg-card">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-6 py-4">
@@ -33,15 +31,6 @@ export function SiteHeader() {
           >
             Admin
           </Link>
-          {isAdmin && (
-            <Link
-              to="/admin/ge"
-              className="rounded-md border border-primary/40 px-2 py-1 text-primary transition-colors hover:bg-primary/10"
-              activeProps={{ className: "bg-primary/10" }}
-            >
-              Edit GE
-            </Link>
-          )}
         </nav>
       </div>
     </header>
