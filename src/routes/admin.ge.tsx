@@ -127,21 +127,28 @@ function AdminGePage() {
 
 function AreaEditor({ area }: { area: DbGeArea }) {
   const qc = useQueryClient();
-  const [form, setForm] = useState<EditableArea>(area);
-  const [coursesText, setCoursesText] = useState((area.courses ?? []).join("\n"));
+  const toEditable = (a: DbGeArea): EditableArea => ({
+    ...a,
+    course_descriptions: (a.course_descriptions ?? {}) as Record<string, string>,
+  });
+  const [form, setForm] = useState<EditableArea>(toEditable(area));
   const [savedAt, setSavedAt] = useState<number | null>(null);
 
   useEffect(() => {
-    setForm(area);
-    setCoursesText((area.courses ?? []).join("\n"));
+    setForm(toEditable(area));
   }, [area.id]);
 
   const save = useMutation({
     mutationFn: async () => {
-      const courses = coursesText
-        .split("\n")
+      const courses = form.courses
         .map((s) => s.trim())
         .filter((s) => s.length > 0);
+      // Drop descriptions for codes no longer in the list
+      const descriptions: Record<string, string> = {};
+      for (const code of courses) {
+        const v = form.course_descriptions[code];
+        if (v && v.trim().length > 0) descriptions[code] = v;
+      }
       const { error } = await supabase
         .from("ge_areas")
         .update({
@@ -149,6 +156,7 @@ function AreaEditor({ area }: { area: DbGeArea }) {
           title: form.title,
           units_note: form.units_note,
           courses,
+          course_descriptions: descriptions,
           sort_order: form.sort_order,
         })
         .eq("id", area.id);
