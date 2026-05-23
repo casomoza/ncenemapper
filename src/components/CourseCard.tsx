@@ -164,6 +164,11 @@ export function CourseCard({
                 {course.description}
               </DialogDescription>
             )}
+            {choice && geArea?.courseDescriptions?.[choice] && (
+              <DialogDescription className="text-sm leading-relaxed text-foreground/80">
+                {geArea.courseDescriptions[choice]}
+              </DialogDescription>
+            )}
           </DialogHeader>
 
           <div className="space-y-3 text-sm">
