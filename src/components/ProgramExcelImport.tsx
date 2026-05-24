@@ -327,6 +327,13 @@ export function ProgramExcelImport() {
         </div>
         <div className="flex gap-2">
           <button
+            onClick={exportExisting}
+            disabled={busy}
+            className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-2 text-sm hover:bg-accent/30 disabled:opacity-60"
+          >
+            <FileDown className="h-4 w-4" /> Export current
+          </button>
+          <button
             onClick={downloadTemplate}
             className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-2 text-sm hover:bg-accent/30"
           >
