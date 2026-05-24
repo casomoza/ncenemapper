@@ -253,6 +253,63 @@ export function ProgramExcelImport() {
     XLSX.writeFile(wb, "programs-template.xlsx");
   }
 
+  async function exportExisting() {
+    setBusy(true);
+    setLog([]);
+    try {
+      const { data: progs, error: pErr } = await supabase
+        .from("programs")
+        .select("*")
+        .order("name");
+      if (pErr) throw pErr;
+      const { data: courses, error: cErr } = await supabase
+        .from("courses")
+        .select("*")
+        .order("sort_order");
+      if (cErr) throw cErr;
+
+      const idToSlug = new Map<string, string>();
+      const progRows = (progs ?? []).map((p: any) => {
+        idToSlug.set(p.id, p.slug);
+        return {
+          slug: p.slug,
+          name: p.name,
+          degree_type: p.degree_type ?? "",
+          total_units: p.total_units ?? 0,
+          cluster: p.cluster ?? "",
+          description: p.description ?? "",
+          outcomes: (p.outcomes ?? []).join("\n"),
+        };
+      });
+      const courseRows = (courses ?? []).map((c: any) => ({
+        program_slug: idToSlug.get(c.program_id) ?? "",
+        code: c.code,
+        title: c.title,
+        units: c.units,
+        year: c.year,
+        semester: c.semester,
+        category: c.category,
+        prerequisite: c.prerequisite ?? "",
+        satisfies: (c.satisfies ?? []).join("\n"),
+        description: c.description ?? "",
+        optional: c.optional ?? false,
+        note: c.note ?? "",
+        sort_order: c.sort_order ?? 0,
+      }));
+
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(progRows), "Programs");
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(courseRows), "Courses");
+      const stamp = new Date().toISOString().slice(0, 10);
+      XLSX.writeFile(wb, `programs-export-${stamp}.xlsx`);
+      addLog(`Exported ${progRows.length} programs and ${courseRows.length} courses.`);
+    } catch (e) {
+      addLog(`Error: ${(e as Error).message}`);
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <div className="mt-6 rounded-lg border border-border bg-card p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
