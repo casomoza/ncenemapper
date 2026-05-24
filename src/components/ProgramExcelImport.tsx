@@ -89,17 +89,34 @@ export function ProgramExcelImport() {
           description: String(p.description ?? ""),
           outcomes: splitLines(p.outcomes),
         };
-        const { data, error } = await supabase
+        const { data: existing } = await supabase
           .from("programs")
-          .upsert(payload, { onConflict: "slug" })
-          .select("id, slug")
-          .single();
-        if (error) {
-          addLog(`Program ${slug}: ${error.message}`);
-          continue;
+          .select("id")
+          .eq("slug", slug)
+          .maybeSingle();
+        let id: string | undefined;
+        if (existing) {
+          const { error } = await supabase.from("programs").update(payload).eq("id", existing.id);
+          if (error) {
+            addLog(`Program ${slug}: ${error.message}`);
+            continue;
+          }
+          id = existing.id;
+        } else {
+          const { data, error } = await supabase
+            .from("programs")
+            .insert(payload)
+            .select("id")
+            .single();
+          if (error) {
+            addLog(`Program ${slug}: ${error.message}`);
+            continue;
+          }
+          id = data.id;
         }
-        slugToId.set(data.slug, data.id);
+        slugToId.set(slug, id!);
         addLog(`✓ Program ${slug}`);
+
       }
 
       // Resolve any course program_slugs not yet in map (existing programs not in upload)
