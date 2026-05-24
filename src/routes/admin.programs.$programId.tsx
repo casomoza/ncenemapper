@@ -183,30 +183,82 @@ function ProgramForm({ program }: { program: DbProgram }) {
 
 function AddCourseButton({ programId }: { programId: string }) {
   const qc = useQueryClient();
+  const [code, setCode] = useState("");
+  const [status, setStatus] = useState<string | null>(null);
   const add = useMutation({
     mutationFn: async () => {
+      const trimmed = code.trim();
+      let prefill: Partial<DbCourse> = {};
+      let prefilled = false;
+      if (trimmed) {
+        // Look up an existing course with the same code in any other program
+        const { data: existing, error: lookupErr } = await supabase
+          .from("courses")
+          .select("*")
+          .ilike("code", trimmed)
+          .neq("program_id", programId)
+          .limit(1);
+        if (lookupErr) throw lookupErr;
+        if (existing && existing.length > 0) {
+          const src = existing[0] as DbCourse;
+          prefill = {
+            title: src.title,
+            units: src.units,
+            category: src.category,
+            prerequisite: src.prerequisite,
+            satisfies: src.satisfies,
+            description: src.description,
+            optional: src.optional,
+            note: src.note,
+          };
+          prefilled = true;
+        }
+      }
       const { error } = await supabase.from("courses").insert({
         program_id: programId,
-        code: "NEW-000",
-        title: "New course",
-        units: 3,
+        code: trimmed || "NEW-000",
+        title: prefill.title ?? "New course",
+        units: prefill.units ?? 3,
         year: 1,
         semester: "Fall",
-        category: "core",
+        category: prefill.category ?? "core",
+        prerequisite: prefill.prerequisite ?? null,
+        satisfies: prefill.satisfies ?? [],
+        description: prefill.description ?? null,
+        optional: prefill.optional ?? false,
+        note: prefill.note ?? null,
       });
       if (error) throw error;
+      return prefilled;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-courses", programId] }),
+    onSuccess: (prefilled) => {
+      qc.invalidateQueries({ queryKey: ["admin-courses", programId] });
+      setStatus(prefilled ? `Prefilled from existing "${code.trim()}"` : "Added blank course");
+      setCode("");
+      setTimeout(() => setStatus(null), 3000);
+    },
+    onError: (e: Error) => setStatus(`Error: ${e.message}`),
   });
   return (
-    <button
-      onClick={() => add.mutate()}
-      className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:bg-burgundy"
-    >
-      <Plus className="h-4 w-4" /> Add course
-    </button>
+    <div className="flex items-center gap-2">
+      {status && <span className="text-xs text-muted-foreground">{status}</span>}
+      <input
+        value={code}
+        onChange={(e) => setCode(e.target.value)}
+        placeholder="Course code (optional)"
+        className="w-44 rounded-md border border-input bg-background px-2 py-1.5 text-sm"
+      />
+      <button
+        onClick={() => add.mutate()}
+        disabled={add.isPending}
+        className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:bg-burgundy disabled:opacity-60"
+      >
+        <Plus className="h-4 w-4" /> Add course
+      </button>
+    </div>
   );
 }
+
 
 function CourseRow({ course }: { course: DbCourse }) {
   const qc = useQueryClient();
