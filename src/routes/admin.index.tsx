@@ -5,7 +5,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { SiteHeader, SiteFooter } from "@/components/SiteHeader";
 import { fetchPrograms } from "@/lib/api";
+import { ProgramExcelImport } from "@/components/ProgramExcelImport";
 import { LogOut, Plus, Pencil, Trash2 } from "lucide-react";
+
 
 export const Route = createFileRoute("/admin/")({
   component: AdminPage,
@@ -116,6 +118,9 @@ function AdminPage() {
         </div>
 
         {showNew && <NewProgramForm onClose={() => setShowNew(false)} />}
+
+        <ProgramExcelImport />
+
 
         <div className="mt-8 grid gap-4">
           {programs?.map((p) => (
