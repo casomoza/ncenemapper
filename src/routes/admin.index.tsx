@@ -119,6 +119,9 @@ function AdminPage() {
 
         {showNew && <NewProgramForm onClose={() => setShowNew(false)} />}
 
+        <ProgramExcelImport />
+
+
         <div className="mt-8 grid gap-4">
           {programs?.map((p) => (
             <div
