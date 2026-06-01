@@ -1,10 +1,32 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useMemo, useState } from "react";
 import { fetchProgramBySlug } from "@/lib/api";
-import { groupByTerm } from "@/lib/program";
+import { groupByTerm, type Course } from "@/lib/program";
 import { SiteHeader, SiteFooter } from "@/components/SiteHeader";
 import { CourseCard } from "@/components/CourseCard";
-import { ArrowLeft, Printer, GraduationCap, Award } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ArrowLeft, Printer, GraduationCap, Award, Filter } from "lucide-react";
+
+// Normalize satisfies tags so minor variants (e.g. "UCR TAG Requirement" vs
+// "UCR TAG Requirements") collapse into a single filter option.
+function normalizeTag(raw: string): string {
+  return raw
+    .trim()
+    .replace(/\s+/g, " ")
+    .replace(/\bUC\s*TAG\b/gi, "UCR TAG")
+    .replace(/\bUCR\s*Tag\b/g, "UCR TAG")
+    .replace(/Requirements?$/i, "Requirements")
+    .replace(/UC Pathways\s*\+?/i, "UC Pathways+")
+    .replace(/A\.S\.?\s*Pre-?Engineering/i, "A.S. Pre-Engineering");
+}
+
+function courseTags(c: Course): string[] {
+  return (c.satisfies ?? [])
+    .map(normalizeTag)
+    // Filter out long descriptive strings that aren't really requirement tags
+    .filter((t) => t.length > 0 && t.length <= 60);
+}
 
 export const Route = createFileRoute("/programs/$programId")({
   component: ProgramPage,
@@ -27,6 +49,24 @@ function ProgramPage() {
     queryFn: () => fetchProgramBySlug(programId),
   });
 
+  const allTags = useMemo(() => {
+    const set = new Set<string>();
+    for (const c of program?.courses ?? []) for (const t of courseTags(c)) set.add(t);
+    return Array.from(set).sort();
+  }, [program]);
+
+  const [activeTags, setActiveTags] = useState<Set<string> | null>(null);
+  const effectiveActive = activeTags ?? new Set(allTags);
+
+  const visibleCourses = useMemo(() => {
+    if (!program) return [];
+    return program.courses.filter((c) => {
+      const tags = courseTags(c);
+      if (tags.length === 0) return true; // courses with no tags always shown
+      return tags.some((t) => effectiveActive.has(t));
+    });
+  }, [program, effectiveActive]);
+
   if (isLoading) {
     return (
       <div className="flex min-h-screen flex-col">
@@ -48,8 +88,18 @@ function ProgramPage() {
       </div>
     );
   }
-  const terms = groupByTerm(program.courses);
+  const terms = groupByTerm(visibleCourses);
   const years = Array.from(new Set(terms.map((t) => t.year))).sort();
+
+  function toggleTag(tag: string) {
+    setActiveTags((prev) => {
+      const base = new Set(prev ?? allTags);
+      if (base.has(tag)) base.delete(tag);
+      else base.add(tag);
+      return base;
+    });
+  }
+
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -132,6 +182,44 @@ function ProgramPage() {
         </section>
 
         <section className="mx-auto max-w-6xl px-6 py-10">
+          {allTags.length > 0 && (
+            <div className="mb-6 rounded-lg border border-border bg-card p-4 shadow-sm">
+              <div className="mb-3 flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                  <Filter className="h-4 w-4 text-primary" />
+                  Filter courses by requirement
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setActiveTags(null)}
+                  className="text-xs font-medium text-primary hover:underline"
+                >
+                  Reset
+                </button>
+              </div>
+              <div className="flex flex-wrap gap-x-5 gap-y-2">
+                {allTags.map((tag) => {
+                  const checked = effectiveActive.has(tag);
+                  return (
+                    <label
+                      key={tag}
+                      className="flex cursor-pointer items-center gap-2 text-sm text-foreground/85"
+                    >
+                      <Checkbox
+                        checked={checked}
+                        onCheckedChange={() => toggleTag(tag)}
+                      />
+                      {tag}
+                    </label>
+                  );
+                })}
+              </div>
+              <p className="mt-3 text-xs text-muted-foreground">
+                Showing {visibleCourses.length} of {program.courses.length} courses. Core courses with no requirement tag are always shown.
+              </p>
+            </div>
+          )}
+
           {years.map((year) => {
             const yearTerms = terms.filter((t) => t.year === year);
             const yearUnits = yearTerms.reduce(
