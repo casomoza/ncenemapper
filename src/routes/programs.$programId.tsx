@@ -6,7 +6,7 @@ import { groupByTerm, type Course } from "@/lib/program";
 import { SiteHeader, SiteFooter } from "@/components/SiteHeader";
 import { CourseCard } from "@/components/CourseCard";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ArrowLeft, Printer, GraduationCap, Award, Filter } from "lucide-react";
+import { ArrowLeft, Printer, GraduationCap, Award, Filter, ChevronDown, ChevronUp } from "lucide-react";
 
 // Normalize satisfies tags so minor variants (e.g. "UCR TAG Requirement" vs
 // "UCR TAG Requirements") collapse into a single filter option.
