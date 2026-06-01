@@ -56,6 +56,7 @@ function ProgramPage() {
   }, [program]);
 
   const [activeTags, setActiveTags] = useState<Set<string> | null>(null);
+  const [filterOpen, setFilterOpen] = useState(false);
   const effectiveActive = activeTags ?? new Set(allTags);
 
   const visibleCourses = useMemo(() => {
