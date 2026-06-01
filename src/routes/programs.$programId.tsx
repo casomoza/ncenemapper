@@ -6,7 +6,7 @@ import { groupByTerm, type Course } from "@/lib/program";
 import { SiteHeader, SiteFooter } from "@/components/SiteHeader";
 import { CourseCard } from "@/components/CourseCard";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ArrowLeft, Printer, GraduationCap, Award, Filter } from "lucide-react";
+import { ArrowLeft, Printer, GraduationCap, Award, Filter, ChevronDown, ChevronUp } from "lucide-react";
 
 // Normalize satisfies tags so minor variants (e.g. "UCR TAG Requirement" vs
 // "UCR TAG Requirements") collapse into a single filter option.
@@ -56,6 +56,7 @@ function ProgramPage() {
   }, [program]);
 
   const [activeTags, setActiveTags] = useState<Set<string> | null>(null);
+  const [filterOpen, setFilterOpen] = useState(false);
   const effectiveActive = activeTags ?? new Set(allTags);
 
   const visibleCourses = useMemo(() => {
@@ -183,40 +184,58 @@ function ProgramPage() {
 
         <section className="mx-auto max-w-6xl px-6 py-10">
           {allTags.length > 0 && (
-            <div className="mb-6 rounded-lg border border-border bg-card p-4 shadow-sm">
-              <div className="mb-3 flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+            <div className="mb-6 rounded-lg border border-border bg-card shadow-sm">
+              <button
+                type="button"
+                onClick={() => setFilterOpen((o) => !o)}
+                className="flex w-full items-center justify-between gap-2 px-4 py-3 text-sm font-semibold text-foreground"
+              >
+                <div className="flex items-center gap-2">
                   <Filter className="h-4 w-4 text-primary" />
                   Filter courses by requirement
+                  <span className="ml-1 rounded-full bg-muted px-2 py-0.5 text-xs font-normal text-muted-foreground">
+                    {effectiveActive.size} / {allTags.length}
+                  </span>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setActiveTags(null)}
-                  className="text-xs font-medium text-primary hover:underline"
-                >
-                  Reset
-                </button>
-              </div>
-              <div className="flex flex-wrap gap-x-5 gap-y-2">
-                {allTags.map((tag) => {
-                  const checked = effectiveActive.has(tag);
-                  return (
-                    <label
-                      key={tag}
-                      className="flex cursor-pointer items-center gap-2 text-sm text-foreground/85"
+                {filterOpen ? (
+                  <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                ) : (
+                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                )}
+              </button>
+              {filterOpen && (
+                <div className="border-t border-border px-4 pb-4 pt-3">
+                  <div className="flex flex-wrap gap-x-5 gap-y-2">
+                    {allTags.map((tag) => {
+                      const checked = effectiveActive.has(tag);
+                      return (
+                        <label
+                          key={tag}
+                          className="flex cursor-pointer items-center gap-2 text-sm text-foreground/85"
+                        >
+                          <Checkbox
+                            checked={checked}
+                            onCheckedChange={() => toggleTag(tag)}
+                          />
+                          {tag}
+                        </label>
+                      );
+                    })}
+                  </div>
+                  <div className="mt-3 flex items-center justify-between">
+                    <p className="text-xs text-muted-foreground">
+                      Showing {visibleCourses.length} of {program.courses.length} courses. Core courses with no requirement tag are always shown.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setActiveTags(null)}
+                      className="text-xs font-medium text-primary hover:underline"
                     >
-                      <Checkbox
-                        checked={checked}
-                        onCheckedChange={() => toggleTag(tag)}
-                      />
-                      {tag}
-                    </label>
-                  );
-                })}
-              </div>
-              <p className="mt-3 text-xs text-muted-foreground">
-                Showing {visibleCourses.length} of {program.courses.length} courses. Core courses with no requirement tag are always shown.
-              </p>
+                      Reset
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
