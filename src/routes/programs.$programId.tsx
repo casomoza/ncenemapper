@@ -182,6 +182,44 @@ function ProgramPage() {
         </section>
 
         <section className="mx-auto max-w-6xl px-6 py-10">
+          {allTags.length > 0 && (
+            <div className="mb-6 rounded-lg border border-border bg-card p-4 shadow-sm">
+              <div className="mb-3 flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                  <Filter className="h-4 w-4 text-primary" />
+                  Filter courses by requirement
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setActiveTags(null)}
+                  className="text-xs font-medium text-primary hover:underline"
+                >
+                  Reset
+                </button>
+              </div>
+              <div className="flex flex-wrap gap-x-5 gap-y-2">
+                {allTags.map((tag) => {
+                  const checked = effectiveActive.has(tag);
+                  return (
+                    <label
+                      key={tag}
+                      className="flex cursor-pointer items-center gap-2 text-sm text-foreground/85"
+                    >
+                      <Checkbox
+                        checked={checked}
+                        onCheckedChange={() => toggleTag(tag)}
+                      />
+                      {tag}
+                    </label>
+                  );
+                })}
+              </div>
+              <p className="mt-3 text-xs text-muted-foreground">
+                Showing {visibleCourses.length} of {program.courses.length} courses. Core courses with no requirement tag are always shown.
+              </p>
+            </div>
+          )}
+
           {years.map((year) => {
             const yearTerms = terms.filter((t) => t.year === year);
             const yearUnits = yearTerms.reduce(
