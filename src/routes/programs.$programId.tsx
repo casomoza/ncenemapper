@@ -1,10 +1,32 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useMemo, useState } from "react";
 import { fetchProgramBySlug } from "@/lib/api";
-import { groupByTerm } from "@/lib/program";
+import { groupByTerm, type Course } from "@/lib/program";
 import { SiteHeader, SiteFooter } from "@/components/SiteHeader";
 import { CourseCard } from "@/components/CourseCard";
-import { ArrowLeft, Printer, GraduationCap, Award } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ArrowLeft, Printer, GraduationCap, Award, Filter } from "lucide-react";
+
+// Normalize satisfies tags so minor variants (e.g. "UCR TAG Requirement" vs
+// "UCR TAG Requirements") collapse into a single filter option.
+function normalizeTag(raw: string): string {
+  return raw
+    .trim()
+    .replace(/\s+/g, " ")
+    .replace(/\bUC\s*TAG\b/gi, "UCR TAG")
+    .replace(/\bUCR\s*Tag\b/g, "UCR TAG")
+    .replace(/Requirements?$/i, "Requirements")
+    .replace(/UC Pathways\s*\+?/i, "UC Pathways+")
+    .replace(/A\.S\.?\s*Pre-?Engineering/i, "A.S. Pre-Engineering");
+}
+
+function courseTags(c: Course): string[] {
+  return (c.satisfies ?? [])
+    .map(normalizeTag)
+    // Filter out long descriptive strings that aren't really requirement tags
+    .filter((t) => t.length > 0 && t.length <= 60);
+}
 
 export const Route = createFileRoute("/programs/$programId")({
   component: ProgramPage,
