@@ -49,6 +49,24 @@ function ProgramPage() {
     queryFn: () => fetchProgramBySlug(programId),
   });
 
+  const allTags = useMemo(() => {
+    const set = new Set<string>();
+    for (const c of program?.courses ?? []) for (const t of courseTags(c)) set.add(t);
+    return Array.from(set).sort();
+  }, [program]);
+
+  const [activeTags, setActiveTags] = useState<Set<string> | null>(null);
+  const effectiveActive = activeTags ?? new Set(allTags);
+
+  const visibleCourses = useMemo(() => {
+    if (!program) return [];
+    return program.courses.filter((c) => {
+      const tags = courseTags(c);
+      if (tags.length === 0) return true; // courses with no tags always shown
+      return tags.some((t) => effectiveActive.has(t));
+    });
+  }, [program, effectiveActive]);
+
   if (isLoading) {
     return (
       <div className="flex min-h-screen flex-col">
@@ -70,8 +88,18 @@ function ProgramPage() {
       </div>
     );
   }
-  const terms = groupByTerm(program.courses);
+  const terms = groupByTerm(visibleCourses);
   const years = Array.from(new Set(terms.map((t) => t.year))).sort();
+
+  function toggleTag(tag: string) {
+    setActiveTags((prev) => {
+      const base = new Set(prev ?? allTags);
+      if (base.has(tag)) base.delete(tag);
+      else base.add(tag);
+      return base;
+    });
+  }
+
 
   return (
     <div className="flex min-h-screen flex-col">
