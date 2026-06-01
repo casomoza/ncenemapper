@@ -24,8 +24,8 @@ function normalizeTag(raw: string): string {
 function courseTags(c: Course): string[] {
   return (c.satisfies ?? [])
     .map(normalizeTag)
-    // Filter out long descriptive strings that aren't really requirement tags
-    .filter((t) => t.length > 0 && t.length <= 60);
+    // Filter out long descriptive strings and prerequisite notes that aren't requirement tags
+    .filter((t) => t.length > 0 && t.length <= 60 && !/prerequisite/i.test(t));
 }
 
 export const Route = createFileRoute("/programs/$programId")({
