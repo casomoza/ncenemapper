@@ -6,7 +6,16 @@ import { groupByTerm, type Course } from "@/lib/program";
 import { SiteHeader, SiteFooter } from "@/components/SiteHeader";
 import { CourseCard } from "@/components/CourseCard";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ArrowLeft, Printer, GraduationCap, Award, Filter, ChevronDown, ChevronUp } from "lucide-react";
+import { ArrowLeft, Printer, Download, GraduationCap, Award, Filter, ChevronDown, ChevronUp } from "lucide-react";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+
+const TERM_ORDER: Record<string, number> = { Summer: 0, Fall: 1, Winter: 2, Spring: 3 };
+
+function getGeChoice(programId: string, code: string): string | null {
+  if (typeof window === "undefined") return null;
+  return window.localStorage.getItem(`ge-choice:${programId}:${code}`);
+}
 
 // Normalize satisfies tags so minor variants (e.g. "UCR TAG Requirement" vs
 // "UCR TAG Requirements") collapse into a single filter option.
@@ -92,6 +101,85 @@ function ProgramPage() {
   const terms = groupByTerm(visibleCourses);
   const years = Array.from(new Set(terms.map((t) => t.year))).sort();
 
+  function downloadPdf() {
+    if (!program) return;
+    const doc = new jsPDF({ unit: "pt", format: "letter" });
+    const margin = 40;
+    let y = margin;
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(18);
+    doc.text(program.name, margin, y);
+    y += 20;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(11);
+    doc.setTextColor(90);
+    doc.text(`${program.degreeType} · ${program.cluster}`, margin, y);
+    y += 14;
+    doc.text(`Total units: ${program.totalUnits} · Courses shown: ${visibleCourses.length}`, margin, y);
+    y += 18;
+
+    const active = activeTags ?? new Set(allTags);
+    if (allTags.length > 0) {
+      doc.setFontSize(10);
+      doc.setTextColor(60);
+      const filterLabel =
+        active.size === allTags.length
+          ? "Filters: All requirements"
+          : `Filters: ${Array.from(active).join(", ") || "None"}`;
+      const lines = doc.splitTextToSize(filterLabel, 540 - margin);
+      doc.text(lines, margin, y);
+      y += lines.length * 12 + 6;
+    }
+
+    const visibleTerms = groupByTerm(visibleCourses);
+    const visibleYears = Array.from(new Set(visibleTerms.map((t) => t.year))).sort();
+
+    for (const yr of visibleYears) {
+      const yrTerms = visibleTerms.filter((t) => t.year === yr);
+      const yrUnits = yrTerms.reduce((s, t) => s + t.courses.reduce((a, c) => a + c.units, 0), 0);
+      if (y > 720) { doc.addPage(); y = margin; }
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(13);
+      doc.setTextColor(20);
+      doc.text(`Year ${yr}  (${yrUnits} units)`, margin, y);
+      y += 6;
+
+      const sortedTerms = [...yrTerms].sort(
+        (a, b) => (TERM_ORDER[a.semester] ?? 9) - (TERM_ORDER[b.semester] ?? 9),
+      );
+      for (const t of sortedTerms) {
+        const rows = t.courses.map((c) => {
+          const choice = getGeChoice(programId, c.code);
+          const title = choice ? `${c.title}  →  ${choice}` : c.title;
+          return [c.code, title, String(c.units), c.satisfies.join("; ")];
+        });
+        autoTable(doc, {
+          startY: y + 8,
+          head: [[`${t.semester} ${t.year}`, "Title", "Units", "Satisfies"]],
+          body: rows,
+          theme: "grid",
+          styles: { fontSize: 9, cellPadding: 4, overflow: "linebreak" },
+          headStyles: { fillColor: [124, 30, 48], textColor: 255 },
+          columnStyles: {
+            0: { cellWidth: 70, fontStyle: "bold" },
+            1: { cellWidth: 240 },
+            2: { cellWidth: 40, halign: "center" },
+            3: { cellWidth: 180 },
+          },
+          margin: { left: margin, right: margin },
+        });
+        // @ts-expect-error lastAutoTable is attached by plugin
+        y = doc.lastAutoTable.finalY + 10;
+        if (y > 720) { doc.addPage(); y = margin; }
+      }
+      y += 6;
+    }
+
+    doc.save(`${program.id}-pathway.pdf`);
+  }
+
+
   function toggleTag(tag: string) {
     setActiveTags((prev) => {
       const base = new Set(prev ?? allTags);
@@ -158,6 +246,13 @@ function ProgramPage() {
                   className="mt-5 inline-flex w-full items-center justify-center gap-1.5 rounded-md border border-primary bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-burgundy"
                 >
                   <Printer className="h-4 w-4" /> Print pathway
+                </button>
+                <button
+                  type="button"
+                  onClick={downloadPdf}
+                  className="mt-2 inline-flex w-full items-center justify-center gap-1.5 rounded-md border border-primary bg-card px-3 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary/5"
+                >
+                  <Download className="h-4 w-4" /> Download PDF
                 </button>
               </aside>
             </div>
