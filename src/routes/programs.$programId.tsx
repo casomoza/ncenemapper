@@ -6,7 +6,16 @@ import { groupByTerm, type Course } from "@/lib/program";
 import { SiteHeader, SiteFooter } from "@/components/SiteHeader";
 import { CourseCard } from "@/components/CourseCard";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ArrowLeft, Printer, GraduationCap, Award, Filter, ChevronDown, ChevronUp } from "lucide-react";
+import { ArrowLeft, Printer, Download, GraduationCap, Award, Filter, ChevronDown, ChevronUp } from "lucide-react";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+
+const TERM_ORDER: Record<string, number> = { Summer: 0, Fall: 1, Winter: 2, Spring: 3 };
+
+function getGeChoice(programId: string, code: string): string | null {
+  if (typeof window === "undefined") return null;
+  return window.localStorage.getItem(`ge-choice:${programId}:${code}`);
+}
 
 // Normalize satisfies tags so minor variants (e.g. "UCR TAG Requirement" vs
 // "UCR TAG Requirements") collapse into a single filter option.
