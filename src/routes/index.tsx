@@ -1,8 +1,9 @@
+import { useState, useMemo } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { fetchPrograms } from "@/lib/api";
 import { SiteHeader, SiteFooter } from "@/components/SiteHeader";
-import { ArrowRight, GraduationCap, Layers } from "lucide-react";
+import { ArrowRight, ArrowLeft, GraduationCap, Layers } from "lucide-react";
 
 export const Route = createFileRoute("/")({
   component: HomePage,
@@ -23,6 +24,27 @@ function HomePage() {
     queryKey: ["programs"],
     queryFn: fetchPrograms,
   });
+  const [selectedCluster, setSelectedCluster] = useState<string | null>(null);
+
+  const clusters = useMemo(() => {
+    const map = new Map<string, { name: string; count: number }>();
+    for (const p of programs) {
+      const key = p.cluster?.trim() || "Other";
+      const existing = map.get(key);
+      if (existing) existing.count += 1;
+      else map.set(key, { name: key, count: 1 });
+    }
+    return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
+  }, [programs]);
+
+  const visiblePrograms = useMemo(
+    () =>
+      selectedCluster
+        ? programs.filter((p) => (p.cluster?.trim() || "Other") === selectedCluster)
+        : [],
+    [programs, selectedCluster],
+  );
+
   return (
     <div className="flex min-h-screen flex-col">
       <SiteHeader />
@@ -44,55 +66,113 @@ function HomePage() {
         </section>
 
         <section className="mx-auto max-w-6xl px-6 py-12">
-          <div className="mb-6 flex items-end justify-between">
-            <div>
-              <h2 className="font-serif text-2xl font-semibold text-foreground">Programs</h2>
-              <p className="text-sm text-muted-foreground">
-                Choose a program to view its pathway.
-              </p>
-            </div>
-          </div>
+          {selectedCluster === null ? (
+            <>
+              <div className="mb-6">
+                <h2 className="font-serif text-2xl font-semibold text-foreground">
+                  Program Clusters
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  Choose a cluster to see its programs.
+                </p>
+              </div>
 
-          {isLoading ? (
-            <p className="text-sm text-muted-foreground">Loading programs…</p>
-          ) : programs.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No programs yet.</p>
+              {isLoading ? (
+                <p className="text-sm text-muted-foreground">Loading clusters…</p>
+              ) : clusters.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No programs yet.</p>
+              ) : (
+                <div className="grid gap-5 md:grid-cols-2">
+                  {clusters.map((c) => (
+                    <button
+                      key={c.name}
+                      type="button"
+                      onClick={() => setSelectedCluster(c.name)}
+                      className="group relative overflow-hidden rounded-lg border border-border bg-card p-6 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-lg"
+                    >
+                      <div className="absolute inset-x-0 top-0 h-1 bg-primary" />
+                      <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-primary">
+                        <Layers className="h-3.5 w-3.5" />
+                        Cluster
+                      </div>
+                      <h3 className="mt-2 font-serif text-2xl font-semibold leading-tight text-foreground">
+                        {c.name}
+                      </h3>
+                      <div className="mt-5 flex items-center justify-between border-t border-border pt-4 text-sm">
+                        <span className="text-muted-foreground">
+                          {c.count} {c.count === 1 ? "program" : "programs"}
+                        </span>
+                        <span className="flex items-center gap-1 font-medium text-primary transition-transform group-hover:translate-x-0.5">
+                          View programs <ArrowRight className="h-4 w-4" />
+                        </span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </>
           ) : (
-            <div className="grid gap-5 md:grid-cols-2">
-              {programs.map((p) => (
-                <Link
-                  key={p.id}
-                  to="/programs/$programId"
-                  params={{ programId: p.id }}
-                  className="group relative overflow-hidden rounded-lg border border-border bg-card p-6 shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-lg"
-                >
-                  <div className="absolute inset-x-0 top-0 h-1 bg-primary" />
-                  <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-primary">
-                    <Layers className="h-3.5 w-3.5" />
-                    {p.cluster}
-                  </div>
-                  <h3 className="mt-2 font-serif text-2xl font-semibold leading-tight text-foreground">
-                    {p.name}
-                  </h3>
-                  <p className="mt-1 text-sm text-muted-foreground">{p.degreeType}</p>
-                  <p className="mt-4 line-clamp-2 text-sm text-foreground/75">
-                    {p.description}
+            <>
+              <div className="mb-6 flex items-end justify-between gap-4">
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedCluster(null)}
+                    className="mb-2 inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+                  >
+                    <ArrowLeft className="h-4 w-4" /> All clusters
+                  </button>
+                  <h2 className="font-serif text-2xl font-semibold text-foreground">
+                    {selectedCluster}
+                  </h2>
+                  <p className="text-sm text-muted-foreground">
+                    Choose a program to view its pathway.
                   </p>
-                  <div className="mt-5 flex items-center justify-between border-t border-border pt-4 text-sm">
-                    <div className="flex items-center gap-4 text-muted-foreground">
-                      <span className="flex items-center gap-1.5">
-                        <GraduationCap className="h-4 w-4" />
-                        {p.totalUnits} units
-                      </span>
-                      <span>{p.courses.length} courses</span>
-                    </div>
-                    <span className="flex items-center gap-1 font-medium text-primary transition-transform group-hover:translate-x-0.5">
-                      View pathway <ArrowRight className="h-4 w-4" />
-                    </span>
-                  </div>
-                </Link>
-              ))}
-            </div>
+                </div>
+              </div>
+
+              {visiblePrograms.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  No programs in this cluster yet.
+                </p>
+              ) : (
+                <div className="grid gap-5 md:grid-cols-2">
+                  {visiblePrograms.map((p) => (
+                    <Link
+                      key={p.id}
+                      to="/programs/$programId"
+                      params={{ programId: p.id }}
+                      className="group relative overflow-hidden rounded-lg border border-border bg-card p-6 shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-lg"
+                    >
+                      <div className="absolute inset-x-0 top-0 h-1 bg-primary" />
+                      <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-primary">
+                        <Layers className="h-3.5 w-3.5" />
+                        {p.cluster}
+                      </div>
+                      <h3 className="mt-2 font-serif text-2xl font-semibold leading-tight text-foreground">
+                        {p.name}
+                      </h3>
+                      <p className="mt-1 text-sm text-muted-foreground">{p.degreeType}</p>
+                      <p className="mt-4 line-clamp-2 text-sm text-foreground/75">
+                        {p.description}
+                      </p>
+                      <div className="mt-5 flex items-center justify-between border-t border-border pt-4 text-sm">
+                        <div className="flex items-center gap-4 text-muted-foreground">
+                          <span className="flex items-center gap-1.5">
+                            <GraduationCap className="h-4 w-4" />
+                            {p.totalUnits} units
+                          </span>
+                          <span>{p.courses.length} courses</span>
+                        </div>
+                        <span className="flex items-center gap-1 font-medium text-primary transition-transform group-hover:translate-x-0.5">
+                          View pathway <ArrowRight className="h-4 w-4" />
+                        </span>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </>
           )}
         </section>
       </main>
