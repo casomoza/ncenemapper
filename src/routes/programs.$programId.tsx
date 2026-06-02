@@ -247,6 +247,13 @@ function ProgramPage() {
                 >
                   <Printer className="h-4 w-4" /> Print pathway
                 </button>
+                <button
+                  type="button"
+                  onClick={downloadPdf}
+                  className="mt-2 inline-flex w-full items-center justify-center gap-1.5 rounded-md border border-primary bg-card px-3 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary/5"
+                >
+                  <Download className="h-4 w-4" /> Download PDF
+                </button>
               </aside>
             </div>
 
