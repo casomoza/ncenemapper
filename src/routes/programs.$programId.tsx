@@ -76,6 +76,12 @@ function ProgramPage() {
 
   const [activeTags, setActiveTags] = useState<Set<string> | null>(null);
   const [filterOpen, setFilterOpen] = useState(false);
+  const [pdfOpen, setPdfOpen] = useState(false);
+  const [pdfTitle, setPdfTitle] = useState("");
+  const [pdfIncludeSummary, setPdfIncludeSummary] = useState(true);
+  const [pdfShowSatisfies, setPdfShowSatisfies] = useState(true);
+  const [pdfShowTerms, setPdfShowTerms] = useState(true);
+  const [pdfShowGe, setPdfShowGe] = useState(true);
   const effectiveActive = activeTags ?? new Set(allTags);
 
   const visibleCourses = useMemo(() => {
