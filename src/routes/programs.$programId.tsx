@@ -117,83 +117,154 @@ function ProgramPage() {
   const terms = groupByTerm(visibleCourses);
   const years = Array.from(new Set(terms.map((t) => t.year))).sort();
 
+  function isGeCourse(c: Course): boolean {
+    return (c.satisfies ?? []).some((s) => /\b(GE|General Education|Pathways|IGETC|CSU GE)\b/i.test(s));
+  }
+
   function downloadPdf() {
     if (!program) return;
     const doc = new jsPDF({ unit: "pt", format: "letter" });
     const margin = 40;
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const bottomLimit = pageHeight - margin;
     let y = margin;
+
+    const title = pdfTitle.trim() || program.name;
+    const coursesForPdf = visibleCourses.filter((c) => pdfShowGe || !isGeCourse(c));
 
     doc.setFont("helvetica", "bold");
     doc.setFontSize(18);
-    doc.text(program.name, margin, y);
+    doc.text(title, margin, y);
     y += 20;
     doc.setFont("helvetica", "normal");
     doc.setFontSize(11);
     doc.setTextColor(90);
     doc.text(`${program.degreeType} · ${program.cluster}`, margin, y);
-    y += 14;
-    doc.text(`Total units: ${program.totalUnits} · Courses shown: ${visibleCourses.length}`, margin, y);
     y += 18;
 
-    const active = activeTags ?? new Set(allTags);
-    if (allTags.length > 0) {
+    if (pdfIncludeSummary) {
+      doc.setFontSize(13);
+      doc.setTextColor(20);
+      doc.setFont("helvetica", "bold");
+      doc.text("Summary", margin, y);
+      y += 16;
+      doc.setFont("helvetica", "normal");
       doc.setFontSize(10);
       doc.setTextColor(60);
-      const filterLabel =
-        active.size === allTags.length
-          ? "Filters: All requirements"
-          : `Filters: ${Array.from(active).join(", ") || "None"}`;
-      const lines = doc.splitTextToSize(filterLabel, 540 - margin);
-      doc.text(lines, margin, y);
-      y += lines.length * 12 + 6;
+
+      const totalUnits = coursesForPdf.reduce((s, c) => s + c.units, 0);
+      const summaryLines = [
+        `Total units (in PDF): ${totalUnits}`,
+        `Program total units: ${program.totalUnits}`,
+        `Courses included: ${coursesForPdf.length} of ${program.courses.length}`,
+        `GE requirements: ${pdfShowGe ? "included" : "excluded"}`,
+        `Grouping: ${pdfShowTerms ? "By term" : "By year"}`,
+      ];
+      for (const line of summaryLines) {
+        doc.text(line, margin, y);
+        y += 12;
+      }
+      if (program.description) {
+        const desc = doc.splitTextToSize(program.description, 540 - margin);
+        y += 4;
+        doc.text(desc, margin, y);
+        y += desc.length * 12;
+      }
+
+      const active = activeTags ?? new Set(allTags);
+      if (allTags.length > 0) {
+        const filterLabel =
+          active.size === allTags.length
+            ? "Filters: All requirements"
+            : `Filters: ${Array.from(active).join(", ") || "None"}`;
+        const lines = doc.splitTextToSize(filterLabel, 540 - margin);
+        y += 4;
+        doc.text(lines, margin, y);
+        y += lines.length * 12;
+      }
+      y += 10;
     }
 
-    const visibleTerms = groupByTerm(visibleCourses);
+    const visibleTerms = groupByTerm(coursesForPdf);
     const visibleYears = Array.from(new Set(visibleTerms.map((t) => t.year))).sort();
+
+    const head = pdfShowSatisfies
+      ? [["Course", "Title", "Units", "Satisfies"]]
+      : [["Course", "Title", "Units"]];
+    const columnStyles: Record<number, Record<string, unknown>> = pdfShowSatisfies
+      ? {
+          0: { cellWidth: 70, fontStyle: "bold" },
+          1: { cellWidth: 240 },
+          2: { cellWidth: 40, halign: "center" },
+          3: { cellWidth: 180 },
+        }
+      : {
+          0: { cellWidth: 90, fontStyle: "bold" },
+          1: { cellWidth: 380 },
+          2: { cellWidth: 50, halign: "center" },
+        };
+
+    function buildRows(courses: Course[]) {
+      return courses.map((c) => {
+        const choice = pdfShowGe ? getGeChoice(programId, c.code) : null;
+        const title = choice ? `${c.title}  →  ${choice}` : c.title;
+        const base = [c.code, title, String(c.units)];
+        return pdfShowSatisfies ? [...base, c.satisfies.join("; ")] : base;
+      });
+    }
 
     for (const yr of visibleYears) {
       const yrTerms = visibleTerms.filter((t) => t.year === yr);
       const yrUnits = yrTerms.reduce((s, t) => s + t.courses.reduce((a, c) => a + c.units, 0), 0);
-      if (y > 720) { doc.addPage(); y = margin; }
+      if (y > bottomLimit - 60) { doc.addPage(); y = margin; }
       doc.setFont("helvetica", "bold");
       doc.setFontSize(13);
       doc.setTextColor(20);
       doc.text(`Year ${yr}  (${yrUnits} units)`, margin, y);
       y += 6;
 
-      const sortedTerms = [...yrTerms].sort(
-        (a, b) => (TERM_ORDER[a.semester] ?? 9) - (TERM_ORDER[b.semester] ?? 9),
-      );
-      for (const t of sortedTerms) {
-        const rows = t.courses.map((c) => {
-          const choice = getGeChoice(programId, c.code);
-          const title = choice ? `${c.title}  →  ${choice}` : c.title;
-          return [c.code, title, String(c.units), c.satisfies.join("; ")];
-        });
+      if (pdfShowTerms) {
+        const sortedTerms = [...yrTerms].sort(
+          (a, b) => (TERM_ORDER[a.semester] ?? 9) - (TERM_ORDER[b.semester] ?? 9),
+        );
+        for (const t of sortedTerms) {
+          autoTable(doc, {
+            startY: y + 8,
+            head: [[`${t.semester} ${t.year}`, ...head[0].slice(1)]],
+            body: buildRows(t.courses),
+            theme: "grid",
+            styles: { fontSize: 9, cellPadding: 4, overflow: "linebreak" },
+            headStyles: { fillColor: [124, 30, 48], textColor: 255 },
+            columnStyles,
+            margin: { left: margin, right: margin },
+          });
+          // @ts-expect-error lastAutoTable is attached by plugin
+          y = doc.lastAutoTable.finalY + 10;
+          if (y > bottomLimit) { doc.addPage(); y = margin; }
+        }
+      } else {
+        const allYearCourses = yrTerms.flatMap((t) => t.courses);
         autoTable(doc, {
           startY: y + 8,
-          head: [[`${t.semester} ${t.year}`, "Title", "Units", "Satisfies"]],
-          body: rows,
+          head,
+          body: buildRows(allYearCourses),
           theme: "grid",
           styles: { fontSize: 9, cellPadding: 4, overflow: "linebreak" },
           headStyles: { fillColor: [124, 30, 48], textColor: 255 },
-          columnStyles: {
-            0: { cellWidth: 70, fontStyle: "bold" },
-            1: { cellWidth: 240 },
-            2: { cellWidth: 40, halign: "center" },
-            3: { cellWidth: 180 },
-          },
+          columnStyles,
           margin: { left: margin, right: margin },
         });
         // @ts-expect-error lastAutoTable is attached by plugin
         y = doc.lastAutoTable.finalY + 10;
-        if (y > 720) { doc.addPage(); y = margin; }
+        if (y > bottomLimit) { doc.addPage(); y = margin; }
       }
       y += 6;
     }
 
     doc.save(`${program.id}-pathway.pdf`);
+    setPdfOpen(false);
   }
+
 
 
   function toggleTag(tag: string) {
