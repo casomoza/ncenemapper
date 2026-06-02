@@ -101,6 +101,85 @@ function ProgramPage() {
   const terms = groupByTerm(visibleCourses);
   const years = Array.from(new Set(terms.map((t) => t.year))).sort();
 
+  function downloadPdf() {
+    if (!program) return;
+    const doc = new jsPDF({ unit: "pt", format: "letter" });
+    const margin = 40;
+    let y = margin;
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(18);
+    doc.text(program.name, margin, y);
+    y += 20;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(11);
+    doc.setTextColor(90);
+    doc.text(`${program.degreeType} · ${program.cluster}`, margin, y);
+    y += 14;
+    doc.text(`Total units: ${program.totalUnits} · Courses shown: ${visibleCourses.length}`, margin, y);
+    y += 18;
+
+    const active = activeTags ?? new Set(allTags);
+    if (allTags.length > 0) {
+      doc.setFontSize(10);
+      doc.setTextColor(60);
+      const filterLabel =
+        active.size === allTags.length
+          ? "Filters: All requirements"
+          : `Filters: ${Array.from(active).join(", ") || "None"}`;
+      const lines = doc.splitTextToSize(filterLabel, 540 - margin);
+      doc.text(lines, margin, y);
+      y += lines.length * 12 + 6;
+    }
+
+    const visibleTerms = groupByTerm(visibleCourses);
+    const visibleYears = Array.from(new Set(visibleTerms.map((t) => t.year))).sort();
+
+    for (const yr of visibleYears) {
+      const yrTerms = visibleTerms.filter((t) => t.year === yr);
+      const yrUnits = yrTerms.reduce((s, t) => s + t.courses.reduce((a, c) => a + c.units, 0), 0);
+      if (y > 720) { doc.addPage(); y = margin; }
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(13);
+      doc.setTextColor(20);
+      doc.text(`Year ${yr}  (${yrUnits} units)`, margin, y);
+      y += 6;
+
+      const sortedTerms = [...yrTerms].sort(
+        (a, b) => (TERM_ORDER[a.semester] ?? 9) - (TERM_ORDER[b.semester] ?? 9),
+      );
+      for (const t of sortedTerms) {
+        const rows = t.courses.map((c) => {
+          const choice = getGeChoice(programId, c.code);
+          const title = choice ? `${c.title}  →  ${choice}` : c.title;
+          return [c.code, title, String(c.units), c.satisfies.join("; ")];
+        });
+        autoTable(doc, {
+          startY: y + 8,
+          head: [[`${t.semester} ${t.year}`, "Title", "Units", "Satisfies"]],
+          body: rows,
+          theme: "grid",
+          styles: { fontSize: 9, cellPadding: 4, overflow: "linebreak" },
+          headStyles: { fillColor: [124, 30, 48], textColor: 255 },
+          columnStyles: {
+            0: { cellWidth: 70, fontStyle: "bold" },
+            1: { cellWidth: 240 },
+            2: { cellWidth: 40, halign: "center" },
+            3: { cellWidth: 180 },
+          },
+          margin: { left: margin, right: margin },
+        });
+        // @ts-expect-error lastAutoTable is attached by plugin
+        y = doc.lastAutoTable.finalY + 10;
+        if (y > 720) { doc.addPage(); y = margin; }
+      }
+      y += 6;
+    }
+
+    doc.save(`${program.id}-pathway.pdf`);
+  }
+
+
   function toggleTag(tag: string) {
     setActiveTags((prev) => {
       const base = new Set(prev ?? allTags);
