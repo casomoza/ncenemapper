@@ -491,7 +491,76 @@ function ProgramPage() {
         </section>
       </main>
 
+      <Dialog open={pdfOpen} onOpenChange={setPdfOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>PDF options</DialogTitle>
+            <DialogDescription>
+              Customize what's included in the downloaded pathway PDF.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="pdf-title">PDF title</Label>
+              <Input
+                id="pdf-title"
+                value={pdfTitle}
+                onChange={(e) => setPdfTitle(e.target.value)}
+                placeholder={program.name}
+              />
+            </div>
+            <div className="space-y-2.5">
+              <label className="flex items-center gap-2 text-sm text-foreground/90">
+                <Checkbox
+                  checked={pdfIncludeSummary}
+                  onCheckedChange={(v) => setPdfIncludeSummary(v === true)}
+                />
+                Include summary page
+              </label>
+              <label className="flex items-center gap-2 text-sm text-foreground/90">
+                <Checkbox
+                  checked={pdfShowSatisfies}
+                  onCheckedChange={(v) => setPdfShowSatisfies(v === true)}
+                />
+                Show course sections (Satisfies column)
+              </label>
+              <label className="flex items-center gap-2 text-sm text-foreground/90">
+                <Checkbox
+                  checked={pdfShowTerms}
+                  onCheckedChange={(v) => setPdfShowTerms(v === true)}
+                />
+                Show terms (group by semester)
+              </label>
+              <label className="flex items-center gap-2 text-sm text-foreground/90">
+                <Checkbox
+                  checked={pdfShowGe}
+                  onCheckedChange={(v) => setPdfShowGe(v === true)}
+                />
+                Show GE requirements
+              </label>
+            </div>
+          </div>
+          <DialogFooter>
+            <button
+              type="button"
+              onClick={() => setPdfOpen(false)}
+              className="inline-flex items-center justify-center rounded-md border border-border bg-card px-3 py-2 text-sm font-medium text-foreground hover:bg-muted"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={downloadPdf}
+              className="inline-flex items-center justify-center gap-1.5 rounded-md border border-primary bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-burgundy"
+            >
+              <Download className="h-4 w-4" /> Download
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <SiteFooter />
+
     </div>
   );
 }
