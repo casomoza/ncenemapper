@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { SiteHeader, SiteFooter } from "@/components/SiteHeader";
 import { fetchGeAreas, type DbGeArea } from "@/lib/api";
-import { Plus, Trash2, ArrowLeft } from "lucide-react";
+import { Plus, Trash2, ArrowLeft, ChevronDown } from "lucide-react";
 
 export const Route = createFileRoute("/admin/ge")({
   component: AdminGePage,
@@ -164,6 +164,7 @@ function AreaEditor({ area }: { area: DbGeArea }) {
   });
   const [form, setForm] = useState<EditableArea>(toEditable(area));
   const [savedAt, setSavedAt] = useState<number | null>(null);
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
     setForm(toEditable(area));
@@ -215,156 +216,177 @@ function AreaEditor({ area }: { area: DbGeArea }) {
   });
 
   return (
-    <div className="rounded-lg border border-border bg-card p-5">
-      <div className="grid gap-3 md:grid-cols-5">
-        <div>
-          <label className="block text-xs font-medium">System</label>
-          <select
-            value={form.system}
-            onChange={(e) =>
-              setForm({ ...form, system: e.target.value as GeSystem })
-            }
-            className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-          >
-            <option value="RCCD">RCCD GE</option>
-            <option value="CalGETC">CalGETC</option>
-          </select>
+    <div className="rounded-lg border border-border bg-card overflow-hidden">
+      <button
+        onClick={() => setOpen(!open)}
+        className="flex w-full items-center justify-between p-5 text-left hover:bg-accent/40 transition-colors"
+      >
+        <div className="flex items-center gap-3">
+          <span className="rounded bg-primary/10 px-2 py-0.5 font-mono text-xs text-primary">
+            {area.area_code}
+          </span>
+          <span className="font-medium text-foreground">{area.title}</span>
+          <span className="text-xs text-muted-foreground">
+            {(area.system ?? "RCCD") === "RCCD" ? "RCCD GE" : "CalGETC"}
+          </span>
         </div>
-        <div>
-          <label className="block text-xs font-medium">Area code</label>
-          <input
-            value={form.area_code}
-            onChange={(e) => setForm({ ...form, area_code: e.target.value })}
-            className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-          />
-        </div>
-        <div className="md:col-span-2">
-          <label className="block text-xs font-medium">Title</label>
-          <input
-            value={form.title}
-            onChange={(e) => setForm({ ...form, title: e.target.value })}
-            className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-          />
-        </div>
-        <div>
-          <label className="block text-xs font-medium">Sort order</label>
-          <input
-            type="number"
-            value={form.sort_order}
-            onChange={(e) =>
-              setForm({ ...form, sort_order: Number(e.target.value) || 0 })
-            }
-            className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-          />
-        </div>
-      </div>
-
-      <div className="mt-3">
-        <label className="block text-xs font-medium">Units note</label>
-        <input
-          value={form.units_note}
-          onChange={(e) => setForm({ ...form, units_note: e.target.value })}
-          placeholder="e.g. 3-4 units"
-          className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+        <ChevronDown
+          className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200 ${open ? "rotate-180" : ""}`}
         />
-      </div>
-      <div className="mt-3">
-        <div className="flex items-center justify-between">
-          <label className="block text-xs font-medium">Courses</label>
-          <button
-            type="button"
-            onClick={() =>
-              setForm({ ...form, courses: [...form.courses, ""] })
-            }
-            className="text-xs font-medium text-primary hover:underline"
-          >
-            + Add course
-          </button>
-        </div>
-        <div className="mt-2 space-y-3">
-          {form.courses.length === 0 && (
-            <p className="text-xs text-muted-foreground">
-              No courses yet. Click "Add course" to add one.
-            </p>
-          )}
-          {form.courses.map((code, idx) => (
-            <div
-              key={idx}
-              className="rounded-md border border-border bg-background/40 p-3"
-            >
-              <div className="flex items-start gap-2">
-                <input
-                  value={code}
-                  onChange={(e) => {
-                    const next = [...form.courses];
-                    const oldCode = next[idx];
-                    next[idx] = e.target.value;
-                    const desc = { ...form.course_descriptions };
-                    if (oldCode && oldCode !== e.target.value) {
-                      const prev = desc[oldCode];
-                      delete desc[oldCode];
-                      if (prev) desc[e.target.value] = prev;
-                    }
-                    setForm({ ...form, courses: next, course_descriptions: desc });
-                  }}
-                  placeholder="e.g. ENG 1A — College Composition"
-                  className="flex-1 rounded-md border border-input bg-background px-3 py-1.5 font-mono text-xs"
-                />
-                <button
-                  type="button"
-                  onClick={() => {
-                    const next = form.courses.filter((_, i) => i !== idx);
-                    const desc = { ...form.course_descriptions };
-                    delete desc[code];
-                    setForm({ ...form, courses: next, course_descriptions: desc });
-                  }}
-                  className="rounded-md border border-destructive/40 px-2 py-1.5 text-xs text-destructive hover:bg-destructive/10"
-                  aria-label="Remove course"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </button>
-              </div>
-              <textarea
-                value={form.course_descriptions[code] ?? ""}
+      </button>
+      {open && (
+        <div className="border-t border-border p-5">
+          <div className="grid gap-3 md:grid-cols-5">
+            <div>
+              <label className="block text-xs font-medium">System</label>
+              <select
+                value={form.system}
                 onChange={(e) =>
-                  setForm({
-                    ...form,
-                    course_descriptions: {
-                      ...form.course_descriptions,
-                      [code]: e.target.value,
-                    },
-                  })
+                  setForm({ ...form, system: e.target.value as GeSystem })
                 }
-                placeholder="Course description shown when a student opens this course on a program map."
-                rows={2}
-                className="mt-2 w-full rounded-md border border-input bg-background px-3 py-2 text-xs"
+                className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              >
+                <option value="RCCD">RCCD GE</option>
+                <option value="CalGETC">CalGETC</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium">Area code</label>
+              <input
+                value={form.area_code}
+                onChange={(e) => setForm({ ...form, area_code: e.target.value })}
+                className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
               />
             </div>
-          ))}
+            <div className="md:col-span-2">
+              <label className="block text-xs font-medium">Title</label>
+              <input
+                value={form.title}
+                onChange={(e) => setForm({ ...form, title: e.target.value })}
+                className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium">Sort order</label>
+              <input
+                type="number"
+                value={form.sort_order}
+                onChange={(e) =>
+                  setForm({ ...form, sort_order: Number(e.target.value) || 0 })
+                }
+                className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              />
+            </div>
+          </div>
+
+          <div className="mt-3">
+            <label className="block text-xs font-medium">Units note</label>
+            <input
+              value={form.units_note}
+              onChange={(e) => setForm({ ...form, units_note: e.target.value })}
+              placeholder="e.g. 3-4 units"
+              className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            />
+          </div>
+          <div className="mt-3">
+            <div className="flex items-center justify-between">
+              <label className="block text-xs font-medium">Courses</label>
+              <button
+                type="button"
+                onClick={() =>
+                  setForm({ ...form, courses: [...form.courses, ""] })
+                }
+                className="text-xs font-medium text-primary hover:underline"
+              >
+                + Add course
+              </button>
+            </div>
+            <div className="mt-2 space-y-3">
+              {form.courses.length === 0 && (
+                <p className="text-xs text-muted-foreground">
+                  No courses yet. Click "Add course" to add one.
+                </p>
+              )}
+              {form.courses.map((code, idx) => (
+                <div
+                  key={idx}
+                  className="rounded-md border border-border bg-background/40 p-3"
+                >
+                  <div className="flex items-start gap-2">
+                    <input
+                      value={code}
+                      onChange={(e) => {
+                        const next = [...form.courses];
+                        const oldCode = next[idx];
+                        next[idx] = e.target.value;
+                        const desc = { ...form.course_descriptions };
+                        if (oldCode && oldCode !== e.target.value) {
+                          const prev = desc[oldCode];
+                          delete desc[oldCode];
+                          if (prev) desc[e.target.value] = prev;
+                        }
+                        setForm({ ...form, courses: next, course_descriptions: desc });
+                      }}
+                      placeholder="e.g. ENG 1A — College Composition"
+                      className="flex-1 rounded-md border border-input bg-background px-3 py-1.5 font-mono text-xs"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const next = form.courses.filter((_, i) => i !== idx);
+                        const desc = { ...form.course_descriptions };
+                        delete desc[code];
+                        setForm({ ...form, courses: next, course_descriptions: desc });
+                      }}
+                      className="rounded-md border border-destructive/40 px-2 py-1.5 text-xs text-destructive hover:bg-destructive/10"
+                      aria-label="Remove course"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                  <textarea
+                    value={form.course_descriptions[code] ?? ""}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        course_descriptions: {
+                          ...form.course_descriptions,
+                          [code]: e.target.value,
+                        },
+                      })
+                    }
+                    placeholder="Course description shown when a student opens this course on a program map."
+                    rows={2}
+                    className="mt-2 w-full rounded-md border border-input bg-background px-3 py-2 text-xs"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="mt-3 flex items-center justify-between">
+            <button
+              onClick={() => {
+                if (confirm(`Delete GE area "${form.title}"?`)) del.mutate();
+              }}
+              className="inline-flex items-center gap-1.5 rounded-md border border-destructive/50 px-3 py-1.5 text-sm text-destructive hover:bg-destructive/10"
+            >
+              <Trash2 className="h-3.5 w-3.5" /> Delete
+            </button>
+            <div className="flex items-center gap-3">
+              {savedAt && (
+                <span className="text-xs text-muted-foreground">Saved</span>
+              )}
+              <button
+                onClick={() => save.mutate()}
+                disabled={save.isPending}
+                className="rounded-md bg-primary px-3 py-1.5 text-sm text-primary-foreground hover:bg-burgundy disabled:opacity-60"
+              >
+                {save.isPending ? "Saving…" : "Save"}
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
-      <div className="mt-3 flex items-center justify-between">
-        <button
-          onClick={() => {
-            if (confirm(`Delete GE area "${form.title}"?`)) del.mutate();
-          }}
-          className="inline-flex items-center gap-1.5 rounded-md border border-destructive/50 px-3 py-1.5 text-sm text-destructive hover:bg-destructive/10"
-        >
-          <Trash2 className="h-3.5 w-3.5" /> Delete
-        </button>
-        <div className="flex items-center gap-3">
-          {savedAt && (
-            <span className="text-xs text-muted-foreground">Saved</span>
-          )}
-          <button
-            onClick={() => save.mutate()}
-            disabled={save.isPending}
-            className="rounded-md bg-primary px-3 py-1.5 text-sm text-primary-foreground hover:bg-burgundy disabled:opacity-60"
-          >
-            {save.isPending ? "Saving…" : "Save"}
-          </button>
-        </div>
-      </div>
+      )}
     </div>
   );
 }
