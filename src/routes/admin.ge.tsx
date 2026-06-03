@@ -12,6 +12,8 @@ export const Route = createFileRoute("/admin/ge")({
   head: () => ({ meta: [{ title: "Admin · GE Areas — Norco College Pathways" }] }),
 });
 
+type GeSystem = "RCCD" | "CalGETC";
+
 type EditableArea = {
   id?: string;
   area_code: string;
@@ -20,6 +22,7 @@ type EditableArea = {
   courses: string[];
   course_descriptions: Record<string, string>;
   sort_order: number;
+  system: GeSystem;
 };
 
 function AdminGePage() {
