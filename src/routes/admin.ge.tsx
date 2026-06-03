@@ -97,33 +97,58 @@ function AdminGePage() {
         >
           <ArrowLeft className="h-4 w-4" /> Back to admin
         </Link>
-        <div className="mt-4 flex items-center justify-between">
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
           <div>
             <p className="font-mono text-xs uppercase tracking-wider text-primary">Admin</p>
-            <h1 className="font-serif text-3xl font-semibold text-foreground">
-              RCCD GE Areas
-            </h1>
+            <h1 className="font-serif text-3xl font-semibold text-foreground">GE Areas</h1>
             <p className="text-sm text-muted-foreground">
-              Edit the General Education area list shown on /ge and in course pop-ups.
+              Edit RCCD GE and CalGETC area lists shown on /ge and in course pop-ups.
             </p>
           </div>
-          <button
-            onClick={() => createArea.mutate()}
-            disabled={createArea.isPending}
-            className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-burgundy disabled:opacity-60"
-          >
-            <Plus className="h-4 w-4" /> Add area
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => createArea.mutate("RCCD")}
+              disabled={createArea.isPending}
+              className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-burgundy disabled:opacity-60"
+            >
+              <Plus className="h-4 w-4" /> Add RCCD area
+            </button>
+            <button
+              onClick={() => createArea.mutate("CalGETC")}
+              disabled={createArea.isPending}
+              className="inline-flex items-center gap-1.5 rounded-md border border-primary bg-card px-3 py-2 text-sm font-medium text-primary hover:bg-primary/10 disabled:opacity-60"
+            >
+              <Plus className="h-4 w-4" /> Add CalGETC area
+            </button>
+          </div>
         </div>
 
-        <div className="mt-8 grid gap-5">
-          {areas.map((a) => (
-            <AreaEditor key={a.id} area={a} />
-          ))}
-          {areas.length === 0 && (
-            <p className="text-sm text-muted-foreground">No GE areas yet.</p>
-          )}
-        </div>
+        {(["RCCD", "CalGETC"] as const).map((system) => {
+          const list = areas.filter((a) => (a.system ?? "RCCD") === system);
+          return (
+            <section key={system} className="mt-10">
+              <div className="mb-3 flex items-baseline justify-between border-b border-border pb-2">
+                <h2 className="font-serif text-xl font-semibold text-foreground">
+                  {system === "RCCD" ? "RCCD General Education" : "CalGETC"}
+                </h2>
+                <span className="text-xs text-muted-foreground">
+                  {list.length} area{list.length === 1 ? "" : "s"}
+                </span>
+              </div>
+              <div className="grid gap-5">
+                {list.map((a) => (
+                  <AreaEditor key={a.id} area={a} />
+                ))}
+                {list.length === 0 && (
+                  <p className="text-sm text-muted-foreground">
+                    No {system} areas yet.
+                  </p>
+                )}
+              </div>
+            </section>
+          );
+        })}
+
       </main>
       <SiteFooter />
     </div>
