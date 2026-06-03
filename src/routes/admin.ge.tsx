@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { SiteHeader, SiteFooter } from "@/components/SiteHeader";
 import { fetchGeAreas, type DbGeArea } from "@/lib/api";
-import { Plus, Trash2, ArrowLeft } from "lucide-react";
+import { Plus, Trash2, ArrowLeft, ChevronDown } from "lucide-react";
 
 export const Route = createFileRoute("/admin/ge")({
   component: AdminGePage,
