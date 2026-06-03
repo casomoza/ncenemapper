@@ -164,6 +164,7 @@ function AreaEditor({ area }: { area: DbGeArea }) {
   });
   const [form, setForm] = useState<EditableArea>(toEditable(area));
   const [savedAt, setSavedAt] = useState<number | null>(null);
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
     setForm(toEditable(area));
