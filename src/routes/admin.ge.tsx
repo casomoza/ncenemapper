@@ -189,6 +189,7 @@ function AreaEditor({ area }: { area: DbGeArea }) {
           courses,
           course_descriptions: descriptions,
           sort_order: form.sort_order,
+          system: form.system,
         })
         .eq("id", area.id);
       if (error) throw error;
