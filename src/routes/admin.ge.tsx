@@ -43,15 +43,17 @@ function AdminGePage() {
   });
 
   const createArea = useMutation({
-    mutationFn: async () => {
-      const nextOrder = (areas[areas.length - 1]?.sort_order ?? -1) + 1;
+    mutationFn: async (system: GeSystem) => {
+      const sameSystem = areas.filter((a) => (a.system ?? "RCCD") === system);
+      const nextOrder = (sameSystem[sameSystem.length - 1]?.sort_order ?? -1) + 1;
       const { error } = await supabase.from("ge_areas").insert({
         area_code: `new-${Date.now()}`,
-        title: "New GE Area",
+        title: `New ${system} Area`,
         units_note: "",
         courses: [],
         course_descriptions: {},
         sort_order: nextOrder,
+        system,
       });
       if (error) throw error;
     },
