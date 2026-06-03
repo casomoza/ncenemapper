@@ -12,6 +12,8 @@ export const Route = createFileRoute("/admin/ge")({
   head: () => ({ meta: [{ title: "Admin · GE Areas — Norco College Pathways" }] }),
 });
 
+type GeSystem = "RCCD" | "CalGETC";
+
 type EditableArea = {
   id?: string;
   area_code: string;
@@ -20,6 +22,7 @@ type EditableArea = {
   courses: string[];
   course_descriptions: Record<string, string>;
   sort_order: number;
+  system: GeSystem;
 };
 
 function AdminGePage() {
@@ -40,15 +43,17 @@ function AdminGePage() {
   });
 
   const createArea = useMutation({
-    mutationFn: async () => {
-      const nextOrder = (areas[areas.length - 1]?.sort_order ?? -1) + 1;
+    mutationFn: async (system: GeSystem) => {
+      const sameSystem = areas.filter((a) => (a.system ?? "RCCD") === system);
+      const nextOrder = (sameSystem[sameSystem.length - 1]?.sort_order ?? -1) + 1;
       const { error } = await supabase.from("ge_areas").insert({
         area_code: `new-${Date.now()}`,
-        title: "New GE Area",
+        title: `New ${system} Area`,
         units_note: "",
         courses: [],
         course_descriptions: {},
         sort_order: nextOrder,
+        system,
       });
       if (error) throw error;
     },
@@ -92,33 +97,58 @@ function AdminGePage() {
         >
           <ArrowLeft className="h-4 w-4" /> Back to admin
         </Link>
-        <div className="mt-4 flex items-center justify-between">
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
           <div>
             <p className="font-mono text-xs uppercase tracking-wider text-primary">Admin</p>
-            <h1 className="font-serif text-3xl font-semibold text-foreground">
-              RCCD GE Areas
-            </h1>
+            <h1 className="font-serif text-3xl font-semibold text-foreground">GE Areas</h1>
             <p className="text-sm text-muted-foreground">
-              Edit the General Education area list shown on /ge and in course pop-ups.
+              Edit RCCD GE and CalGETC area lists shown on /ge and in course pop-ups.
             </p>
           </div>
-          <button
-            onClick={() => createArea.mutate()}
-            disabled={createArea.isPending}
-            className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-burgundy disabled:opacity-60"
-          >
-            <Plus className="h-4 w-4" /> Add area
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => createArea.mutate("RCCD")}
+              disabled={createArea.isPending}
+              className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-burgundy disabled:opacity-60"
+            >
+              <Plus className="h-4 w-4" /> Add RCCD area
+            </button>
+            <button
+              onClick={() => createArea.mutate("CalGETC")}
+              disabled={createArea.isPending}
+              className="inline-flex items-center gap-1.5 rounded-md border border-primary bg-card px-3 py-2 text-sm font-medium text-primary hover:bg-primary/10 disabled:opacity-60"
+            >
+              <Plus className="h-4 w-4" /> Add CalGETC area
+            </button>
+          </div>
         </div>
 
-        <div className="mt-8 grid gap-5">
-          {areas.map((a) => (
-            <AreaEditor key={a.id} area={a} />
-          ))}
-          {areas.length === 0 && (
-            <p className="text-sm text-muted-foreground">No GE areas yet.</p>
-          )}
-        </div>
+        {(["RCCD", "CalGETC"] as const).map((system) => {
+          const list = areas.filter((a) => (a.system ?? "RCCD") === system);
+          return (
+            <section key={system} className="mt-10">
+              <div className="mb-3 flex items-baseline justify-between border-b border-border pb-2">
+                <h2 className="font-serif text-xl font-semibold text-foreground">
+                  {system === "RCCD" ? "RCCD General Education" : "CalGETC"}
+                </h2>
+                <span className="text-xs text-muted-foreground">
+                  {list.length} area{list.length === 1 ? "" : "s"}
+                </span>
+              </div>
+              <div className="grid gap-5">
+                {list.map((a) => (
+                  <AreaEditor key={a.id} area={a} />
+                ))}
+                {list.length === 0 && (
+                  <p className="text-sm text-muted-foreground">
+                    No {system} areas yet.
+                  </p>
+                )}
+              </div>
+            </section>
+          );
+        })}
+
       </main>
       <SiteFooter />
     </div>
@@ -130,6 +160,7 @@ function AreaEditor({ area }: { area: DbGeArea }) {
   const toEditable = (a: DbGeArea): EditableArea => ({
     ...a,
     course_descriptions: (a.course_descriptions ?? {}) as Record<string, string>,
+    system: (a.system ?? "RCCD") as GeSystem,
   });
   const [form, setForm] = useState<EditableArea>(toEditable(area));
   const [savedAt, setSavedAt] = useState<number | null>(null);
@@ -158,6 +189,7 @@ function AreaEditor({ area }: { area: DbGeArea }) {
           courses,
           course_descriptions: descriptions,
           sort_order: form.sort_order,
+          system: form.system,
         })
         .eq("id", area.id);
       if (error) throw error;
@@ -184,7 +216,20 @@ function AreaEditor({ area }: { area: DbGeArea }) {
 
   return (
     <div className="rounded-lg border border-border bg-card p-5">
-      <div className="grid gap-3 md:grid-cols-4">
+      <div className="grid gap-3 md:grid-cols-5">
+        <div>
+          <label className="block text-xs font-medium">System</label>
+          <select
+            value={form.system}
+            onChange={(e) =>
+              setForm({ ...form, system: e.target.value as GeSystem })
+            }
+            className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+          >
+            <option value="RCCD">RCCD GE</option>
+            <option value="CalGETC">CalGETC</option>
+          </select>
+        </div>
         <div>
           <label className="block text-xs font-medium">Area code</label>
           <input
@@ -213,6 +258,7 @@ function AreaEditor({ area }: { area: DbGeArea }) {
           />
         </div>
       </div>
+
       <div className="mt-3">
         <label className="block text-xs font-medium">Units note</label>
         <input

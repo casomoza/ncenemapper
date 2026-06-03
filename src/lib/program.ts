@@ -25,12 +25,15 @@ export type Program = {
   courses: Course[];
 };
 
+export type GeSystem = "RCCD" | "CalGETC";
+
 export type GeArea = {
   id: string;
   title: string;
   unitsNote: string;
   courses: string[];
   courseDescriptions: Record<string, string>;
+  system: GeSystem;
 };
 
 const TERM_ORDER: Record<string, number> = { Summer: 0, Fall: 1, Winter: 2, Spring: 3 };
