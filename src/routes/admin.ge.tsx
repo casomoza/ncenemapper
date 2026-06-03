@@ -216,7 +216,20 @@ function AreaEditor({ area }: { area: DbGeArea }) {
 
   return (
     <div className="rounded-lg border border-border bg-card p-5">
-      <div className="grid gap-3 md:grid-cols-4">
+      <div className="grid gap-3 md:grid-cols-5">
+        <div>
+          <label className="block text-xs font-medium">System</label>
+          <select
+            value={form.system}
+            onChange={(e) =>
+              setForm({ ...form, system: e.target.value as GeSystem })
+            }
+            className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+          >
+            <option value="RCCD">RCCD GE</option>
+            <option value="CalGETC">CalGETC</option>
+          </select>
+        </div>
         <div>
           <label className="block text-xs font-medium">Area code</label>
           <input
@@ -245,6 +258,7 @@ function AreaEditor({ area }: { area: DbGeArea }) {
           />
         </div>
       </div>
+
       <div className="mt-3">
         <label className="block text-xs font-medium">Units note</label>
         <input
