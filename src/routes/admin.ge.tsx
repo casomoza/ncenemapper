@@ -160,6 +160,7 @@ function AreaEditor({ area }: { area: DbGeArea }) {
   const toEditable = (a: DbGeArea): EditableArea => ({
     ...a,
     course_descriptions: (a.course_descriptions ?? {}) as Record<string, string>,
+    system: (a.system ?? "RCCD") as GeSystem,
   });
   const [form, setForm] = useState<EditableArea>(toEditable(area));
   const [savedAt, setSavedAt] = useState<number | null>(null);
