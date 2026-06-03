@@ -122,6 +122,7 @@ export type DbGeArea = {
   courses: string[];
   course_descriptions: Record<string, string> | null;
   sort_order: number;
+  system: "RCCD" | "CalGETC";
 };
 
 export async function fetchGeAreas(): Promise<GeArea[]> {
@@ -136,5 +137,6 @@ export async function fetchGeAreas(): Promise<GeArea[]> {
     unitsNote: a.units_note ?? "",
     courses: a.courses ?? [],
     courseDescriptions: (a.course_descriptions ?? {}) as Record<string, string>,
+    system: (a.system ?? "RCCD") as "RCCD" | "CalGETC",
   }));
 }
