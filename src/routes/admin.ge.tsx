@@ -124,6 +124,8 @@ function AdminGePage() {
           </div>
         </div>
 
+        <GeExcelImport />
+
         {(["RCCD", "CalGETC"] as const).map((system) => {
           const list = areas.filter((a) => (a.system ?? "RCCD") === system);
           return (
