@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { SiteHeader, SiteFooter } from "@/components/SiteHeader";
 import { fetchGeAreas, type DbGeArea } from "@/lib/api";
 import { Plus, Trash2, ArrowLeft, ChevronDown } from "lucide-react";
+import { GeExcelImport } from "@/components/GeExcelImport";
 
 export const Route = createFileRoute("/admin/ge")({
   component: AdminGePage,
@@ -122,6 +123,8 @@ function AdminGePage() {
             </button>
           </div>
         </div>
+
+        <GeExcelImport />
 
         {(["RCCD", "CalGETC"] as const).map((system) => {
           const list = areas.filter((a) => (a.system ?? "RCCD") === system);
