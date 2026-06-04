@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { SiteHeader, SiteFooter } from "@/components/SiteHeader";
 import { fetchGeAreas, type DbGeArea } from "@/lib/api";
 import { Plus, Trash2, ArrowLeft, ChevronDown } from "lucide-react";
+import { GeExcelImport } from "@/components/GeExcelImport";
 
 export const Route = createFileRoute("/admin/ge")({
   component: AdminGePage,
