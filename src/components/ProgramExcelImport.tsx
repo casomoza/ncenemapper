@@ -30,6 +30,20 @@ type CourseRow = {
   sort_order?: number | string;
 };
 
+type GeAreaRow = {
+  area_code?: string;
+  system?: string;
+  title?: string;
+  units_note?: string;
+  sort_order?: number | string;
+};
+
+type GeCourseRow = {
+  area_code?: string;
+  code?: string;
+  description?: string;
+};
+
 function splitLines(v: unknown): string[] {
   if (!v) return [];
   return String(v)
@@ -42,6 +56,12 @@ function toBool(v: unknown): boolean {
   if (typeof v === "boolean") return v;
   const s = String(v ?? "").trim().toLowerCase();
   return s === "true" || s === "yes" || s === "y" || s === "1";
+}
+
+function normSystem(v: unknown): "RCCD" | "CalGETC" {
+  const s = String(v ?? "").trim().toLowerCase();
+  if (s === "calgetc" || s === "cal-getc" || s === "cal getc") return "CalGETC";
+  return "RCCD";
 }
 
 export function ProgramExcelImport() {
@@ -61,18 +81,33 @@ export function ProgramExcelImport() {
       const buf = await file.arrayBuffer();
       const wb = XLSX.read(buf, { type: "array" });
 
-      const progSheet = wb.Sheets["Programs"] ?? wb.Sheets[wb.SheetNames[0]];
+      const progSheet = wb.Sheets["Programs"];
       const courseSheet = wb.Sheets["Courses"];
-      if (!progSheet) throw new Error('Missing "Programs" sheet');
+      const geAreaSheet = wb.Sheets["GE Areas"];
+      const geCourseSheet = wb.Sheets["GE Courses"];
 
-      const programs = XLSX.utils.sheet_to_json<ProgramRow>(progSheet, { defval: "" });
+      if (!progSheet && !geAreaSheet) {
+        throw new Error('Missing "Programs" or "GE Areas" sheet');
+      }
+
+      const programs = progSheet
+        ? XLSX.utils.sheet_to_json<ProgramRow>(progSheet, { defval: "" })
+        : [];
       const courses = courseSheet
         ? XLSX.utils.sheet_to_json<CourseRow>(courseSheet, { defval: "" })
         : [];
+      const geAreas = geAreaSheet
+        ? XLSX.utils.sheet_to_json<GeAreaRow>(geAreaSheet, { defval: "" })
+        : [];
+      const geCourses = geCourseSheet
+        ? XLSX.utils.sheet_to_json<GeCourseRow>(geCourseSheet, { defval: "" })
+        : [];
 
-      addLog(`Parsed ${programs.length} programs, ${courses.length} courses`);
+      addLog(
+        `Parsed ${programs.length} programs, ${courses.length} courses, ${geAreas.length} GE areas, ${geCourses.length} GE course rows`,
+      );
 
-      // Upsert programs by slug
+      // === Programs + Courses ===
       const slugToId = new Map<string, string>();
       for (const p of programs) {
         const slug = String(p.slug ?? "").trim();
@@ -116,10 +151,8 @@ export function ProgramExcelImport() {
         }
         slugToId.set(slug, id!);
         addLog(`✓ Program ${slug}`);
-
       }
 
-      // Resolve any course program_slugs not yet in map (existing programs not in upload)
       const missing = Array.from(
         new Set(
           courses
@@ -135,8 +168,6 @@ export function ProgramExcelImport() {
         existing?.forEach((p) => slugToId.set(p.slug, p.id));
       }
 
-      // Upsert courses — we use (program_id, code) as identity by deleting existing matches first
-      // Group by program for fewer round trips
       const byProgram = new Map<string, CourseRow[]>();
       for (const c of courses) {
         const slug = String(c.program_slug ?? "").trim();
@@ -152,7 +183,6 @@ export function ProgramExcelImport() {
       for (const [programId, rows] of byProgram) {
         const codes = rows.map((r) => String(r.code ?? "").trim()).filter(Boolean);
         if (codes.length) {
-          // Remove any existing courses with these codes so we can re-insert cleanly
           const { error: delErr } = await supabase
             .from("courses")
             .delete()
@@ -193,8 +223,69 @@ export function ProgramExcelImport() {
         }
       }
 
+      // === GE Areas + GE Courses ===
+      const geCoursesByArea = new Map<
+        string,
+        { codes: string[]; descriptions: Record<string, string> }
+      >();
+      for (const c of geCourses) {
+        const ac = String(c.area_code ?? "").trim();
+        const code = String(c.code ?? "").trim();
+        if (!ac || !code) continue;
+        if (!geCoursesByArea.has(ac))
+          geCoursesByArea.set(ac, { codes: [], descriptions: {} });
+        const entry = geCoursesByArea.get(ac)!;
+        entry.codes.push(code);
+        const desc = String(c.description ?? "").trim();
+        if (desc) entry.descriptions[code] = desc;
+      }
+
+      for (const a of geAreas) {
+        const area_code = String(a.area_code ?? "").trim();
+        if (!area_code) {
+          addLog("Skipped GE area with empty area_code");
+          continue;
+        }
+        const grouped = geCoursesByArea.get(area_code);
+        const payload = {
+          area_code,
+          system: normSystem(a.system),
+          title: String(a.title ?? "").trim() || area_code,
+          units_note: String(a.units_note ?? "").trim(),
+          sort_order: Number(a.sort_order) || 0,
+          courses: grouped?.codes ?? [],
+          course_descriptions: (grouped?.descriptions ?? {}) as Record<string, string>,
+        };
+
+        const { data: existing } = await supabase
+          .from("ge_areas")
+          .select("id")
+          .eq("area_code", area_code)
+          .maybeSingle();
+
+        if (existing) {
+          const { error } = await supabase
+            .from("ge_areas")
+            .update(payload)
+            .eq("id", existing.id);
+          if (error) {
+            addLog(`GE area ${area_code}: ${error.message}`);
+            continue;
+          }
+        } else {
+          const { error } = await supabase.from("ge_areas").insert(payload);
+          if (error) {
+            addLog(`GE area ${area_code}: ${error.message}`);
+            continue;
+          }
+        }
+        addLog(`✓ ${payload.system} ${area_code}`);
+      }
+
       addLog("Done.");
       qc.invalidateQueries({ queryKey: ["programs"] });
+      qc.invalidateQueries({ queryKey: ["ge_areas"] });
+      qc.invalidateQueries({ queryKey: ["ge_areas_admin"] });
     } catch (e) {
       addLog(`Error: ${(e as Error).message}`);
     } finally {
@@ -248,9 +339,39 @@ export function ProgramExcelImport() {
         sort_order: 2,
       },
     ]);
+    const geAreas = XLSX.utils.json_to_sheet([
+      {
+        area_code: "1A",
+        system: "RCCD",
+        title: "English Composition",
+        units_note: "3 units",
+        sort_order: 0,
+      },
+      {
+        area_code: "1A-CGETC",
+        system: "CalGETC",
+        title: "English Composition",
+        units_note: "3 units",
+        sort_order: 0,
+      },
+    ]);
+    const geCs = XLSX.utils.json_to_sheet([
+      {
+        area_code: "1A",
+        code: "ENG 1A",
+        description: "Reading and writing college-level prose.",
+      },
+      {
+        area_code: "1A-CGETC",
+        code: "ENG 1A",
+        description: "Reading and writing college-level prose.",
+      },
+    ]);
     XLSX.utils.book_append_sheet(wb, progs, "Programs");
     XLSX.utils.book_append_sheet(wb, cs, "Courses");
-    XLSX.writeFile(wb, "programs-template.xlsx");
+    XLSX.utils.book_append_sheet(wb, geAreas, "GE Areas");
+    XLSX.utils.book_append_sheet(wb, geCs, "GE Courses");
+    XLSX.writeFile(wb, "pathways-template.xlsx");
   }
 
   async function exportExisting() {
@@ -267,6 +388,11 @@ export function ProgramExcelImport() {
         .select("*")
         .order("sort_order");
       if (cErr) throw cErr;
+      const { data: geData, error: geErr } = await supabase
+        .from("ge_areas")
+        .select("*")
+        .order("sort_order");
+      if (geErr) throw geErr;
 
       const idToSlug = new Map<string, string>();
       const progRows = (progs ?? []).map((p: any) => {
@@ -297,12 +423,35 @@ export function ProgramExcelImport() {
         sort_order: c.sort_order ?? 0,
       }));
 
+      const geAreaRows = (geData ?? []).map((a: any) => ({
+        area_code: a.area_code,
+        system: a.system ?? "RCCD",
+        title: a.title ?? "",
+        units_note: a.units_note ?? "",
+        sort_order: a.sort_order ?? 0,
+      }));
+      const geCourseRows: { area_code: string; code: string; description: string }[] = [];
+      for (const a of geData ?? []) {
+        const descs = ((a as any).course_descriptions ?? {}) as Record<string, string>;
+        for (const code of ((a as any).courses ?? []) as string[]) {
+          geCourseRows.push({
+            area_code: (a as any).area_code,
+            code,
+            description: descs[code] ?? "",
+          });
+        }
+      }
+
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(progRows), "Programs");
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(courseRows), "Courses");
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(geAreaRows), "GE Areas");
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(geCourseRows), "GE Courses");
       const stamp = new Date().toISOString().slice(0, 10);
-      XLSX.writeFile(wb, `programs-export-${stamp}.xlsx`);
-      addLog(`Exported ${progRows.length} programs and ${courseRows.length} courses.`);
+      XLSX.writeFile(wb, `pathways-export-${stamp}.xlsx`);
+      addLog(
+        `Exported ${progRows.length} programs, ${courseRows.length} courses, ${geAreaRows.length} GE areas, ${geCourseRows.length} GE course rows.`,
+      );
     } catch (e) {
       addLog(`Error: ${(e as Error).message}`);
     } finally {
@@ -316,12 +465,12 @@ export function ProgramExcelImport() {
         <div className="flex items-start gap-3">
           <FileSpreadsheet className="mt-0.5 h-5 w-5 text-primary" />
           <div>
-            <h2 className="font-serif text-lg text-foreground">Import from Excel</h2>
+            <h2 className="font-serif text-lg text-foreground">Import / Export Excel</h2>
             <p className="text-sm text-muted-foreground">
-              Upload an .xlsx with sheets <strong>Programs</strong> and <strong>Courses</strong>.
-              Programs are matched by <code>slug</code> (new ones are created, existing ones
-              updated). For each program in the upload, listed courses replace existing courses
-              with the same code.
+              One .xlsx with sheets <strong>Programs</strong>, <strong>Courses</strong>,{" "}
+              <strong>GE Areas</strong>, and <strong>GE Courses</strong>. Programs match by{" "}
+              <code>slug</code>; GE areas match by <code>area_code</code>. Any sheet you omit
+              is left untouched.
             </p>
           </div>
         </div>
