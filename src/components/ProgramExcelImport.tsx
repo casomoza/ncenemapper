@@ -40,6 +40,7 @@ type GeAreaRow = {
 
 type GeCourseRow = {
   area_code?: string;
+  system?: string;
   code?: string;
   description?: string;
 };
@@ -224,17 +225,21 @@ export function ProgramExcelImport() {
       }
 
       // === GE Areas + GE Courses ===
+      // Key is "area_code|system" so RCCD and CalGETC areas with the same
+      // area_code are kept separate and don't bleed into each other on import.
       const geCoursesByArea = new Map<
         string,
         { codes: string[]; descriptions: Record<string, string> }
       >();
       for (const c of geCourses) {
         const ac = String(c.area_code ?? "").trim();
+        const sys = normSystem(c.system);
         const code = String(c.code ?? "").trim();
         if (!ac || !code) continue;
-        if (!geCoursesByArea.has(ac))
-          geCoursesByArea.set(ac, { codes: [], descriptions: {} });
-        const entry = geCoursesByArea.get(ac)!;
+        const key = `${ac}|${sys}`;
+        if (!geCoursesByArea.has(key))
+          geCoursesByArea.set(key, { codes: [], descriptions: {} });
+        const entry = geCoursesByArea.get(key)!;
         entry.codes.push(code);
         const desc = String(c.description ?? "").trim();
         if (desc) entry.descriptions[code] = desc;
@@ -246,7 +251,8 @@ export function ProgramExcelImport() {
           addLog("Skipped GE area with empty area_code");
           continue;
         }
-        const grouped = geCoursesByArea.get(area_code);
+        const sys = normSystem(a.system);
+        const grouped = geCoursesByArea.get(`${area_code}|${sys}`);
         const payload = {
           area_code,
           system: normSystem(a.system),
@@ -359,11 +365,13 @@ export function ProgramExcelImport() {
     const geCs = XLSX.utils.json_to_sheet([
       {
         area_code: "1A",
+        system: "RCCD",
         code: "ENG 1A",
         description: "Reading and writing college-level prose.",
       },
       {
-        area_code: "1A-CGETC",
+        area_code: "1A",
+        system: "CalGETC",
         code: "ENG 1A",
         description: "Reading and writing college-level prose.",
       },
@@ -431,12 +439,13 @@ export function ProgramExcelImport() {
         units_note: a.units_note ?? "",
         sort_order: a.sort_order ?? 0,
       }));
-      const geCourseRows: { area_code: string; code: string; description: string }[] = [];
+      const geCourseRows: { area_code: string; system: string; code: string; description: string }[] = [];
       for (const a of geData ?? []) {
         const descs = ((a as any).course_descriptions ?? {}) as Record<string, string>;
         for (const code of ((a as any).courses ?? []) as string[]) {
           geCourseRows.push({
             area_code: (a as any).area_code,
+            system: (a as any).system ?? "RCCD",
             code,
             description: descs[code] ?? "",
           });
