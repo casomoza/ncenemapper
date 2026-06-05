@@ -133,7 +133,7 @@ export function CourseCard({
                   : "bg-accent/30 text-accent-foreground"
               }`}
             >
-              {isCore ? "Core" : "GE"}
+              {slot?.kind === "elective" ? "Elective" : isCore ? "Core" : "GE"}
             </span>
             {course.optional && (
               <span className="rounded-full bg-accent/20 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-accent-foreground">
@@ -152,7 +152,7 @@ export function CourseCard({
             )}
           </div>
 
-          {geArea && (
+          {slot && (
             <div
               className="mt-2"
               onClick={(e) => e.stopPropagation()}
@@ -160,10 +160,14 @@ export function CourseCard({
             >
               <Select value={choice} onValueChange={handleChoice}>
                 <SelectTrigger className="h-8 text-xs">
-                  <SelectValue placeholder="Choose a GE course…" />
+                  <SelectValue
+                    placeholder={
+                      slot.kind === "elective" ? "Choose an elective…" : "Choose a GE course…"
+                    }
+                  />
                 </SelectTrigger>
                 <SelectContent>
-                  {geArea.courses.map((c) => (
+                  {slot.courses.map((c) => (
                     <SelectItem key={c} value={c} className="text-xs">
                       {c}
                     </SelectItem>
@@ -196,9 +200,9 @@ export function CourseCard({
                 {course.description}
               </DialogDescription>
             )}
-            {choice && geArea?.courseDescriptions?.[choice] && (
+            {choice && slot?.descriptions?.[choice] && (
               <DialogDescription className="text-sm leading-relaxed text-foreground/80">
-                {geArea.courseDescriptions[choice]}
+                {slot.descriptions[choice]}
               </DialogDescription>
             )}
           </DialogHeader>
@@ -231,21 +235,25 @@ export function CourseCard({
                 </ul>
               </div>
             )}
-            {geArea && (
+            {slot && (
               <div className="rounded-md border border-accent/40 bg-accent/10 p-3">
                 <p className="text-xs font-semibold uppercase tracking-wide text-accent-foreground">
-                  GE Area {geArea.id} · {geArea.title}
+                  {slot.label}
                 </p>
                 <p className="mt-2 text-xs text-foreground/80">
-                  {geArea.courses.length} eligible course{geArea.courses.length === 1 ? "" : "s"}. Pick one from the dropdown to set it on your map.
+                  {slot.courses.length} eligible course{slot.courses.length === 1 ? "" : "s"}. Pick one from the dropdown to set it on your map.
                 </p>
                 <div className="mt-3">
                   <Select value={choice} onValueChange={handleChoice}>
                     <SelectTrigger className="h-9 text-sm">
-                      <SelectValue placeholder="Choose a GE course…" />
+                      <SelectValue
+                        placeholder={
+                          slot.kind === "elective" ? "Choose an elective…" : "Choose a GE course…"
+                        }
+                      />
                     </SelectTrigger>
                     <SelectContent>
-                      {geArea.courses.map((c) => (
+                      {slot.courses.map((c) => (
                         <SelectItem key={c} value={c}>
                           {c}
                         </SelectItem>
