@@ -17,7 +17,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-const isGeSlot = (code: string) => /^RCCD GE/i.test(code);
+const isRccdGeSlot = (code: string) => /^RCCD GE/i.test(code);
+const isCalGetcSlot = (code: string) => /^CalGETC\s+/i.test(code);
+const isGeSlot = (code: string) => isRccdGeSlot(code) || isCalGetcSlot(code);
 const isElectiveSlot = (code: string) => /^ELEC\s+/i.test(code);
 const electiveGroupCode = (code: string) => code.replace(/^ELEC\s+/i, "").trim();
 const storageKey = (programId: string | undefined, code: string) =>
@@ -48,9 +50,12 @@ export function CourseCard({
 
   const geArea = (() => {
     if (!isGeSlot(course.code) || !geAreas) return undefined;
-    const m = course.code.match(/(\d+[A-Za-z]?)/);
+    const m = course.code.match(/(\d+[A-Za-z]*)/);
     if (!m) return undefined;
-    return geAreas.find((a) => a.id === m[1]);
+    const areaCode = m[1];
+    const system = isCalGetcSlot(course.code) ? "CalGETC" : "RCCD";
+    return geAreas.find((a) => a.id === areaCode && a.system === system)
+      ?? geAreas.find((a) => a.id === areaCode);
   })();
 
   const electiveGroup = (() => {
