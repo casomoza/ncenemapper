@@ -315,9 +315,11 @@ function ProgramPage() {
   }
 
   // ── Pathway mode selector ────────────────────────────────────────────────
-  const hasAsTags   = allTags.some(isAsTag);
-  const hasCertTags = allTags.some(isCertTag);
-  const hasGeTags   = allTags.some(isGeTag);
+  const hasAsTags      = allTags.some(isAsTag);
+  const hasCertTags    = allTags.some(isCertTag);
+  const hasRccdGeTags  = allTags.some(isRccdGeTag);
+  const hasCalGetcTags = allTags.some(isCalGetcTag);
+  const hasGeTags      = hasRccdGeTags || hasCalGetcTags;
   const showPathwaySelector = hasAsTags && hasCertTags;
 
   // Derive the active track from current filter state
@@ -328,16 +330,42 @@ function ProgramPage() {
     : certNowActive && !asNowActive ? "cert"
     : "all";
 
+  // Derive which GE system is currently active (only meaningful in A.S. mode)
+  const rccdGeNowActive   = allTags.some((t) => isRccdGeTag(t)  && effectiveActive.has(t));
+  const calGetcNowActive  = allTags.some((t) => isCalGetcTag(t) && effectiveActive.has(t));
+  const geSystem: "rccd" | "calgetc" | null =
+    rccdGeNowActive && !calGetcNowActive ? "rccd"
+    : calGetcNowActive && !rccdGeNowActive ? "calgetc"
+    : null;
+
+  // Show GE sub-toggle only in A.S. mode when both systems exist
+  const showGeSubtoggle = currentMode === "as" && hasRccdGeTags && hasCalGetcTags;
+
+  function selectGeSystem(sys: "rccd" | "calgetc") {
+    setActiveTags((prev) => {
+      const base = new Set(prev ?? new Set(allTags));
+      for (const t of allTags) if (isGeTag(t)) base.delete(t);
+      for (const t of allTags) {
+        if (sys === "rccd"    && isRccdGeTag(t))  base.add(t);
+        if (sys === "calgetc" && isCalGetcTag(t)) base.add(t);
+      }
+      return base;
+    });
+  }
+
   function selectPathwayMode(mode: "as" | "cert" | "all") {
     if (mode === "all") { setActiveTags(null); return; }
     setActiveTags(() => {
       const base = new Set(allTags);
       if (mode === "as") {
         for (const t of allTags) if (isCertTag(t)) base.delete(t);
-        // GE is required; keep all GE tags on
+        // Default GE system to RCCD; remove CalGETC unless there is no RCCD GE
+        if (hasRccdGeTags && hasCalGetcTags) {
+          for (const t of allTags) if (isCalGetcTag(t)) base.delete(t);
+        }
       } else {
-        for (const t of allTags) if (isAsTag(t))   base.delete(t);
-        for (const t of allTags) if (isGeTag(t))   base.delete(t);
+        for (const t of allTags) if (isAsTag(t))  base.delete(t);
+        for (const t of allTags) if (isGeTag(t))  base.delete(t);
       }
       return base;
     });
@@ -488,29 +516,63 @@ function ProgramPage() {
                 </button>
 
                 {/* A.S. Degree */}
-                <button
-                  type="button"
-                  onClick={() => selectPathwayMode("as")}
-                  className={`group flex items-start gap-3 rounded-xl border p-4 text-left transition-all hover:shadow-md ${
+                <div
+                  className={`rounded-xl border transition-all ${
                     currentMode === "as"
                       ? "border-primary/50 bg-primary/5 shadow-sm ring-1 ring-inset ring-primary/20"
-                      : "border-border bg-card hover:border-primary/30"
+                      : "border-border bg-card"
                   }`}
                 >
-                  <div className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
-                    currentMode === "as" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary"
-                  }`}>
-                    <GraduationCap className="h-4 w-4" />
-                  </div>
-                  <div>
-                    <p className={`font-semibold leading-tight ${currentMode === "as" ? "text-primary" : "text-foreground"}`}>
-                      A.S. Degree
-                    </p>
-                    <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
-                      Associate degree track{hasGeTags ? " — includes GE requirements" : ""}
-                    </p>
-                  </div>
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => selectPathwayMode("as")}
+                    className="group flex w-full items-start gap-3 p-4 text-left"
+                  >
+                    <div className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
+                      currentMode === "as" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary"
+                    }`}>
+                      <GraduationCap className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <p className={`font-semibold leading-tight ${currentMode === "as" ? "text-primary" : "text-foreground"}`}>
+                        A.S. Degree
+                      </p>
+                      <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
+                        Associate degree track{hasGeTags ? " — includes GE requirements" : ""}
+                      </p>
+                    </div>
+                  </button>
+
+                  {showGeSubtoggle && (
+                    <div className="border-t border-primary/15 px-4 pb-4 pt-3">
+                      <p className="mb-2 text-xs font-medium text-primary/70">GE system (pick one)</p>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => selectGeSystem("rccd")}
+                          className={`flex-1 rounded-lg border px-3 py-2 text-xs font-semibold transition-all ${
+                            geSystem === "rccd"
+                              ? "border-primary bg-primary text-primary-foreground shadow-sm"
+                              : "border-border bg-background text-muted-foreground hover:border-primary/40 hover:text-foreground"
+                          }`}
+                        >
+                          RCCD GE
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => selectGeSystem("calgetc")}
+                          className={`flex-1 rounded-lg border px-3 py-2 text-xs font-semibold transition-all ${
+                            geSystem === "calgetc"
+                              ? "border-primary bg-primary text-primary-foreground shadow-sm"
+                              : "border-border bg-background text-muted-foreground hover:border-primary/40 hover:text-foreground"
+                          }`}
+                        >
+                          CalGETC
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
 
                 {/* Certificate */}
                 <button
