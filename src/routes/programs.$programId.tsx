@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Printer, Download, GraduationCap, Award, Filter, ChevronDown, ChevronUp, Lock } from "lucide-react";
+import { ArrowLeft, Printer, Download, GraduationCap, Award, Filter, ChevronDown, ChevronUp, Lock, LayoutGrid } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
@@ -314,6 +314,36 @@ function ProgramPage() {
     });
   }
 
+  // ── Pathway mode selector ────────────────────────────────────────────────
+  const hasAsTags   = allTags.some(isAsTag);
+  const hasCertTags = allTags.some(isCertTag);
+  const hasGeTags   = allTags.some(isGeTag);
+  const showPathwaySelector = hasAsTags && hasCertTags;
+
+  // Derive the active track from current filter state
+  const asNowActive   = allTags.some((t) => isAsTag(t)   && effectiveActive.has(t));
+  const certNowActive = allTags.some((t) => isCertTag(t) && effectiveActive.has(t));
+  const currentMode: "as" | "cert" | "all" =
+    asNowActive && !certNowActive ? "as"
+    : certNowActive && !asNowActive ? "cert"
+    : "all";
+
+  function selectPathwayMode(mode: "as" | "cert" | "all") {
+    if (mode === "all") { setActiveTags(null); return; }
+    setActiveTags(() => {
+      const base = new Set(allTags);
+      if (mode === "as") {
+        for (const t of allTags) if (isCertTag(t)) base.delete(t);
+        // GE is required; keep all GE tags on
+      } else {
+        for (const t of allTags) if (isAsTag(t))   base.delete(t);
+        for (const t of allTags) if (isGeTag(t))   base.delete(t);
+      }
+      return base;
+    });
+  }
+  // ─────────────────────────────────────────────────────────────────────────
+
   // Compute which tags are blocked and why, for the filter UI
   function getTagBlockedReason(tag: string): string | null {
     const active = activeTags ?? new Set(allTags);
@@ -426,6 +456,90 @@ function ProgramPage() {
         </section>
 
         <section className="mx-auto max-w-6xl px-6 py-10">
+          {showPathwaySelector && (
+            <div className="mb-5">
+              <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Choose your pathway track
+              </p>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                {/* All courses */}
+                <button
+                  type="button"
+                  onClick={() => selectPathwayMode("all")}
+                  className={`group flex items-start gap-3 rounded-xl border p-4 text-left transition-all hover:shadow-md ${
+                    currentMode === "all"
+                      ? "border-primary/50 bg-primary/5 shadow-sm ring-1 ring-inset ring-primary/20"
+                      : "border-border bg-card hover:border-primary/30"
+                  }`}
+                >
+                  <div className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
+                    currentMode === "all" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary"
+                  }`}>
+                    <LayoutGrid className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <p className={`font-semibold leading-tight ${currentMode === "all" ? "text-primary" : "text-foreground"}`}>
+                      All courses
+                    </p>
+                    <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
+                      View every requirement — A.S. and certificate tracks together
+                    </p>
+                  </div>
+                </button>
+
+                {/* A.S. Degree */}
+                <button
+                  type="button"
+                  onClick={() => selectPathwayMode("as")}
+                  className={`group flex items-start gap-3 rounded-xl border p-4 text-left transition-all hover:shadow-md ${
+                    currentMode === "as"
+                      ? "border-primary/50 bg-primary/5 shadow-sm ring-1 ring-inset ring-primary/20"
+                      : "border-border bg-card hover:border-primary/30"
+                  }`}
+                >
+                  <div className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
+                    currentMode === "as" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary"
+                  }`}>
+                    <GraduationCap className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <p className={`font-semibold leading-tight ${currentMode === "as" ? "text-primary" : "text-foreground"}`}>
+                      A.S. Degree
+                    </p>
+                    <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
+                      Associate degree track{hasGeTags ? " — includes GE requirements" : ""}
+                    </p>
+                  </div>
+                </button>
+
+                {/* Certificate */}
+                <button
+                  type="button"
+                  onClick={() => selectPathwayMode("cert")}
+                  className={`group flex items-start gap-3 rounded-xl border p-4 text-left transition-all hover:shadow-md ${
+                    currentMode === "cert"
+                      ? "border-accent/60 bg-accent/8 shadow-sm ring-1 ring-inset ring-accent/30"
+                      : "border-border bg-card hover:border-accent/40"
+                  }`}
+                >
+                  <div className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
+                    currentMode === "cert" ? "bg-accent text-accent-foreground" : "bg-muted text-muted-foreground group-hover:bg-accent/20 group-hover:text-accent-foreground"
+                  }`}>
+                    <Award className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <p className={`font-semibold leading-tight ${currentMode === "cert" ? "text-accent-foreground" : "text-foreground"}`}>
+                      Certificate (CERT)
+                    </p>
+                    <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
+                      Certificate-only track — no GE requirements
+                    </p>
+                  </div>
+                </button>
+              </div>
+            </div>
+          )}
+
           {allTags.length > 0 && (
             <div className="mb-6 rounded-lg border border-border bg-card shadow-sm">
               <button
