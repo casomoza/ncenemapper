@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Printer, Download, GraduationCap, Award, Filter, ChevronDown, ChevronUp } from "lucide-react";
+import { ArrowLeft, Printer, Download, GraduationCap, Award, Filter, ChevronDown, ChevronUp, Lock } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
@@ -46,6 +46,13 @@ function courseTags(c: Course): string[] {
     // Filter out long descriptive strings and prerequisite notes that aren't requirement tags
     .filter((t) => t.length > 0 && t.length <= 60 && !/prerequisite/i.test(t));
 }
+
+// Tag classifiers for filter constraint logic
+const isAsTag     = (t: string) => /\bA\.S\b/i.test(t);
+const isCertTag   = (t: string) => /\bCERT\b/i.test(t) || /\bCertificate\b/i.test(t);
+const isRccdGeTag = (t: string) => /\bRCCD\s*GE\b/i.test(t);
+const isCalGetcTag= (t: string) => /\bCalGETC\b/i.test(t);
+const isGeTag     = (t: string) => isRccdGeTag(t) || isCalGetcTag(t);
 
 export const Route = createFileRoute("/programs/$programId")({
   component: ProgramPage,
@@ -270,10 +277,61 @@ function ProgramPage() {
   function toggleTag(tag: string) {
     setActiveTags((prev) => {
       const base = new Set(prev ?? allTags);
-      if (base.has(tag)) base.delete(tag);
-      else base.add(tag);
-      return base;
+      const turningOn = !base.has(tag);
+
+      if (turningOn) {
+        base.add(tag);
+        if (isAsTag(tag)) {
+          // A.S. ↔ CERT are mutually exclusive: remove all CERT tags
+          for (const t of allTags) if (isCertTag(t)) base.delete(t);
+          // A.S. requires at least one GE system: if none are on, enable all GE tags
+          const hasGe = allTags.some((t) => isGeTag(t) && base.has(t));
+          if (!hasGe) for (const t of allTags) if (isGeTag(t)) base.add(t);
+        }
+        if (isCertTag(tag)) {
+          // CERT ↔ A.S. mutually exclusive
+          for (const t of allTags) if (isAsTag(t)) base.delete(t);
+          // CERT ↔ GE mutually exclusive
+          for (const t of allTags) if (isGeTag(t)) base.delete(t);
+        }
+        if (isGeTag(tag)) {
+          // Enabling a GE system while CERT is on → turn CERT off
+          for (const t of allTags) if (isCertTag(t)) base.delete(t);
+        }
+      } else {
+        // Turning OFF: block removing the last GE tag while any A.S. tag is active
+        if (isGeTag(tag)) {
+          const asActive = allTags.some((t) => isAsTag(t) && base.has(t));
+          if (asActive) {
+            const otherGeActive = allTags.some((t) => isGeTag(t) && t !== tag && base.has(t));
+            if (!otherGeActive) return base; // blocked — would leave A.S. with no GE
+          }
+        }
+        base.delete(tag);
+      }
+
+      return new Set(base);
     });
+  }
+
+  // Compute which tags are blocked and why, for the filter UI
+  function getTagBlockedReason(tag: string): string | null {
+    const active = activeTags ?? new Set(allTags);
+    const asActive   = allTags.some((t) => isAsTag(t) && active.has(t));
+    const certActive = allTags.some((t) => isCertTag(t) && active.has(t));
+
+    if (isCertTag(tag) && asActive)
+      return "Cannot combine CERT with A.S.";
+    if (isAsTag(tag) && certActive)
+      return "Cannot combine A.S. with CERT";
+    if (isGeTag(tag) && certActive && !active.has(tag))
+      return "CERT track does not include GE requirements";
+    // Block unchecking last GE while A.S. is on
+    if (isGeTag(tag) && active.has(tag) && asActive) {
+      const otherGeActive = allTags.some((t) => isGeTag(t) && t !== tag && active.has(t));
+      if (!otherGeActive) return "A.S. requires at least one GE system";
+    }
+    return null;
   }
 
 
@@ -393,16 +451,21 @@ function ProgramPage() {
                   <div className="flex flex-wrap gap-x-5 gap-y-2">
                     {allTags.map((tag) => {
                       const checked = effectiveActive.has(tag);
+                      const blockedReason = getTagBlockedReason(tag);
+                      const isDisabled = blockedReason !== null;
                       return (
                         <label
                           key={tag}
-                          className="flex cursor-pointer items-center gap-2 text-sm text-foreground/85"
+                          title={blockedReason ?? undefined}
+                          className={`flex items-center gap-2 text-sm ${isDisabled ? "cursor-not-allowed opacity-50" : "cursor-pointer text-foreground/85"}`}
                         >
                           <Checkbox
                             checked={checked}
-                            onCheckedChange={() => toggleTag(tag)}
+                            disabled={isDisabled}
+                            onCheckedChange={() => !isDisabled && toggleTag(tag)}
                           />
                           {tag}
+                          {isDisabled && <Lock className="h-3 w-3 text-muted-foreground" />}
                         </label>
                       );
                     })}
