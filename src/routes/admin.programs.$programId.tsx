@@ -473,3 +473,226 @@ function Field({
     </div>
   );
 }
+
+type DbElective = {
+  id: string;
+  program_id: string;
+  group_code: string;
+  title: string;
+  units_note: string;
+  courses: string[];
+  course_descriptions: Record<string, string> | null;
+  sort_order: number;
+};
+
+function ElectiveGroupsSection({ programId }: { programId: string }) {
+  const qc = useQueryClient();
+  const { data: groups = [] } = useQuery({
+    queryKey: ["program_electives_admin", programId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("program_electives" as never)
+        .select("*")
+        .eq("program_id", programId)
+        .order("sort_order");
+      if (error) throw error;
+      return (data ?? []) as unknown as DbElective[];
+    },
+  });
+
+  const create = useMutation({
+    mutationFn: async () => {
+      const nextOrder = (groups[groups.length - 1]?.sort_order ?? -1) + 1;
+      const { error } = await supabase.from("program_electives" as never).insert({
+        program_id: programId,
+        group_code: `NEW-${Date.now().toString().slice(-5)}`,
+        title: "New elective group",
+        units_note: "",
+        courses: [],
+        course_descriptions: {},
+        sort_order: nextOrder,
+      } as never);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["program_electives_admin", programId] }),
+    onError: (e: Error) => alert(e.message),
+  });
+
+  return (
+    <section className="mt-12">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="font-serif text-2xl text-foreground">Elective groups</h2>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Define "choose X from this list" course groups. Add a placeholder course on the map
+            with code <code className="rounded bg-muted px-1">ELEC &lt;group code&gt;</code> (e.g.
+            <code className="ml-1 rounded bg-muted px-1">ELEC CON-ELEC</code>) to give students a
+            dropdown of options.
+          </p>
+        </div>
+        <button
+          onClick={() => create.mutate()}
+          disabled={create.isPending}
+          className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-burgundy disabled:opacity-60"
+        >
+          <Plus className="h-4 w-4" /> Add elective group
+        </button>
+      </div>
+
+      <div className="mt-4 space-y-3">
+        {groups.length === 0 && (
+          <p className="rounded-md border border-dashed border-border bg-muted/30 px-4 py-6 text-center text-sm text-muted-foreground">
+            No elective groups yet.
+          </p>
+        )}
+        {groups.map((g) => (
+          <ElectiveGroupRow key={g.id} group={g} />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function ElectiveGroupRow({ group }: { group: DbElective }) {
+  const qc = useQueryClient();
+  const [g, setG] = useState(group);
+  const [open, setOpen] = useState(false);
+  const dirty = JSON.stringify(g) !== JSON.stringify(group);
+
+  useEffect(() => setG(group), [group.id]);
+
+  const save = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase
+        .from("program_electives" as never)
+        .update({
+          group_code: g.group_code,
+          title: g.title,
+          units_note: g.units_note,
+          courses: g.courses,
+          course_descriptions: g.course_descriptions ?? {},
+          sort_order: g.sort_order,
+        } as never)
+        .eq("id", g.id);
+      if (error) throw error;
+    },
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: ["program_electives_admin", group.program_id] }),
+    onError: (e: Error) => alert(`Save failed: ${e.message}`),
+  });
+
+  const del = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase
+        .from("program_electives" as never)
+        .delete()
+        .eq("id", g.id);
+      if (error) throw error;
+    },
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: ["program_electives_admin", group.program_id] }),
+  });
+
+  const courseText = g.courses.join("\n");
+  const descs = g.course_descriptions ?? {};
+
+  return (
+    <div className="rounded-lg border border-border bg-card">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center justify-between px-4 py-3 text-left"
+      >
+        <div>
+          <p className="font-mono text-sm font-semibold text-primary">{g.group_code}</p>
+          <p className="text-sm text-foreground">{g.title || <em className="text-muted-foreground">untitled</em>}</p>
+        </div>
+        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+          <span>{g.courses.length} course{g.courses.length === 1 ? "" : "s"}</span>
+          <span>order {g.sort_order}</span>
+          <span>{open ? "Hide" : "Edit"}</span>
+        </div>
+      </button>
+      {open && (
+        <div className="space-y-3 border-t border-border p-4">
+          <div className="grid gap-3 md:grid-cols-2">
+            <Field
+              label="Group code (used in course slot, e.g. ELEC CON-ELEC)"
+              value={g.group_code}
+              onChange={(v) => setG({ ...g, group_code: v })}
+            />
+            <Field label="Title" value={g.title} onChange={(v) => setG({ ...g, title: v })} />
+            <Field
+              label="Units note (e.g. Choose 2 of 6 · 6 units)"
+              value={g.units_note}
+              onChange={(v) => setG({ ...g, units_note: v })}
+            />
+            <Field
+              label="Sort order"
+              type="number"
+              value={String(g.sort_order)}
+              onChange={(v) => setG({ ...g, sort_order: Number(v) || 0 })}
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium">Eligible courses (one per line)</label>
+            <textarea
+              rows={Math.max(3, g.courses.length + 1)}
+              value={courseText}
+              onChange={(e) =>
+                setG({
+                  ...g,
+                  courses: e.target.value
+                    .split("\n")
+                    .map((s) => s.trim())
+                    .filter(Boolean),
+                })
+              }
+              className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 font-mono text-sm"
+            />
+          </div>
+          {g.courses.length > 0 && (
+            <div>
+              <p className="text-xs font-medium">Course descriptions (optional)</p>
+              <div className="mt-2 space-y-2">
+                {g.courses.map((code) => (
+                  <div key={code} className="grid grid-cols-[140px_1fr] items-start gap-2">
+                    <span className="mt-2 font-mono text-xs text-primary">{code}</span>
+                    <textarea
+                      rows={2}
+                      value={descs[code] ?? ""}
+                      onChange={(e) =>
+                        setG({
+                          ...g,
+                          course_descriptions: { ...descs, [code]: e.target.value },
+                        })
+                      }
+                      className="rounded-md border border-input bg-background px-2 py-1 text-sm"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          <div className="flex items-center justify-end gap-2">
+            <button
+              onClick={() => {
+                if (confirm(`Delete elective group ${g.group_code}?`)) del.mutate();
+              }}
+              className="inline-flex items-center gap-1 rounded border border-destructive/50 px-2 py-1 text-xs text-destructive"
+            >
+              <Trash2 className="h-3 w-3" /> Delete
+            </button>
+            <button
+              disabled={!dirty || save.isPending}
+              onClick={() => save.mutate()}
+              className="inline-flex items-center gap-1 rounded bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground disabled:opacity-40"
+            >
+              <Save className="h-3 w-3" /> {save.isPending ? "Saving…" : "Save group"}
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
