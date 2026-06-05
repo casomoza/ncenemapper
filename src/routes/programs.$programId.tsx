@@ -338,8 +338,8 @@ function ProgramPage() {
     : calGetcNowActive && !rccdGeNowActive ? "calgetc"
     : null;
 
-  // Show GE sub-toggle only in A.S. mode when both systems exist
-  const showGeSubtoggle = currentMode === "as" && hasRccdGeTags && hasCalGetcTags;
+  // Show GE sub-toggle whenever A.S. mode is active and the program has any GE tags
+  const showGeSubtoggle = currentMode === "as" && hasGeTags;
 
   function selectGeSystem(sys: "rccd" | "calgetc") {
     setActiveTags((prev) => {
@@ -374,6 +374,10 @@ function ProgramPage() {
 
   // Compute which tags are blocked and why, for the filter UI
   function getTagBlockedReason(tag: string): string | null {
+    // In CERT mode, ALL GE tags are always blocked — no GE requirements for a certificate
+    if (isGeTag(tag) && currentMode === "cert")
+      return "CERT track does not include GE requirements";
+
     const active = activeTags ?? new Set(allTags);
     const asActive   = allTags.some((t) => isAsTag(t) && active.has(t));
     const certActive = allTags.some((t) => isCertTag(t) && active.has(t));
@@ -382,9 +386,7 @@ function ProgramPage() {
       return "Cannot combine CERT with A.S.";
     if (isAsTag(tag) && certActive)
       return "Cannot combine A.S. with CERT";
-    if (isGeTag(tag) && certActive && !active.has(tag))
-      return "CERT track does not include GE requirements";
-    // Block unchecking last GE while A.S. is on
+    // Block unchecking the last active GE system while A.S. is on
     if (isGeTag(tag) && active.has(tag) && asActive) {
       const otherGeActive = allTags.some((t) => isGeTag(t) && t !== tag && active.has(t));
       if (!otherGeActive) return "A.S. requires at least one GE system";
@@ -545,30 +547,36 @@ function ProgramPage() {
 
                   {showGeSubtoggle && (
                     <div className="border-t border-primary/15 px-4 pb-4 pt-3">
-                      <p className="mb-2 text-xs font-medium text-primary/70">GE system (pick one)</p>
+                      <p className="mb-2 text-xs font-medium text-primary/70">
+                        {hasRccdGeTags && hasCalGetcTags ? "GE system — pick one" : "GE system"}
+                      </p>
                       <div className="flex gap-2">
-                        <button
-                          type="button"
-                          onClick={() => selectGeSystem("rccd")}
-                          className={`flex-1 rounded-lg border px-3 py-2 text-xs font-semibold transition-all ${
-                            geSystem === "rccd"
-                              ? "border-primary bg-primary text-primary-foreground shadow-sm"
-                              : "border-border bg-background text-muted-foreground hover:border-primary/40 hover:text-foreground"
-                          }`}
-                        >
-                          RCCD GE
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => selectGeSystem("calgetc")}
-                          className={`flex-1 rounded-lg border px-3 py-2 text-xs font-semibold transition-all ${
-                            geSystem === "calgetc"
-                              ? "border-primary bg-primary text-primary-foreground shadow-sm"
-                              : "border-border bg-background text-muted-foreground hover:border-primary/40 hover:text-foreground"
-                          }`}
-                        >
-                          CalGETC
-                        </button>
+                        {hasRccdGeTags && (
+                          <button
+                            type="button"
+                            onClick={() => selectGeSystem("rccd")}
+                            className={`flex-1 rounded-lg border px-3 py-2 text-xs font-semibold transition-all ${
+                              geSystem === "rccd"
+                                ? "border-primary bg-primary text-primary-foreground shadow-sm"
+                                : "border-border bg-background text-muted-foreground hover:border-primary/40 hover:text-foreground"
+                            }`}
+                          >
+                            RCCD GE
+                          </button>
+                        )}
+                        {hasCalGetcTags && (
+                          <button
+                            type="button"
+                            onClick={() => selectGeSystem("calgetc")}
+                            className={`flex-1 rounded-lg border px-3 py-2 text-xs font-semibold transition-all ${
+                              geSystem === "calgetc"
+                                ? "border-primary bg-primary text-primary-foreground shadow-sm"
+                                : "border-border bg-background text-muted-foreground hover:border-primary/40 hover:text-foreground"
+                            }`}
+                          >
+                            CalGETC
+                          </button>
+                        )}
                       </div>
                     </div>
                   )}
