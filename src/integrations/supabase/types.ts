@@ -118,6 +118,45 @@ export type Database = {
         }
         Relationships: []
       }
+      program_electives: {
+        Row: {
+          course_descriptions: Json
+          courses: string[]
+          created_at: string
+          group_code: string
+          id: string
+          program_id: string
+          sort_order: number
+          title: string
+          units_note: string
+          updated_at: string
+        }
+        Insert: {
+          course_descriptions?: Json
+          courses?: string[]
+          created_at?: string
+          group_code: string
+          id?: string
+          program_id: string
+          sort_order?: number
+          title?: string
+          units_note?: string
+          updated_at?: string
+        }
+        Update: {
+          course_descriptions?: Json
+          courses?: string[]
+          created_at?: string
+          group_code?: string
+          id?: string
+          program_id?: string
+          sort_order?: number
+          title?: string
+          units_note?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       programs: {
         Row: {
           cluster: string
