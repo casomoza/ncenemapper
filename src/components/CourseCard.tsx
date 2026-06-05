@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import type { Course } from "@/lib/program";
-import { fetchGeAreas } from "@/lib/api";
+import { fetchGeAreas, fetchProgramElectivesBySlug } from "@/lib/api";
 import {
   Dialog,
   DialogContent,
@@ -18,6 +18,8 @@ import {
 } from "@/components/ui/select";
 
 const isGeSlot = (code: string) => /^RCCD GE/i.test(code);
+const isElectiveSlot = (code: string) => /^ELEC\s+/i.test(code);
+const electiveGroupCode = (code: string) => code.replace(/^ELEC\s+/i, "").trim();
 const storageKey = (programId: string | undefined, code: string) =>
   `ge-choice:${programId ?? "_"}:${code}`;
 
@@ -37,6 +39,13 @@ export function CourseCard({
     staleTime: 5 * 60 * 1000,
   });
 
+  const { data: electives } = useQuery({
+    queryKey: ["program_electives", programId],
+    queryFn: () => fetchProgramElectivesBySlug(programId!),
+    enabled: !!programId,
+    staleTime: 5 * 60 * 1000,
+  });
+
   const geArea = (() => {
     if (!isGeSlot(course.code) || !geAreas) return undefined;
     const m = course.code.match(/(\d+[A-Za-z]?)/);
@@ -44,11 +53,33 @@ export function CourseCard({
     return geAreas.find((a) => a.id === m[1]);
   })();
 
+  const electiveGroup = (() => {
+    if (!isElectiveSlot(course.code) || !electives) return undefined;
+    const gc = electiveGroupCode(course.code);
+    return electives.find((e) => e.group_code.toLowerCase() === gc.toLowerCase());
+  })();
+
+  const slot = geArea
+    ? {
+        kind: "ge" as const,
+        label: `GE Area ${geArea.id} · ${geArea.title}`,
+        courses: geArea.courses,
+        descriptions: geArea.courseDescriptions,
+      }
+    : electiveGroup
+      ? {
+          kind: "elective" as const,
+          label: `${electiveGroup.group_code} · ${electiveGroup.title || "Program elective"}`,
+          courses: electiveGroup.courses,
+          descriptions: (electiveGroup.course_descriptions ?? {}) as Record<string, string>,
+        }
+      : undefined;
+
   useEffect(() => {
-    if (typeof window === "undefined" || !geArea) return;
+    if (typeof window === "undefined" || !slot) return;
     const saved = window.localStorage.getItem(storageKey(programId, course.code));
     if (saved) setChoice(saved);
-  }, [geArea, programId, course.code]);
+  }, [slot, programId, course.code]);
 
   const handleChoice = (value: string) => {
     setChoice(value);
@@ -64,6 +95,7 @@ export function CourseCard({
       window.localStorage.removeItem(storageKey(programId, course.code));
     }
   };
+
 
   const isCore = course.category === "core";
   const displayTitle = choice || course.title;
@@ -101,7 +133,7 @@ export function CourseCard({
                   : "bg-accent/30 text-accent-foreground"
               }`}
             >
-              {isCore ? "Core" : "GE"}
+              {slot?.kind === "elective" ? "Elective" : isCore ? "Core" : "GE"}
             </span>
             {course.optional && (
               <span className="rounded-full bg-accent/20 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-accent-foreground">
@@ -120,7 +152,7 @@ export function CourseCard({
             )}
           </div>
 
-          {geArea && (
+          {slot && (
             <div
               className="mt-2"
               onClick={(e) => e.stopPropagation()}
@@ -128,10 +160,14 @@ export function CourseCard({
             >
               <Select value={choice} onValueChange={handleChoice}>
                 <SelectTrigger className="h-8 text-xs">
-                  <SelectValue placeholder="Choose a GE course…" />
+                  <SelectValue
+                    placeholder={
+                      slot.kind === "elective" ? "Choose an elective…" : "Choose a GE course…"
+                    }
+                  />
                 </SelectTrigger>
                 <SelectContent>
-                  {geArea.courses.map((c) => (
+                  {slot.courses.map((c) => (
                     <SelectItem key={c} value={c} className="text-xs">
                       {c}
                     </SelectItem>
@@ -164,9 +200,9 @@ export function CourseCard({
                 {course.description}
               </DialogDescription>
             )}
-            {choice && geArea?.courseDescriptions?.[choice] && (
+            {choice && slot?.descriptions?.[choice] && (
               <DialogDescription className="text-sm leading-relaxed text-foreground/80">
-                {geArea.courseDescriptions[choice]}
+                {slot.descriptions[choice]}
               </DialogDescription>
             )}
           </DialogHeader>
@@ -199,21 +235,25 @@ export function CourseCard({
                 </ul>
               </div>
             )}
-            {geArea && (
+            {slot && (
               <div className="rounded-md border border-accent/40 bg-accent/10 p-3">
                 <p className="text-xs font-semibold uppercase tracking-wide text-accent-foreground">
-                  GE Area {geArea.id} · {geArea.title}
+                  {slot.label}
                 </p>
                 <p className="mt-2 text-xs text-foreground/80">
-                  {geArea.courses.length} eligible course{geArea.courses.length === 1 ? "" : "s"}. Pick one from the dropdown to set it on your map.
+                  {slot.courses.length} eligible course{slot.courses.length === 1 ? "" : "s"}. Pick one from the dropdown to set it on your map.
                 </p>
                 <div className="mt-3">
                   <Select value={choice} onValueChange={handleChoice}>
                     <SelectTrigger className="h-9 text-sm">
-                      <SelectValue placeholder="Choose a GE course…" />
+                      <SelectValue
+                        placeholder={
+                          slot.kind === "elective" ? "Choose an elective…" : "Choose a GE course…"
+                        }
+                      />
                     </SelectTrigger>
                     <SelectContent>
-                      {geArea.courses.map((c) => (
+                      {slot.courses.map((c) => (
                         <SelectItem key={c} value={c}>
                           {c}
                         </SelectItem>

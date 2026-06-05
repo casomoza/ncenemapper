@@ -140,3 +140,35 @@ export async function fetchGeAreas(): Promise<GeArea[]> {
     system: (a.system ?? "RCCD") as "RCCD" | "CalGETC",
   }));
 }
+
+export type DbProgramElective = {
+  id: string;
+  program_id: string;
+  group_code: string;
+  title: string;
+  units_note: string;
+  courses: string[];
+  course_descriptions: Record<string, string> | null;
+  sort_order: number;
+};
+
+export async function fetchProgramElectives(programId: string): Promise<DbProgramElective[]> {
+  const { data, error } = await supabase
+    .from("program_electives" as never)
+    .select("*")
+    .eq("program_id", programId)
+    .order("sort_order");
+  if (error) throw error;
+  return ((data ?? []) as unknown as DbProgramElective[]);
+}
+
+export async function fetchProgramElectivesBySlug(slug: string): Promise<DbProgramElective[]> {
+  const { data: prog, error } = await supabase
+    .from("programs")
+    .select("id")
+    .eq("slug", slug)
+    .maybeSingle();
+  if (error) throw error;
+  if (!prog) return [];
+  return fetchProgramElectives((prog as { id: string }).id);
+}
