@@ -51,7 +51,8 @@ function courseTags(c: Course): string[] {
 const isAsTag     = (t: string) => /\bA\.S\b/i.test(t);
 const isCertTag   = (t: string) => /\bCERT\b/i.test(t) || /\bCertificate\b/i.test(t);
 const isRccdGeTag = (t: string) => /\bRCCD\s*GE\b/i.test(t);
-const isCalGetcTag= (t: string) => /\bCalGETC\b/i.test(t);
+// Match CalGETC with or without hyphen/space (Cal-GETC, Cal GETC, CalGETC), and IGETC
+const isCalGetcTag= (t: string) => /\bCal[\s-]?GETC\b/i.test(t) || /\bIGETC\b/i.test(t);
 const isGeTag     = (t: string) => isRccdGeTag(t) || isCalGetcTag(t);
 
 export const Route = createFileRoute("/programs/$programId")({
@@ -374,9 +375,13 @@ function ProgramPage() {
 
   // Compute which tags are blocked and why, for the filter UI
   function getTagBlockedReason(tag: string): string | null {
-    // In CERT mode, ALL GE tags are always blocked — no GE requirements for a certificate
+    // In CERT mode, ALL GE tags are locked — certificates have no GE requirements
     if (isGeTag(tag) && currentMode === "cert")
       return "CERT track does not include GE requirements";
+
+    // In A.S. mode, GE tags are controlled exclusively by the GE system sub-toggle
+    if (isGeTag(tag) && currentMode === "as")
+      return "Use the GE system selector above to change GE requirements";
 
     const active = activeTags ?? new Set(allTags);
     const asActive   = allTags.some((t) => isAsTag(t) && active.has(t));
@@ -386,11 +391,6 @@ function ProgramPage() {
       return "Cannot combine CERT with A.S.";
     if (isAsTag(tag) && certActive)
       return "Cannot combine A.S. with CERT";
-    // Block unchecking the last active GE system while A.S. is on
-    if (isGeTag(tag) && active.has(tag) && asActive) {
-      const otherGeActive = allTags.some((t) => isGeTag(t) && t !== tag && active.has(t));
-      if (!otherGeActive) return "A.S. requires at least one GE system";
-    }
     return null;
   }
 
