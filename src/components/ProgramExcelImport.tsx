@@ -261,6 +261,7 @@ export function ProgramExcelImport() {
           .from("ge_areas")
           .select("id")
           .eq("area_code", area_code)
+          .eq("system", payload.system)
           .maybeSingle();
 
         if (existing) {
