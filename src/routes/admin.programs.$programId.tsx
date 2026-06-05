@@ -90,6 +90,8 @@ function AdminProgramPage() {
         <p className="mt-4 text-xs text-muted-foreground">
           Edit any cell and click Save on the row. Satisfies / description / notes can be edited from the row's "Details" link.
         </p>
+
+        <ElectiveGroupsSection programId={program.id} />
       </main>
       <SiteFooter />
     </div>
