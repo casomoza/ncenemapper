@@ -103,7 +103,7 @@ function AdminGePage() {
             <p className="font-mono text-xs uppercase tracking-wider text-primary">Admin</p>
             <h1 className="font-serif text-3xl font-semibold text-foreground">GE Areas</h1>
             <p className="text-sm text-muted-foreground">
-              Edit RCCD GE and CalGETC area lists shown on /ge and in course pop-ups.
+              Edit RCCD GE and Cal-GETC area lists shown on /ge and in course pop-ups.
             </p>
           </div>
           <div className="flex gap-2">
@@ -119,7 +119,7 @@ function AdminGePage() {
               disabled={createArea.isPending}
               className="inline-flex items-center gap-1.5 rounded-md border border-primary bg-card px-3 py-2 text-sm font-medium text-primary hover:bg-primary/10 disabled:opacity-60"
             >
-              <Plus className="h-4 w-4" /> Add CalGETC area
+              <Plus className="h-4 w-4" /> Add Cal-GETC area
             </button>
           </div>
         </div>
@@ -132,7 +132,7 @@ function AdminGePage() {
             <section key={system} className="mt-10">
               <div className="mb-3 flex items-baseline justify-between border-b border-border pb-2">
                 <h2 className="font-serif text-xl font-semibold text-foreground">
-                  {system === "RCCD" ? "RCCD General Education" : "CalGETC"}
+                  {system === "RCCD" ? "RCCD General Education" : "Cal-GETC"}
                 </h2>
                 <span className="text-xs text-muted-foreground">
                   {list.length} area{list.length === 1 ? "" : "s"}
@@ -230,7 +230,7 @@ function AreaEditor({ area }: { area: DbGeArea }) {
           </span>
           <span className="font-medium text-foreground">{area.title}</span>
           <span className="text-xs text-muted-foreground">
-            {(area.system ?? "RCCD") === "RCCD" ? "RCCD GE" : "CalGETC"}
+            {(area.system ?? "RCCD") === "RCCD" ? "RCCD GE" : "Cal-GETC"}
           </span>
         </div>
         <ChevronDown
@@ -250,7 +250,7 @@ function AreaEditor({ area }: { area: DbGeArea }) {
                 className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
               >
                 <option value="RCCD">RCCD GE</option>
-                <option value="CalGETC">CalGETC</option>
+                <option value="CalGETC">Cal-GETC</option>
               </select>
             </div>
             <div>

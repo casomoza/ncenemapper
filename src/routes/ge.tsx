@@ -13,7 +13,7 @@ export const Route = createFileRoute("/ge")({
       {
         name: "description",
         content:
-          "Browse RCCD General Education and CalGETC areas and the courses that satisfy each one for UC/CSU/IGETC transfer.",
+          "Browse RCCD General Education and Cal-GETC areas and the courses that satisfy each one for UC/CSU/IGETC transfer.",
       },
     ],
   }),
@@ -29,7 +29,7 @@ const SYSTEM_META: Record<
     tagClass: "bg-primary/10 text-primary",
   },
   CalGETC: {
-    label: "CalGETC",
+    label: "Cal-GETC",
     subtitle: "California General Education Transfer Curriculum",
     tagClass: "bg-accent/30 text-accent-foreground",
   },
@@ -58,7 +58,7 @@ function GePage() {
               GE Requirements
             </h1>
             <p className="mt-3 max-w-2xl text-base text-muted-foreground">
-              Browse the RCCD GE pattern and CalGETC areas. Pick one eligible course per slot in
+              Browse the RCCD GE pattern and Cal-GETC areas. Pick one eligible course per slot in
               your pathway.
             </p>
           </div>

@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { fetchProgramBySlug } from "@/lib/api";
 import { groupByTerm, type Course } from "@/lib/program";
 import { SiteHeader, SiteFooter } from "@/components/SiteHeader";
@@ -339,8 +339,18 @@ function ProgramPage() {
     : calGetcNowActive && !rccdGeNowActive ? "calgetc"
     : null;
 
-  // Show GE sub-toggle whenever A.S. mode is active and the program has any GE tags
+  // Show GE sub-toggle inside the A.S. card (when pathway selector is visible)
   const showGeSubtoggle = currentMode === "as" && hasGeTags;
+  // Show a standalone GE toggle for A.S.-only programs (no CERT track) with both GE systems
+  const showStandaloneGeToggle = !showPathwaySelector && hasRccdGeTags && hasCalGetcTags;
+
+  // For A.S.-only programs with both GE systems, auto-default to RCCD GE on load
+  useEffect(() => {
+    if (showStandaloneGeToggle && activeTags === null) {
+      selectGeSystem("rccd");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [program?.id]);
 
   function selectGeSystem(sys: "rccd" | "calgetc") {
     setActiveTags((prev) => {
@@ -574,7 +584,7 @@ function ProgramPage() {
                                 : "border-border bg-background text-muted-foreground hover:border-primary/40 hover:text-foreground"
                             }`}
                           >
-                            CalGETC
+                            Cal-GETC
                           </button>
                         )}
                       </div>
@@ -605,6 +615,38 @@ function ProgramPage() {
                       Certificate-only track — no GE requirements
                     </p>
                   </div>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {showStandaloneGeToggle && (
+            <div className="mb-5">
+              <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                GE system
+              </p>
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => selectGeSystem("rccd")}
+                  className={`flex-1 rounded-xl border px-4 py-3 text-sm font-semibold transition-all ${
+                    geSystem === "rccd"
+                      ? "border-primary/50 bg-primary/5 text-primary shadow-sm ring-1 ring-inset ring-primary/20"
+                      : "border-border bg-card text-muted-foreground hover:border-primary/30 hover:text-foreground"
+                  }`}
+                >
+                  RCCD GE
+                </button>
+                <button
+                  type="button"
+                  onClick={() => selectGeSystem("calgetc")}
+                  className={`flex-1 rounded-xl border px-4 py-3 text-sm font-semibold transition-all ${
+                    geSystem === "calgetc"
+                      ? "border-primary/50 bg-primary/5 text-primary shadow-sm ring-1 ring-inset ring-primary/20"
+                      : "border-border bg-card text-muted-foreground hover:border-primary/30 hover:text-foreground"
+                  }`}
+                >
+                  Cal-GETC
                 </button>
               </div>
             </div>
