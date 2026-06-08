@@ -729,6 +729,23 @@ function ProgramPage() {
                     {yearUnits} units · {yearTerms.length} terms
                   </span>
                 </div>
+                <div className="mb-1 hidden grid-cols-4 gap-4 lg:grid">
+                  {(["Summer", "Fall", "Winter", "Spring"] as const).map((semester) => {
+                    const present = yearTerms.some((t) => t.semester === semester);
+                    const style = TERM_STYLE[semester] ?? TERM_STYLE.Fall;
+                    return (
+                      <div key={`header-${semester}`} className="px-1">
+                        <span
+                          className={`text-xs font-semibold uppercase tracking-wider ${
+                            present ? style.text : "text-muted-foreground/30"
+                          }`}
+                        >
+                          {semester}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                   {(["Summer", "Fall", "Winter", "Spring"] as const).map((semester) => {
                     const t = yearTerms.find((t) => t.semester === semester);
