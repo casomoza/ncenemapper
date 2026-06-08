@@ -61,7 +61,11 @@ export function CourseCard({
   const electiveGroup = (() => {
     if (!isElectiveSlot(course.code) || !electives) return undefined;
     const gc = electiveGroupCode(course.code);
-    return electives.find((e) => e.group_code.toLowerCase() === gc.toLowerCase());
+    // Normalize group_code — strip any accidental "ELEC " prefix that may have
+    // been saved in the DB alongside the course code (course code already stripped above)
+    return electives.find(
+      (e) => electiveGroupCode(e.group_code).toLowerCase() === gc.toLowerCase()
+    );
   })();
 
   const slot = geArea
