@@ -730,7 +730,12 @@ function ProgramPage() {
                   </span>
                 </div>
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                  {yearTerms.map((t) => {
+                  {(["Summer", "Fall", "Winter", "Spring"] as const).map((semester) => {
+                    const t = yearTerms.find((t) => t.semester === semester);
+                    if (!t) {
+                      // Placeholder keeps the column fixed even when the term is absent
+                      return <div key={`${year}-${semester}-empty`} aria-hidden="true" />;
+                    }
                     const style = TERM_STYLE[t.semester] ?? TERM_STYLE.Fall;
                     const termUnits = t.courses.reduce((s, c) => s + c.units, 0);
                     return (
