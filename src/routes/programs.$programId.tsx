@@ -90,6 +90,7 @@ function ProgramPage() {
   const [pdfShowSatisfies, setPdfShowSatisfies] = useState(true);
   const [pdfShowTerms, setPdfShowTerms] = useState(true);
   const [pdfShowGe, setPdfShowGe] = useState(true);
+  const [pdfShowCheckboxes, setPdfShowCheckboxes] = useState(true);
   const effectiveActive = activeTags ?? new Set(allTags);
 
   const visibleCourses = useMemo(() => {
@@ -211,28 +212,55 @@ function ProgramPage() {
     const visibleTerms = groupByTerm(coursesForPdf);
     const visibleYears = Array.from(new Set(visibleTerms.map((t) => t.year))).sort();
 
-    const head = pdfShowSatisfies
-      ? [["Course", "Title", "Units", "Satisfies"]]
-      : [["Course", "Title", "Units"]];
-    const columnStyles: Record<number, Record<string, unknown>> = pdfShowSatisfies
+    // Checkbox column is col 0 when enabled; all other cols shift right by 1
+    const cbCol = pdfShowCheckboxes;
+    const shift = cbCol ? 1 : 0;
+
+    const dataCols = pdfShowSatisfies
+      ? ["Course", "Title", "Units", "Satisfies"]
+      : ["Course", "Title", "Units"];
+    const head = cbCol
+      ? [[" ", ...dataCols]]
+      : [[...dataCols]];
+
+    const dataColStyles: Record<number, Record<string, unknown>> = pdfShowSatisfies
       ? {
-          0: { cellWidth: 70, fontStyle: "bold" },
-          1: { cellWidth: 240 },
-          2: { cellWidth: 40, halign: "center" },
-          3: { cellWidth: 180 },
+          [0 + shift]: { cellWidth: 70, fontStyle: "bold" },
+          [1 + shift]: { cellWidth: pdfShowCheckboxes ? 220 : 240 },
+          [2 + shift]: { cellWidth: 40, halign: "center" },
+          [3 + shift]: { cellWidth: 172 },
         }
       : {
-          0: { cellWidth: 90, fontStyle: "bold" },
-          1: { cellWidth: 380 },
-          2: { cellWidth: 50, halign: "center" },
+          [0 + shift]: { cellWidth: 85, fontStyle: "bold" },
+          [1 + shift]: { cellWidth: pdfShowCheckboxes ? 358 : 380 },
+          [2 + shift]: { cellWidth: 50, halign: "center" },
         };
+    const columnStyles: Record<number, Record<string, unknown>> = cbCol
+      ? { 0: { cellWidth: 18, halign: "center" }, ...dataColStyles }
+      : dataColStyles;
+
+    // Draws an empty checkbox square in body rows of the checkbox column
+    const didDrawCell = cbCol
+      ? (data: { section: string; column: { index: number }; cell: { x: number; y: number; width: number; height: number } }) => {
+          if (data.section === "body" && data.column.index === 0) {
+            const boxSize = 8;
+            const bx = data.cell.x + (data.cell.width - boxSize) / 2;
+            const by = data.cell.y + (data.cell.height - boxSize) / 2;
+            doc.setDrawColor(80);
+            doc.setLineWidth(0.5);
+            doc.rect(bx, by, boxSize, boxSize);
+          }
+        }
+      : undefined;
 
     function buildRows(courses: Course[]) {
       return courses.map((c) => {
         const choice = pdfShowGe ? getGeChoice(programId, c.code) : null;
         const title = choice ? `${c.title}  →  ${choice}` : c.title;
-        const base = [c.code, title, String(c.units)];
-        return pdfShowSatisfies ? [...base, c.satisfies.join("; ")] : base;
+        const dataRow = pdfShowSatisfies
+          ? [c.code, title, String(c.units), c.satisfies.join("; ")]
+          : [c.code, title, String(c.units)];
+        return cbCol ? [" ", ...dataRow] : dataRow;
       });
     }
 
@@ -251,15 +279,19 @@ function ProgramPage() {
           (a, b) => (TERM_ORDER[a.semester] ?? 9) - (TERM_ORDER[b.semester] ?? 9),
         );
         for (const t of sortedTerms) {
+          const termHead = cbCol
+            ? [[" ", `${t.semester} ${t.year}`, ...dataCols.slice(1)]]
+            : [[`${t.semester} ${t.year}`, ...dataCols.slice(1)]];
           autoTable(doc, {
             startY: y + 8,
-            head: [[`${t.semester} ${t.year}`, ...head[0].slice(1)]],
+            head: termHead,
             body: buildRows(t.courses),
             theme: "grid",
             styles: { fontSize: 9, cellPadding: 4, overflow: "linebreak" },
             headStyles: { fillColor: [124, 30, 48], textColor: 255 },
             columnStyles,
             margin: { left: margin, right: margin },
+            didDrawCell,
           });
           // @ts-expect-error lastAutoTable is attached by plugin
           y = doc.lastAutoTable.finalY + 10;
@@ -276,6 +308,7 @@ function ProgramPage() {
           headStyles: { fillColor: [124, 30, 48], textColor: 255 },
           columnStyles,
           margin: { left: margin, right: margin },
+          didDrawCell,
         });
         // @ts-expect-error lastAutoTable is attached by plugin
         y = doc.lastAutoTable.finalY + 10;
@@ -855,6 +888,13 @@ function ProgramPage() {
                   onCheckedChange={(v) => setPdfShowGe(v === true)}
                 />
                 Show GE requirements
+              </label>
+              <label className="flex items-center gap-2 text-sm text-foreground/90">
+                <Checkbox
+                  checked={pdfShowCheckboxes}
+                  onCheckedChange={(v) => setPdfShowCheckboxes(v === true)}
+                />
+                Include completion checkboxes
               </label>
             </div>
           </div>
