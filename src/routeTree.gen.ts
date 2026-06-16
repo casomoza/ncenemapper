@@ -15,6 +15,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as ProgramsProgramIdRouteImport } from './routes/programs.$programId'
 import { Route as AdminGeRouteImport } from './routes/admin.ge'
+import { Route as AdminCatalogRouteImport } from './routes/admin.catalog'
 import { Route as AdminProgramsProgramIdRouteImport } from './routes/admin.programs.$programId'
 
 const GeRoute = GeRouteImport.update({
@@ -47,6 +48,11 @@ const AdminGeRoute = AdminGeRouteImport.update({
   path: '/admin/ge',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminCatalogRoute = AdminCatalogRouteImport.update({
+  id: '/admin/catalog',
+  path: '/admin/catalog',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminProgramsProgramIdRoute = AdminProgramsProgramIdRouteImport.update({
   id: '/admin/programs/$programId',
   path: '/admin/programs/$programId',
@@ -57,6 +63,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/ge': typeof GeRoute
+  '/admin/catalog': typeof AdminCatalogRoute
   '/admin/ge': typeof AdminGeRoute
   '/programs/$programId': typeof ProgramsProgramIdRoute
   '/admin/': typeof AdminIndexRoute
@@ -66,6 +73,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/ge': typeof GeRoute
+  '/admin/catalog': typeof AdminCatalogRoute
   '/admin/ge': typeof AdminGeRoute
   '/programs/$programId': typeof ProgramsProgramIdRoute
   '/admin': typeof AdminIndexRoute
@@ -76,6 +84,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/ge': typeof GeRoute
+  '/admin/catalog': typeof AdminCatalogRoute
   '/admin/ge': typeof AdminGeRoute
   '/programs/$programId': typeof ProgramsProgramIdRoute
   '/admin/': typeof AdminIndexRoute
@@ -87,6 +96,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/ge'
+    | '/admin/catalog'
     | '/admin/ge'
     | '/programs/$programId'
     | '/admin/'
@@ -96,6 +106,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/ge'
+    | '/admin/catalog'
     | '/admin/ge'
     | '/programs/$programId'
     | '/admin'
@@ -105,6 +116,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/ge'
+    | '/admin/catalog'
     | '/admin/ge'
     | '/programs/$programId'
     | '/admin/'
@@ -115,6 +127,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
   GeRoute: typeof GeRoute
+  AdminCatalogRoute: typeof AdminCatalogRoute
   AdminGeRoute: typeof AdminGeRoute
   ProgramsProgramIdRoute: typeof ProgramsProgramIdRoute
   AdminIndexRoute: typeof AdminIndexRoute
@@ -165,6 +178,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminGeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/catalog': {
+      id: '/admin/catalog'
+      path: '/admin/catalog'
+      fullPath: '/admin/catalog'
+      preLoaderRoute: typeof AdminCatalogRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/programs/$programId': {
       id: '/admin/programs/$programId'
       path: '/admin/programs/$programId'
@@ -179,6 +199,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
   GeRoute: GeRoute,
+  AdminCatalogRoute: AdminCatalogRoute,
   AdminGeRoute: AdminGeRoute,
   ProgramsProgramIdRoute: ProgramsProgramIdRoute,
   AdminIndexRoute: AdminIndexRoute,

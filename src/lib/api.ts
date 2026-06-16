@@ -172,3 +172,29 @@ export async function fetchProgramElectivesBySlug(slug: string): Promise<DbProgr
   if (!prog) return [];
   return fetchProgramElectives((prog as { id: string }).id);
 }
+
+export interface CatalogCourse {
+  code: string;
+  title: string;
+  units: number;
+  prerequisite: string;
+  description: string;
+}
+
+/**
+ * Fetch courses from the catalog_courses Supabase table.
+ * Returns null if the table doesn't exist yet (migration not yet applied),
+ * allowing callers to fall back to the bundled static JSON.
+ */
+export async function fetchCatalogCoursesFromDb(): Promise<CatalogCourse[] | null> {
+  const { data, error } = await supabase
+    .from("catalog_courses" as never)
+    .select("code, title, units, prerequisite, description")
+    .order("code");
+  if (error) {
+    // Table might not exist yet — return null so callers can use the static fallback
+    return null;
+  }
+  const rows = (data ?? []) as CatalogCourse[];
+  return rows.length > 0 ? rows : null;
+}

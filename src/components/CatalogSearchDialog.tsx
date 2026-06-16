@@ -1,16 +1,11 @@
 import { useState, useMemo, useRef, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Search, X, BookOpen, Plus, Check } from "lucide-react";
-import catalogData from "@/lib/catalog-courses.json";
+import { fetchCatalogCoursesFromDb } from "@/lib/api";
+import type { CatalogCourse } from "@/lib/api";
+import staticCatalog from "@/lib/catalog-courses.json";
 
-export interface CatalogCourse {
-  code: string;
-  title: string;
-  units: number;
-  prerequisite: string;
-  description: string;
-}
-
-const catalog = catalogData as CatalogCourse[];
+export type { CatalogCourse };
 
 const SEMESTERS = ["Summer", "Fall", "Winter", "Spring"];
 const CATEGORIES = ["core", "ge"];
@@ -30,6 +25,17 @@ export function CatalogSearchDialog({ open, onClose, onAdd }: Props) {
   const [added, setAdded] = useState<Set<string>>(new Set());
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Try Supabase first; fall back to bundled static JSON
+  const { data: dbCourses } = useQuery({
+    queryKey: ["catalog-courses"],
+    queryFn: fetchCatalogCoursesFromDb,
+    staleTime: 5 * 60 * 1000,
+    enabled: open,
+  });
+  const catalog: CatalogCourse[] =
+    dbCourses ?? (staticCatalog as CatalogCourse[]);
+  const source = dbCourses ? "database" : "bundled";
+
   useEffect(() => {
     if (open) {
       setQuery("");
@@ -48,7 +54,7 @@ export function CatalogSearchDialog({ open, onClose, onAdd }: Props) {
           c.title.toLowerCase().includes(q),
       )
       .slice(0, 40);
-  }, [query]);
+  }, [query, catalog]);
 
   async function handleAdd(course: CatalogCourse) {
     setAdding(course.code);
@@ -72,6 +78,9 @@ export function CatalogSearchDialog({ open, onClose, onAdd }: Props) {
         <div className="flex items-center gap-3 border-b border-border px-4 py-3">
           <BookOpen className="h-5 w-5 shrink-0 text-primary" />
           <span className="font-medium">Search Course Catalog</span>
+          <span className="ml-1 text-xs text-muted-foreground">
+            {catalog.length} courses · {source === "database" ? "from database" : "bundled 2026–27"}
+          </span>
           <button
             onClick={onClose}
             className="ml-auto rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -132,7 +141,7 @@ export function CatalogSearchDialog({ open, onClose, onAdd }: Props) {
         <div className="max-h-[50vh] overflow-y-auto px-2 pb-3">
           {query.trim() === "" && (
             <p className="py-8 text-center text-sm text-muted-foreground">
-              Start typing to search 898 catalog courses
+              Start typing to search {catalog.length} catalog courses
             </p>
           )}
           {query.trim() !== "" && results.length === 0 && (
