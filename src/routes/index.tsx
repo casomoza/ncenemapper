@@ -20,6 +20,22 @@ export const Route = createFileRoute("/")({
   }),
 });
 
+// Normalise a stored cluster value to its canonical NORCO_SCHOOLS name.
+// Handles old records that are missing the "School of " prefix.
+function normalizeCluster(raw: string): string {
+  if (!raw) return "Unassigned";
+  // Exact match first
+  if ((NORCO_SCHOOLS as readonly string[]).includes(raw)) return raw;
+  // Try prepending "School of " — handles "Applied Technologies & Apprenticeships" etc.
+  const withPrefix = `School of ${raw}`;
+  if ((NORCO_SCHOOLS as readonly string[]).includes(withPrefix)) return withPrefix;
+  // Try stripping "School of " and comparing the tail — reverse direction
+  const tail = raw.replace(/^School of /i, "");
+  const match = NORCO_SCHOOLS.find((s) => s.replace(/^School of /i, "") === tail);
+  if (match) return match;
+  return raw;
+}
+
 function HomePage() {
   const { data: programs = [], isLoading } = useQuery({
     queryKey: ["programs"],
@@ -28,14 +44,15 @@ function HomePage() {
   const [selectedCluster, setSelectedCluster] = useState<string | null>(null);
   const [search, setSearch] = useState("");
 
-  // Group programs by school, preserving the canonical school order
+  // Group programs by school, preserving the canonical school order.
+  // normalizeCluster handles programs with old cluster values (missing "School of ").
   const schools = useMemo(() => {
     const countMap = new Map<string, number>();
     for (const p of programs) {
-      const key = p.cluster?.trim() || "Unassigned";
+      const key = normalizeCluster(p.cluster?.trim() || "");
       countMap.set(key, (countMap.get(key) ?? 0) + 1);
     }
-    // Start with the canonical school order, then append any unrecognised values
+    // Canonical schools first (in order), then any truly unrecognised values
     const ordered: string[] = [
       ...NORCO_SCHOOLS.filter((s) => countMap.has(s)),
       ...[...countMap.keys()].filter((k) => !(NORCO_SCHOOLS as readonly string[]).includes(k)),
@@ -57,7 +74,7 @@ function HomePage() {
   const visiblePrograms = useMemo(
     () =>
       selectedCluster
-        ? programs.filter((p) => (p.cluster?.trim() || "Unassigned") === selectedCluster)
+        ? programs.filter((p) => normalizeCluster(p.cluster?.trim() || "") === selectedCluster)
         : [],
     [programs, selectedCluster],
   );
