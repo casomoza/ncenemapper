@@ -75,7 +75,7 @@ function HomePage() {
               Norco College · Program Pathways
             </p>
             <h1 className="mt-3 max-w-3xl font-serif text-5xl font-semibold leading-[1.05] text-foreground text-balance">
-              Map your path from first semester to transfer.
+              Your Mustang Journey at a Glance
             </h1>
             <p className="mt-5 max-w-2xl text-lg leading-relaxed text-foreground/75">
               Clear, term-by-term course pathways that show exactly what to take, when to take
