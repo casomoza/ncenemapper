@@ -3,7 +3,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { fetchPrograms } from "@/lib/api";
 import { SiteHeader, SiteFooter } from "@/components/SiteHeader";
-import { ArrowRight, ArrowLeft, GraduationCap, Layers, Search, X } from "lucide-react";
+import { NORCO_SCHOOLS } from "@/lib/schools";
+import { ArrowRight, ArrowLeft, GraduationCap, BookOpen, Search, X } from "lucide-react";
 
 export const Route = createFileRoute("/")({
   component: HomePage,
@@ -27,15 +28,19 @@ function HomePage() {
   const [selectedCluster, setSelectedCluster] = useState<string | null>(null);
   const [search, setSearch] = useState("");
 
-  const clusters = useMemo(() => {
-    const map = new Map<string, { name: string; count: number }>();
+  // Group programs by school, preserving the canonical school order
+  const schools = useMemo(() => {
+    const countMap = new Map<string, number>();
     for (const p of programs) {
-      const key = p.cluster?.trim() || "Other";
-      const existing = map.get(key);
-      if (existing) existing.count += 1;
-      else map.set(key, { name: key, count: 1 });
+      const key = p.cluster?.trim() || "Unassigned";
+      countMap.set(key, (countMap.get(key) ?? 0) + 1);
     }
-    return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
+    // Start with the canonical school order, then append any unrecognised values
+    const ordered: string[] = [
+      ...NORCO_SCHOOLS.filter((s) => countMap.has(s)),
+      ...[...countMap.keys()].filter((k) => !(NORCO_SCHOOLS as readonly string[]).includes(k)),
+    ];
+    return ordered.map((name) => ({ name, count: countMap.get(name) ?? 0 }));
   }, [programs]);
 
   const searchResults = useMemo(() => {
@@ -52,7 +57,7 @@ function HomePage() {
   const visiblePrograms = useMemo(
     () =>
       selectedCluster
-        ? programs.filter((p) => (p.cluster?.trim() || "Other") === selectedCluster)
+        ? programs.filter((p) => (p.cluster?.trim() || "Unassigned") === selectedCluster)
         : [],
     [programs, selectedCluster],
   );
@@ -158,37 +163,37 @@ function HomePage() {
             <>
               <div className="mb-6">
                 <h2 className="font-serif text-2xl font-semibold text-foreground">
-                  Program Clusters
+                  Career and Academic Pathways
                 </h2>
                 <p className="text-sm text-muted-foreground">
-                  Choose a cluster to see its programs.
+                  Choose a school to see its programs.
                 </p>
               </div>
 
               {isLoading ? (
-                <p className="text-sm text-muted-foreground">Loading clusters…</p>
-              ) : clusters.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Loading schools…</p>
+              ) : schools.length === 0 ? (
                 <p className="text-sm text-muted-foreground">No programs yet.</p>
               ) : (
                 <div className="grid gap-5 md:grid-cols-2">
-                  {clusters.map((c) => (
+                  {schools.map((s) => (
                     <button
-                      key={c.name}
+                      key={s.name}
                       type="button"
-                      onClick={() => setSelectedCluster(c.name)}
+                      onClick={() => setSelectedCluster(s.name)}
                       className="group relative overflow-hidden rounded-lg border border-border bg-card p-6 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-lg"
                     >
                       <div className="absolute inset-x-0 top-0 h-1 bg-primary" />
                       <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-primary">
-                        <Layers className="h-3.5 w-3.5" />
-                        Cluster
+                        <BookOpen className="h-3.5 w-3.5" />
+                        School
                       </div>
-                      <h3 className="mt-2 font-serif text-2xl font-semibold leading-tight text-foreground">
-                        {c.name}
+                      <h3 className="mt-2 font-serif text-xl font-semibold leading-snug text-foreground">
+                        {s.name}
                       </h3>
                       <div className="mt-5 flex items-center justify-between border-t border-border pt-4 text-sm">
                         <span className="text-muted-foreground">
-                          {c.count} {c.count === 1 ? "program" : "programs"}
+                          {s.count} {s.count === 1 ? "program" : "programs"}
                         </span>
                         <span className="flex items-center gap-1 font-medium text-primary transition-transform group-hover:translate-x-0.5">
                           View programs <ArrowRight className="h-4 w-4" />
@@ -208,7 +213,7 @@ function HomePage() {
                     onClick={() => setSelectedCluster(null)}
                     className="mb-2 inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
                   >
-                    <ArrowLeft className="h-4 w-4" /> All clusters
+                    <ArrowLeft className="h-4 w-4" /> All schools
                   </button>
                   <h2 className="font-serif text-2xl font-semibold text-foreground">
                     {selectedCluster}
@@ -221,7 +226,7 @@ function HomePage() {
 
               {visiblePrograms.length === 0 ? (
                 <p className="text-sm text-muted-foreground">
-                  No programs in this cluster yet.
+                  No programs assigned to this school yet.
                 </p>
               ) : (
                 <div className="grid gap-5 md:grid-cols-2">

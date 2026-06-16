@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { SiteHeader, SiteFooter } from "@/components/SiteHeader";
 import { fetchPrograms } from "@/lib/api";
 import { ProgramExcelImport } from "@/components/ProgramExcelImport";
+import { NORCO_SCHOOLS } from "@/lib/schools";
 import { LogOut, Plus, Pencil, Trash2 } from "lucide-react";
 
 
@@ -171,7 +172,7 @@ function NewProgramForm({ onClose }: { onClose: () => void }) {
   const [name, setName] = useState("");
   const [degreeType, setDegreeType] = useState("");
   const [totalUnits, setTotalUnits] = useState(60);
-  const [cluster, setCluster] = useState("");
+  const [cluster, setCluster] = useState(NORCO_SCHOOLS[0]);
   const [description, setDescription] = useState("");
   const [error, setError] = useState<string | null>(null);
 
@@ -207,7 +208,18 @@ function NewProgramForm({ onClose }: { onClose: () => void }) {
       <Field label="Slug (URL id)" value={slug} onChange={setSlug} required />
       <Field label="Name" value={name} onChange={setName} required />
       <Field label="Degree type" value={degreeType} onChange={setDegreeType} />
-      <Field label="Cluster" value={cluster} onChange={setCluster} />
+      <div>
+        <label className="block text-xs font-medium">School</label>
+        <select
+          value={cluster}
+          onChange={(e) => setCluster(e.target.value)}
+          className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+        >
+          {NORCO_SCHOOLS.map((s) => (
+            <option key={s} value={s}>{s}</option>
+          ))}
+        </select>
+      </div>
       <Field
         label="Total units"
         value={String(totalUnits)}

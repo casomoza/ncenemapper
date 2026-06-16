@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { SiteHeader, SiteFooter } from "@/components/SiteHeader";
 import { fetchDbProgramBySlug, fetchDbCourses, type DbCourse, type DbProgram } from "@/lib/api";
+import { NORCO_SCHOOLS } from "@/lib/schools";
 import { ArrowLeft, Plus, Trash2, Save } from "lucide-react";
 
 export const Route = createFileRoute("/admin/programs/$programId")({
@@ -134,7 +135,19 @@ function ProgramForm({ program }: { program: DbProgram }) {
     <div className="mt-4 grid gap-3 rounded-lg border border-border bg-card p-5 md:grid-cols-2">
       <Field label="Name" value={form.name} onChange={(v) => setForm({ ...form, name: v })} />
       <Field label="Degree type" value={form.degree_type} onChange={(v) => setForm({ ...form, degree_type: v })} />
-      <Field label="Cluster" value={form.cluster ?? ""} onChange={(v) => setForm({ ...form, cluster: v })} />
+      <div>
+        <label className="block text-xs font-medium">School</label>
+        <select
+          value={form.cluster ?? ""}
+          onChange={(e) => setForm({ ...form, cluster: e.target.value })}
+          className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+        >
+          <option value="">— unassigned —</option>
+          {NORCO_SCHOOLS.map((s) => (
+            <option key={s} value={s}>{s}</option>
+          ))}
+        </select>
+      </div>
       <Field
         label="Total units"
         type="number"
