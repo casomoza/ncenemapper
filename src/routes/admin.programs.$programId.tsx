@@ -6,7 +6,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { SiteHeader, SiteFooter } from "@/components/SiteHeader";
 import { fetchDbProgramBySlug, fetchDbCourses, type DbCourse, type DbProgram } from "@/lib/api";
 import { NORCO_SCHOOLS } from "@/lib/schools";
-import { ArrowLeft, Plus, Trash2, Save } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Save, BookOpen } from "lucide-react";
+import { CatalogSearchDialog } from "@/components/CatalogSearchDialog";
+import type { CatalogCourse } from "@/components/CatalogSearchDialog";
 
 export const Route = createFileRoute("/admin/programs/$programId")({
   component: AdminProgramPage,
@@ -200,13 +202,14 @@ function AddCourseButton({ programId }: { programId: string }) {
   const qc = useQueryClient();
   const [code, setCode] = useState("");
   const [status, setStatus] = useState<string | null>(null);
+  const [catalogOpen, setCatalogOpen] = useState(false);
+
   const add = useMutation({
     mutationFn: async () => {
       const trimmed = code.trim();
       let prefill: Partial<DbCourse> = {};
       let prefilled = false;
       if (trimmed) {
-        // Look up an existing course with the same code in any other program
         const { data: existing, error: lookupErr } = await supabase
           .from("courses")
           .select("*")
@@ -254,23 +257,64 @@ function AddCourseButton({ programId }: { programId: string }) {
     },
     onError: (e: Error) => setStatus(`Error: ${e.message}`),
   });
+
+  async function handleCatalogAdd(
+    course: CatalogCourse,
+    year: number,
+    semester: string,
+    category: string,
+  ) {
+    const { error } = await supabase.from("courses").insert({
+      program_id: programId,
+      code: course.code,
+      title: course.title,
+      units: course.units,
+      year,
+      semester,
+      category,
+      prerequisite: course.prerequisite && course.prerequisite !== "None."
+        ? course.prerequisite
+        : null,
+      description: course.description || null,
+      satisfies: [],
+      optional: false,
+      note: null,
+    });
+    if (error) throw error;
+    qc.invalidateQueries({ queryKey: ["admin-courses", programId] });
+  }
+
   return (
-    <div className="flex items-center gap-2">
-      {status && <span className="text-xs text-muted-foreground">{status}</span>}
-      <input
-        value={code}
-        onChange={(e) => setCode(e.target.value)}
-        placeholder="Course code (optional)"
-        className="w-44 rounded-md border border-input bg-background px-2 py-1.5 text-sm"
+    <>
+      <CatalogSearchDialog
+        open={catalogOpen}
+        onClose={() => setCatalogOpen(false)}
+        onAdd={handleCatalogAdd}
       />
-      <button
-        onClick={() => add.mutate()}
-        disabled={add.isPending}
-        className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:bg-burgundy disabled:opacity-60"
-      >
-        <Plus className="h-4 w-4" /> Add course
-      </button>
-    </div>
+      <div className="flex items-center gap-2">
+        {status && <span className="text-xs text-muted-foreground">{status}</span>}
+        <button
+          onClick={() => setCatalogOpen(true)}
+          className="inline-flex items-center gap-1.5 rounded-md border border-primary px-3 py-1.5 text-sm font-medium text-primary hover:bg-primary/5"
+        >
+          <BookOpen className="h-4 w-4" /> Search catalog
+        </button>
+        <input
+          value={code}
+          onChange={(e) => setCode(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && add.mutate()}
+          placeholder="Code (optional)"
+          className="w-36 rounded-md border border-input bg-background px-2 py-1.5 text-sm"
+        />
+        <button
+          onClick={() => add.mutate()}
+          disabled={add.isPending}
+          className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:bg-burgundy disabled:opacity-60"
+        >
+          <Plus className="h-4 w-4" /> Add blank
+        </button>
+      </div>
+    </>
   );
 }
 
