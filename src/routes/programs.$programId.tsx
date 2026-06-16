@@ -101,6 +101,21 @@ function ProgramPage() {
     });
   }, [program, effectiveActive]);
 
+  const isIeppProgram = program?.cluster === "NC & UCR Bourns College of Engineering Transfer Pathway";
+
+  // Must be before any early returns (Rules of Hooks)
+  useEffect(() => {
+    const hasRccd  = allTags.some(isRccdGeTag);
+    const hasCalGetc = allTags.some(isCalGetcTag);
+    const hasAs    = allTags.some(isAsTag);
+    const hasCert  = allTags.some(isCertTag);
+    const standalone = !(hasAs && hasCert) && hasRccd && hasCalGetc;
+    if (standalone && activeTags === null) {
+      selectGeSystem("rccd");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [program?.id]);
+
   if (isLoading) {
     return (
       <div className="flex min-h-screen flex-col">
@@ -343,14 +358,6 @@ function ProgramPage() {
   const showGeSubtoggle = currentMode === "as" && hasGeTags;
   // Show a standalone GE toggle for A.S.-only programs (no CERT track) with both GE systems
   const showStandaloneGeToggle = !showPathwaySelector && hasRccdGeTags && hasCalGetcTags;
-
-  // For A.S.-only programs with both GE systems, auto-default to RCCD GE on load
-  useEffect(() => {
-    if (showStandaloneGeToggle && activeTags === null) {
-      selectGeSystem("rccd");
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [program?.id]);
 
   function selectGeSystem(sys: "rccd" | "calgetc") {
     setActiveTags((prev) => {
@@ -870,7 +877,7 @@ function ProgramPage() {
         </DialogContent>
       </Dialog>
 
-      <SiteFooter />
+      <SiteFooter showIepp={isIeppProgram} />
 
     </div>
   );

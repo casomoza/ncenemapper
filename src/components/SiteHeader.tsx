@@ -37,15 +37,23 @@ export function SiteHeader() {
   );
 }
 
-export function SiteFooter() {
+export function SiteFooter({ showIepp = false }: { showIepp?: boolean }) {
   return (
     <footer className="mt-16 border-t border-border bg-card">
       <div className="mx-auto max-w-6xl px-6 py-8 text-sm text-muted-foreground">
-        <img
-          src={ieppLogo}
-          alt="Inland Engineering Pathways Partnership — Jurupa Unified School District, Norco College, Riverside City College, UC Riverside"
-          className="mx-auto mb-6 w-full max-w-3xl"
-        />
+        {showIepp ? (
+          <img
+            src={ieppLogo}
+            alt="Inland Engineering Pathways Partnership — Jurupa Unified School District, Norco College, Riverside City College, UC Riverside"
+            className="mx-auto mb-6 w-full max-w-3xl"
+          />
+        ) : (
+          <img
+            src={logo}
+            alt="Norco College Career Education"
+            className="mb-6 h-16 w-auto"
+          />
+        )}
         <p>Norco College &middot; Program Pathways &middot; 2024–2025</p>
         <p className="mt-1 text-xs">
           Information is advisory. Confirm requirements with a counselor before enrolling.
