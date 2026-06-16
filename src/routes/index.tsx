@@ -53,7 +53,7 @@ function HomePage() {
         <section className="bg-paper border-b border-border">
           <div className="mx-auto max-w-6xl px-6 py-16">
             <p className="font-mono text-xs font-semibold uppercase tracking-[0.18em] text-primary">
-              Norco College · Engineering
+              Norco College · Program Pathways
             </p>
             <h1 className="mt-3 max-w-3xl font-serif text-5xl font-semibold leading-[1.05] text-foreground text-balance">
               Map your path from first semester to transfer.
