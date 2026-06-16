@@ -7,7 +7,7 @@ export function SiteHeader() {
     <header className="border-b border-border bg-card">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-6 py-4">
         <Link to="/" className="flex items-center gap-3">
-          <img src={logo} alt="Norco College Engineering" className="h-20 w-auto sm:h-24" />
+          <img src={logo} alt="Norco College Engineering" className="h-14 w-auto sm:h-16" />
         </Link>
         <nav className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm font-medium">
           <Link
