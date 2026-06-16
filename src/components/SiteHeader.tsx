@@ -54,7 +54,7 @@ export function SiteFooter({ showIepp = false }: { showIepp?: boolean }) {
             className="mb-6 h-16 w-auto"
           />
         )}
-        <p>Norco College &middot; Program Pathways &middot; 2024–2025</p>
+        <p>Norco College &middot; Program Pathways &middot; 2026–2027</p>
         <p className="mt-1 text-xs">
           Information is advisory. Confirm requirements with a counselor before enrolling.
         </p>
