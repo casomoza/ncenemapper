@@ -3,7 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { fetchPrograms } from "@/lib/api";
 import { SiteHeader, SiteFooter } from "@/components/SiteHeader";
-import { ArrowRight, ArrowLeft, GraduationCap, Layers } from "lucide-react";
+import { ArrowRight, ArrowLeft, GraduationCap, Layers, Search, X } from "lucide-react";
 
 export const Route = createFileRoute("/")({
   component: HomePage,
@@ -25,6 +25,7 @@ function HomePage() {
     queryFn: fetchPrograms,
   });
   const [selectedCluster, setSelectedCluster] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
 
   const clusters = useMemo(() => {
     const map = new Map<string, { name: string; count: number }>();
@@ -37,6 +38,17 @@ function HomePage() {
     return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
   }, [programs]);
 
+  const searchResults = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return [];
+    return programs.filter(
+      (p) =>
+        p.name.toLowerCase().includes(q) ||
+        (p.cluster ?? "").toLowerCase().includes(q) ||
+        (p.degreeType ?? "").toLowerCase().includes(q),
+    );
+  }, [programs, search]);
+
   const visiblePrograms = useMemo(
     () =>
       selectedCluster
@@ -44,6 +56,8 @@ function HomePage() {
         : [],
     [programs, selectedCluster],
   );
+
+  const isSearching = search.trim().length > 0;
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -62,11 +76,85 @@ function HomePage() {
               Clear, term-by-term course pathways that show exactly what to take, when to take
               it, and which certificate or degree requirements each course satisfies.
             </p>
+
+            <div className="mt-8 max-w-lg">
+              <div className="relative">
+                <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <input
+                  type="search"
+                  placeholder="Search programs…"
+                  value={search}
+                  onChange={(e) => {
+                    setSearch(e.target.value);
+                    if (e.target.value.trim()) setSelectedCluster(null);
+                  }}
+                  className="w-full rounded-lg border border-border bg-card py-2.5 pl-10 pr-10 text-sm text-foreground shadow-sm placeholder:text-muted-foreground focus:border-primary/60 focus:outline-none focus:ring-2 focus:ring-primary/20"
+                />
+                {search && (
+                  <button
+                    type="button"
+                    onClick={() => setSearch("")}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    aria-label="Clear search"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
         </section>
 
         <section className="mx-auto max-w-6xl px-6 py-12">
-          {selectedCluster === null ? (
+          {isSearching ? (
+            <>
+              <div className="mb-6">
+                <h2 className="font-serif text-2xl font-semibold text-foreground">
+                  Search results
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  {searchResults.length === 0
+                    ? "No programs match your search."
+                    : `${searchResults.length} program${searchResults.length === 1 ? "" : "s"} found`}
+                </p>
+              </div>
+              <div className="grid gap-5 md:grid-cols-2">
+                {searchResults.map((p) => (
+                  <Link
+                    key={p.id}
+                    to="/programs/$programId"
+                    params={{ programId: p.id }}
+                    className="group relative overflow-hidden rounded-lg border border-border bg-card p-6 shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-lg"
+                  >
+                    <div className="absolute inset-x-0 top-0 h-1 bg-primary" />
+                    <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-primary">
+                      <Layers className="h-3.5 w-3.5" />
+                      {p.cluster}
+                    </div>
+                    <h3 className="mt-2 font-serif text-2xl font-semibold leading-tight text-foreground">
+                      {p.name}
+                    </h3>
+                    <p className="mt-1 text-sm text-muted-foreground">{p.degreeType}</p>
+                    <p className="mt-4 line-clamp-2 text-sm text-foreground/75">
+                      {p.description}
+                    </p>
+                    <div className="mt-5 flex items-center justify-between border-t border-border pt-4 text-sm">
+                      <div className="flex items-center gap-4 text-muted-foreground">
+                        <span className="flex items-center gap-1.5">
+                          <GraduationCap className="h-4 w-4" />
+                          {p.totalUnits} units
+                        </span>
+                        <span>{p.courses.length} courses</span>
+                      </div>
+                      <span className="flex items-center gap-1 font-medium text-primary transition-transform group-hover:translate-x-0.5">
+                        View pathway <ArrowRight className="h-4 w-4" />
+                      </span>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </>
+          ) : selectedCluster === null ? (
             <>
               <div className="mb-6">
                 <h2 className="font-serif text-2xl font-semibold text-foreground">
