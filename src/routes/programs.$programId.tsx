@@ -87,7 +87,7 @@ function ProgramPage() {
   const [pdfOpen, setPdfOpen] = useState(false);
   const [pdfTitle, setPdfTitle] = useState("");
   const [pdfIncludeSummary, setPdfIncludeSummary] = useState(true);
-  const [pdfShowSatisfies, setPdfShowSatisfies] = useState(true);
+  const [pdfShowSatisfies, setPdfShowSatisfies] = useState(false);
   const [pdfShowTerms, setPdfShowTerms] = useState(true);
   const [pdfShowGe, setPdfShowGe] = useState(true);
   const [pdfShowCheckboxes, setPdfShowCheckboxes] = useState(true);
