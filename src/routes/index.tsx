@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchPrograms } from "@/lib/api";
 import { SiteHeader, SiteFooter } from "@/components/SiteHeader";
 import { NORCO_SCHOOLS } from "@/lib/schools";
-import { ArrowRight, ArrowLeft, GraduationCap, BookOpen, Search, X } from "lucide-react";
+import { ArrowRight, ArrowLeft, GraduationCap, BookOpen, Layers, Search, X } from "lucide-react";
 
 export const Route = createFileRoute("/")({
   component: HomePage,
