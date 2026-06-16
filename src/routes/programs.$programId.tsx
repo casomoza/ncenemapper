@@ -104,15 +104,34 @@ function ProgramPage() {
 
   const isIeppProgram = program?.cluster === "NC & UCR Bourns College of Engineering Transfer Pathway";
 
-  // Must be before any early returns (Rules of Hooks)
+  // Must be before any early returns (Rules of Hooks).
+  // Auto-select default mode whenever the program changes:
+  //   • A.S. + Cal-GETC  (preferred)
+  //   • CERT             (if no A.S. track exists)
+  //   • null / show-all  (if neither track exists)
   useEffect(() => {
-    const hasRccd  = allTags.some(isRccdGeTag);
+    if (allTags.length === 0) return;
+
+    const hasAs      = allTags.some(isAsTag);
+    const hasCert    = allTags.some(isCertTag);
     const hasCalGetc = allTags.some(isCalGetcTag);
-    const hasAs    = allTags.some(isAsTag);
-    const hasCert  = allTags.some(isCertTag);
-    const standalone = !(hasAs && hasCert) && hasRccd && hasCalGetc;
-    if (standalone && activeTags === null) {
-      selectGeSystem("rccd");
+
+    if (hasAs) {
+      // A.S. mode: remove CERT tags; prefer Cal-GETC, fall back to RCCD
+      const base = new Set(allTags);
+      for (const t of allTags) if (isCertTag(t)) base.delete(t);
+      if (hasCalGetc) {
+        for (const t of allTags) if (isRccdGeTag(t)) base.delete(t);
+      }
+      setActiveTags(base);
+    } else if (hasCert) {
+      // CERT mode: remove GE tags (certificates carry no GE requirement)
+      const base = new Set(allTags);
+      for (const t of allTags) if (isGeTag(t)) base.delete(t);
+      setActiveTags(base);
+    } else {
+      // No degree/cert tags — show everything
+      setActiveTags(null);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [program?.id]);
