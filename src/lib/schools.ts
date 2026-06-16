@@ -7,6 +7,7 @@ export const NORCO_SCHOOLS = [
   "School of Natural Sciences, Health & Kinesiology",
   "School of Social & Behavioral Sciences",
   "School of Visual & Performing Arts",
+  "NC & UCR Bourns College of Engineering Transfer Pathway",
 ] as const;
 
 export type NorcoSchool = (typeof NORCO_SCHOOLS)[number];
