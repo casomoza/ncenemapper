@@ -278,7 +278,13 @@ function ProgramPage() {
     function buildRows(courses: Course[]) {
       return courses.map((c) => {
         const choice = pdfShowGe ? getGeChoice(programId, c.code) : null;
-        const title = choice ? `${c.title}  →  ${choice}` : c.title;
+        // Use ASCII ">" instead of Unicode arrow (→) — standard PDF fonts
+        // (Helvetica/WinAnsi) don't include U+2192, which distorts on iOS Safari.
+        // Truncate long choice strings to prevent excessive cell height.
+        const choiceLabel = choice
+          ? choice.length > 55 ? choice.slice(0, 52) + "..." : choice
+          : null;
+        const title = choiceLabel ? `${c.title} > ${choiceLabel}` : c.title;
         const dataRow = pdfShowSatisfies
           ? [c.code, title, String(c.units), c.satisfies.join("; ")]
           : [c.code, title, String(c.units)];
