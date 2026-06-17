@@ -106,17 +106,20 @@ function ProgramPage() {
 
   // Must be before any early returns (Rules of Hooks).
   // Auto-select default mode whenever the program changes:
-  //   • A.S. + Cal-GETC  (preferred)
-  //   • CERT             (if no A.S. track exists)
-  //   • null / show-all  (if neither track exists)
+  //   • A.S. + Cal-GETC  (if degree_type contains A.S. or A.A., or course tags say A.S.)
+  //   • CERT             (otherwise — certificates carry no GE requirement)
+  //   • null / show-all  (if no tags at all)
   useEffect(() => {
-    if (allTags.length === 0) return;
+    if (!program) return;
 
     const hasAs      = allTags.some(isAsTag);
     const hasCert    = allTags.some(isCertTag);
     const hasCalGetc = allTags.some(isCalGetcTag);
+    // Also check the program's degree_type for programs whose core courses
+    // have no satisfies tags (e.g. new bulk-imported programs).
+    const degreeHasAs = /A\.[SA]\./.test(program.degreeType);
 
-    if (hasAs) {
+    if (hasAs || degreeHasAs) {
       // A.S. mode: remove CERT tags; prefer Cal-GETC, fall back to RCCD
       const base = new Set(allTags);
       for (const t of allTags) if (isCertTag(t)) base.delete(t);
@@ -124,13 +127,13 @@ function ProgramPage() {
         for (const t of allTags) if (isRccdGeTag(t)) base.delete(t);
       }
       setActiveTags(base);
-    } else if (hasCert) {
+    } else if (hasCert || allTags.length > 0) {
       // CERT mode: remove GE tags (certificates carry no GE requirement)
       const base = new Set(allTags);
       for (const t of allTags) if (isGeTag(t)) base.delete(t);
-      setActiveTags(base);
+      setActiveTags(base.size > 0 ? base : null);
     } else {
-      // No degree/cert tags — show everything
+      // No tags at all — show everything
       setActiveTags(null);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
