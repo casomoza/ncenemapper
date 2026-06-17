@@ -41,6 +41,27 @@ const ALL_GE_SLOTS = [
   ...RCCD_GE_SLOTS.map((s) => ({ ...s, satisfies: ["RCCD GE"] })),
 ];
 
+const TARGET_PROGRAMS = new Set([
+  "Business Administration - Concentration in Accounting",
+  "Business Administration - Concentration in General Business",
+  "Business Administration - Concentration in Logistics Management",
+  "Business Administration - Concentration in Management",
+  "Business Administration - Concentration in Real Estate",
+  "Business Information Worker",
+  "Logistics Management",
+  "Retail Management WAFC",
+  "Early Childhood Education",
+  "Early Childhood Education: Intervention Assistant",
+  "Computer Information Systems - Graphic Design",
+  "Game Development - Game Design",
+  "Game Development - Game Programming",
+  "Game Development - Game Development Core",
+  "Game Development - Game Concept Art",
+  "Game Development - 3D Game Modeling and Animation",
+  "Music Industry Studies - Audio Production",
+  "Music Industry Studies - Performance",
+]);
+
 function AdminGeImportPage() {
   const { user, isAdmin, loading } = useAuth();
   const navigate = useNavigate();
@@ -60,15 +81,15 @@ function AdminGeImportPage() {
     if (!user || !isAdmin) return;
     supabase
       .from("programs")
-      .select("id, name, degree_type")
+      .select("id, name")
       .order("name")
       .then(({ data, error }) => {
         if (error || !data) { setLoadingPrograms(false); return; }
-        const assoc = (data as { id: string; name: string; degree_type: string }[])
-          .filter((p) => /A\.[SA]\./.test(p.degree_type));
-        setPrograms(assoc);
+        const matched = (data as { id: string; name: string }[])
+          .filter((p) => TARGET_PROGRAMS.has(p.name));
+        setPrograms(matched);
         const init: Record<string, Status> = {};
-        assoc.forEach((p) => { init[p.id] = "pending"; });
+        matched.forEach((p) => { init[p.id] = "pending"; });
         setStatuses(init);
         setLoadingPrograms(false);
       });
