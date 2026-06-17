@@ -277,17 +277,28 @@ function ProgramPage() {
 
     function buildRows(courses: Course[]) {
       return courses.map((c) => {
-        const choice = pdfShowGe ? getGeChoice(programId, c.code) : null;
-        // Use ASCII ">" instead of Unicode arrow (→) — standard PDF fonts
-        // (Helvetica/WinAnsi) don't include U+2192, which distorts on iOS Safari.
-        // Truncate long choice strings to prevent excessive cell height.
-        const choiceLabel = choice
-          ? choice.length > 55 ? choice.slice(0, 52) + "..." : choice
-          : null;
-        const title = choiceLabel ? `${c.title} > ${choiceLabel}` : c.title;
+        // For GE slots (CalGETC / RCCD GE) and elective slots, replace the
+        // placeholder code+title with the user's actual selected course.
+        // Choices are stored as "CODE Title text…" — split on the first space.
+        const isSlot = /^(CalGETC\s|RCCD GE\s|ELEC\s)/i.test(c.code);
+        const rawChoice = isSlot ? getGeChoice(programId, c.code) : null;
+
+        let displayCode = c.code;
+        let displayTitle = c.title;
+
+        if (rawChoice) {
+          const spaceIdx = rawChoice.indexOf(" ");
+          if (spaceIdx !== -1) {
+            displayCode = rawChoice.slice(0, spaceIdx);
+            displayTitle = rawChoice.slice(spaceIdx + 1);
+          } else {
+            displayCode = rawChoice;
+          }
+        }
+
         const dataRow = pdfShowSatisfies
-          ? [c.code, title, String(c.units), c.satisfies.join("; ")]
-          : [c.code, title, String(c.units)];
+          ? [displayCode, displayTitle, String(c.units), c.satisfies.join("; ")]
+          : [displayCode, displayTitle, String(c.units)];
         return cbCol ? [" ", ...dataRow] : dataRow;
       });
     }
