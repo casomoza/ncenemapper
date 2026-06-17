@@ -6,7 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { SiteHeader, SiteFooter } from "@/components/SiteHeader";
 import { fetchPrograms } from "@/lib/api";
 import { NORCO_SCHOOLS } from "@/lib/schools";
-import { LogOut, Plus, Pencil, Trash2, GraduationCap } from "lucide-react";
+import { LogOut, Plus, Pencil, Trash2 } from "lucide-react";
 
 
 export const Route = createFileRoute("/admin/")({
@@ -108,12 +108,7 @@ function AdminPage() {
             >
               <Pencil className="h-4 w-4" /> Edit GE areas
             </Link>
-            <Link
-              to="/admin/ge-import"
-              className="inline-flex items-center gap-1.5 rounded-md border border-primary bg-primary/10 px-3 py-2 text-sm font-medium text-primary hover:bg-primary/20"
-            >
-              <GraduationCap className="h-4 w-4" /> Add GE courses
-            </Link>
+
             <button
               onClick={() => supabase.auth.signOut().then(() => navigate({ to: "/" }))}
               className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-2 text-sm hover:bg-accent/30"
