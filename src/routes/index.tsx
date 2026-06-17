@@ -63,12 +63,7 @@ function HomePage() {
   const searchResults = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return [];
-    return programs.filter(
-      (p) =>
-        p.name.toLowerCase().includes(q) ||
-        (p.cluster ?? "").toLowerCase().includes(q) ||
-        (p.degreeType ?? "").toLowerCase().includes(q),
-    );
+    return programs.filter((p) => p.name.toLowerCase().includes(q));
   }, [programs, search]);
 
   const visiblePrograms = useMemo(
