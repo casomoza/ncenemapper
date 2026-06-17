@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Printer, Download, GraduationCap, Award, Filter, ChevronDown, ChevronUp, Lock, LayoutGrid } from "lucide-react";
+import { ArrowLeft, Printer, Download, GraduationCap, Award, Filter, ChevronDown, ChevronUp, Lock, LayoutGrid, Info } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
@@ -162,6 +162,9 @@ function ProgramPage() {
   }
   const terms = groupByTerm(visibleCourses);
   const years = Array.from(new Set(terms.map((t) => t.year))).sort();
+  const visibleUnits = visibleCourses.reduce((s, c) => s + c.units, 0);
+  const isAssociateDegree = /A\.[SA]\./.test(program.degreeType);
+  const showSepNotice = isAssociateDegree && visibleUnits < 60;
 
   function isGeCourse(c: Course): boolean {
     return (c.satisfies ?? []).some((s) => /\b(GE|General Education|Pathways|IGETC|CSU GE)\b/i.test(s));
@@ -534,6 +537,18 @@ function ProgramPage() {
                     <dd className="font-serif text-2xl text-primary">{terms.length}</dd>
                   </div>
                 </dl>
+                {showSepNotice && (
+                  <div className="mt-4 flex gap-2 rounded-md border border-amber-300 bg-amber-50 p-3 text-xs leading-relaxed text-amber-900">
+                    <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-600" aria-hidden />
+                    <p>
+                      Associate's degrees require a minimum of{" "}
+                      <span className="font-semibold">60 units</span>. This
+                      pathway shows {visibleUnits} units — please see a{" "}
+                      <span className="font-semibold">Norco College counselor</span>{" "}
+                      to build your complete Student Education Plan (SEP).
+                    </p>
+                  </div>
+                )}
                 <button
                   type="button"
                   onClick={() => window.print()}
