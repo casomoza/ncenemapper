@@ -10,11 +10,11 @@ export const Route = createFileRoute("/")({
   component: HomePage,
   head: () => ({
     meta: [
-      { title: "Norco College Engineering — Program Pathways" },
+      { title: "NC CTE Pathway Mapper" },
       {
         name: "description",
         content:
-          "Map out your engineering degree at Norco College. See semester-by-semester course pathways, prerequisites, and certificate requirements.",
+          "Map out your CTE pathway at Norco College. See semester-by-semester course pathways, prerequisites, and certificate requirements.",
       },
     ],
   }),
