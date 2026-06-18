@@ -86,10 +86,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/bKvl6CzrRnOV0uZGusOUR9ohrWh2/social-images/social-1779303409681-NC_Engineering_Logo_Transparent.webp" },
     ],
     links: [
-      {
-        rel: "stylesheet",
-        href: appCss,
-      },
+      { rel: "stylesheet", href: appCss },
+      { rel: "icon", href: "/norco-logo.png", type: "image/png" },
+      { rel: "apple-touch-icon", href: "/norco-logo.png" },
     ],
   }),
   shellComponent: RootShell,
