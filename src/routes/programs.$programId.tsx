@@ -522,7 +522,7 @@ function ProgramPage() {
                 <dl className="mt-4 grid grid-cols-2 gap-3 text-sm">
                   <div>
                     <dt className="text-xs text-muted-foreground">Total units</dt>
-                    <dd className="font-serif text-2xl text-primary">{program.totalUnits}</dd>
+                    <dd className="font-serif text-2xl text-primary">{visibleUnits}</dd>
                   </div>
                   <div>
                     <dt className="text-xs text-muted-foreground">Courses</dt>

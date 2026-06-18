@@ -20,6 +20,21 @@ export const Route = createFileRoute("/")({
   }),
 });
 
+// Compute the displayed unit count from actual course data rather than the
+// manually-entered total_units field.
+//   • A.S. / A.A. programs → Cal-GETC track: all courses except RCCD GE slots
+//   • Certificate-only programs → core track: no GE slots at all
+function computeDisplayUnits(p: { degreeType: string; courses: { code: string; units: number }[] }): number {
+  const isAssociate = /A\.[SA]\./.test(p.degreeType);
+  return p.courses
+    .filter((c) =>
+      isAssociate
+        ? !/^RCCD GE\s/i.test(c.code)           // Cal-GETC track: drop RCCD GE slots
+        : !/^(CalGETC\s|RCCD GE\s)/i.test(c.code) // CERT track: drop all GE slots
+    )
+    .reduce((sum, c) => sum + c.units, 0);
+}
+
 // Normalise a stored cluster value to its canonical NORCO_SCHOOLS name.
 // Handles old records that are missing the "School of " prefix.
 function normalizeCluster(raw: string): string {
@@ -159,7 +174,7 @@ function HomePage() {
                       <div className="flex items-center gap-4 text-muted-foreground">
                         <span className="flex items-center gap-1.5">
                           <GraduationCap className="h-4 w-4" />
-                          {p.totalUnits} units
+                          {computeDisplayUnits(p)} units
                         </span>
                         <span>{p.courses.length} courses</span>
                       </div>
@@ -265,7 +280,7 @@ function HomePage() {
                         <div className="flex items-center gap-4 text-muted-foreground">
                           <span className="flex items-center gap-1.5">
                             <GraduationCap className="h-4 w-4" />
-                            {p.totalUnits} units
+                            {computeDisplayUnits(p)} units
                           </span>
                           <span>{p.courses.length} courses</span>
                         </div>
