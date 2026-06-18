@@ -78,6 +78,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:title", content: "NC CTE Pathway Mapper" },
       { property: "og:description", content: "Start your Norco College CTE journey here!" },
       { property: "og:type", content: "website" },
+      { property: "og:site_name", content: "NC CTE Pathway Mapper" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
       { name: "twitter:title", content: "NC CTE Pathway Mapper" },
