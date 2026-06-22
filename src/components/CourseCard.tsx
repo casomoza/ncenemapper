@@ -124,7 +124,7 @@ export function CourseCard({
         />
         <div className="p-3">
           <div className="flex items-start justify-between gap-2">
-            <span className="font-mono text-xs font-semibold tracking-tight text-primary">
+            <span className="font-mono text-sm font-semibold tracking-tight text-primary">
               {course.code}
             </span>
             <span className="rounded bg-secondary px-1.5 py-0.5 font-mono text-[10px] font-medium text-secondary-foreground">
