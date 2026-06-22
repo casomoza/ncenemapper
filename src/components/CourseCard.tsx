@@ -198,23 +198,29 @@ export function CourseCard({
       </button>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
+        <DialogContent className="flex max-h-[85vh] max-w-lg flex-col">
+          <DialogHeader className="shrink-0">
             <p className="font-mono text-xs font-semibold text-primary">
               {course.code} &middot; {course.units} units &middot; Year {course.year} {course.semester}
             </p>
-            <DialogTitle className="font-serif text-2xl">{displayTitle}</DialogTitle>
-            {course.description && (
-              <DialogDescription className="text-sm leading-relaxed text-foreground/80">
-                {course.description}
-              </DialogDescription>
-            )}
-            {choice && slot?.descriptions?.[choice] && (
-              <DialogDescription className="text-sm leading-relaxed text-foreground/80">
-                {slot.descriptions[choice]}
-              </DialogDescription>
-            )}
+            <DialogTitle className="font-serif text-xl leading-snug">{displayTitle}</DialogTitle>
           </DialogHeader>
+
+          <div className="min-h-0 flex-1 overflow-y-auto pr-1">
+            {(course.description || (choice && slot?.descriptions?.[choice])) && (
+              <div className="mb-3 space-y-2">
+                {course.description && (
+                  <DialogDescription className="text-sm leading-relaxed text-foreground/80">
+                    {course.description}
+                  </DialogDescription>
+                )}
+                {choice && slot?.descriptions?.[choice] && (
+                  <DialogDescription className="text-sm leading-relaxed text-foreground/80">
+                    {slot.descriptions[choice]}
+                  </DialogDescription>
+                )}
+              </div>
+            )}
 
           <div className="space-y-3 text-sm">
             {course.note && (
@@ -281,6 +287,7 @@ export function CourseCard({
                 </div>
               </div>
             )}
+          </div>
           </div>
         </DialogContent>
       </Dialog>
