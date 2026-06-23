@@ -1,8 +1,17 @@
-ALTER TABLE public.courses
-  ADD COLUMN IF NOT EXISTS dual_enrollment boolean NOT NULL DEFAULT false,
-  ADD COLUMN IF NOT EXISTS de_hs_year smallint,
-  ADD COLUMN IF NOT EXISTS de_hs_semester text;
-
-COMMENT ON COLUMN public.courses.dual_enrollment IS 'True if this course is available via high-school dual enrollment';
-COMMENT ON COLUMN public.courses.de_hs_year IS 'High-school grade year the DE course is typically offered (9–12)';
-COMMENT ON COLUMN public.courses.de_hs_semester IS 'High-school semester the DE course is typically offered (Fall / Spring)';
+-- Dual Enrollment schema migration
+--
+-- NOTE: The Supabase project for this app is managed by Lovable Cloud and its
+-- credentials are not exportable. Until the project is transferred to a
+-- user-owned Supabase account, dual enrollment settings are stored as a
+-- hidden tag in the existing `satisfies` text[] column, in the format:
+--
+--   DE:<hs_grade_year>:<hs_semester>   e.g.  DE:11:Fall
+--
+-- This migration is a no-op for now and is preserved here so it can be
+-- applied once the project is transferred and the credentials are available.
+--
+-- ALTER TABLE public.courses
+--   ADD COLUMN IF NOT EXISTS dual_enrollment boolean NOT NULL DEFAULT false,
+--   ADD COLUMN IF NOT EXISTS de_hs_year smallint,
+--   ADD COLUMN IF NOT EXISTS de_hs_semester text;
+SELECT 1; -- placeholder so the migration file is valid SQL

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { SiteHeader, SiteFooter } from "@/components/SiteHeader";
-import { fetchDbProgramBySlug, fetchDbCourses, type DbCourse, type DbProgram } from "@/lib/api";
+import { fetchDbProgramBySlug, fetchDbCourses, type DbCourse, type DbProgram, deTagFromSatisfies, satisfiesWithoutDe, buildDeTag } from "@/lib/api";
 import { NORCO_SCHOOLS } from "@/lib/schools";
 import { ArrowLeft, Plus, Trash2, Save, BookOpen } from "lucide-react";
 import { CatalogSearchDialog } from "@/components/CatalogSearchDialog";
@@ -319,18 +319,34 @@ function AddCourseButton({ programId }: { programId: string }) {
 }
 
 
+type CourseEditState = DbCourse & { _deEnabled: boolean; _deHsYear: number; _deHsSemester: string };
+
+function initCourseState(course: DbCourse): CourseEditState {
+  const deTag = deTagFromSatisfies(course.satisfies ?? []);
+  const deMatch = deTag ? deTag.match(/^DE:(\d+):(Fall|Spring)$/i) : null;
+  return {
+    ...course,
+    satisfies: satisfiesWithoutDe(course.satisfies ?? []),
+    _deEnabled: !!deTag,
+    _deHsYear: deMatch ? Number(deMatch[1]) : 11,
+    _deHsSemester: deMatch ? deMatch[2] : "Fall",
+  };
+}
+
 function CourseRow({ course }: { course: DbCourse }) {
   const qc = useQueryClient();
-  const [c, setC] = useState(course);
+  const [c, setC] = useState<CourseEditState>(() => initCourseState(course));
   const [expanded, setExpanded] = useState(false);
-  const dirty = JSON.stringify(c) !== JSON.stringify(course);
+  const dirty = JSON.stringify(c) !== JSON.stringify(initCourseState(course));
 
   // Only re-sync when this row's id changes (i.e. a different course),
   // so refetches don't wipe out the admin's in-progress edits.
-  useEffect(() => setC(course), [course.id]);
+  useEffect(() => setC(initCourseState(course)), [course.id]);
 
   const save = useMutation({
     mutationFn: async () => {
+      const deTag = c._deEnabled ? buildDeTag(c._deHsYear, c._deHsSemester) : null;
+      const satisfies = deTag ? [...(c.satisfies ?? []), deTag] : (c.satisfies ?? []);
       const { error } = await supabase
         .from("courses")
         .update({
@@ -341,14 +357,11 @@ function CourseRow({ course }: { course: DbCourse }) {
           semester: c.semester,
           category: c.category,
           prerequisite: c.prerequisite || null,
-          satisfies: c.satisfies,
+          satisfies,
           description: c.description,
           optional: c.optional,
           note: c.note,
           sort_order: c.sort_order,
-          dual_enrollment: c.dual_enrollment,
-          de_hs_year: c.de_hs_year ?? null,
-          de_hs_semester: c.de_hs_semester ?? null,
         })
         .eq("id", c.id);
       if (error) throw error;
@@ -508,25 +521,18 @@ function CourseRow({ course }: { course: DbCourse }) {
                 <label className="flex items-center gap-2 text-sm text-foreground">
                   <input
                     type="checkbox"
-                    checked={c.dual_enrollment ?? false}
-                    onChange={(e) =>
-                      setC({
-                        ...c,
-                        dual_enrollment: e.target.checked,
-                        de_hs_year: e.target.checked ? (c.de_hs_year ?? 11) : null,
-                        de_hs_semester: e.target.checked ? (c.de_hs_semester ?? "Fall") : null,
-                      })
-                    }
+                    checked={c._deEnabled}
+                    onChange={(e) => setC({ ...c, _deEnabled: e.target.checked })}
                   />
                   Available via high school dual enrollment
                 </label>
-                {c.dual_enrollment && (
+                {c._deEnabled && (
                   <div className="mt-3 flex flex-wrap gap-4">
                     <div>
                       <label className="block text-xs text-muted-foreground">HS Grade Year</label>
                       <select
-                        value={c.de_hs_year ?? 11}
-                        onChange={(e) => setC({ ...c, de_hs_year: Number(e.target.value) })}
+                        value={c._deHsYear}
+                        onChange={(e) => setC({ ...c, _deHsYear: Number(e.target.value) })}
                         className="mt-1 rounded border border-input bg-background px-2 py-1.5 text-sm"
                       >
                         <option value={9}>9th Grade</option>
@@ -538,8 +544,8 @@ function CourseRow({ course }: { course: DbCourse }) {
                     <div>
                       <label className="block text-xs text-muted-foreground">HS Semester</label>
                       <select
-                        value={c.de_hs_semester ?? "Fall"}
-                        onChange={(e) => setC({ ...c, de_hs_semester: e.target.value })}
+                        value={c._deHsSemester}
+                        onChange={(e) => setC({ ...c, _deHsSemester: e.target.value })}
                         className="mt-1 rounded border border-input bg-background px-2 py-1.5 text-sm"
                       >
                         <option>Fall</option>

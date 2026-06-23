@@ -27,10 +27,21 @@ export type DbCourse = {
   optional: boolean;
   note: string | null;
   sort_order: number;
-  dual_enrollment: boolean;
-  de_hs_year: number | null;
-  de_hs_semester: string | null;
 };
+
+const DE_TAG_RE = /^DE:(\d+):(Fall|Spring)$/i;
+
+export function deTagFromSatisfies(satisfies: string[]): string | undefined {
+  return (satisfies ?? []).find((s) => DE_TAG_RE.test(s));
+}
+
+export function satisfiesWithoutDe(satisfies: string[]): string[] {
+  return (satisfies ?? []).filter((s) => !DE_TAG_RE.test(s));
+}
+
+export function buildDeTag(hsYear: number, hsSemester: string): string {
+  return `DE:${hsYear}:${hsSemester}`;
+}
 
 function toProgram(p: DbProgram, courses: DbCourse[]): Program {
   return {
@@ -46,6 +57,8 @@ function toProgram(p: DbProgram, courses: DbCourse[]): Program {
 }
 
 function toCourse(c: DbCourse): Course {
+  const deTag = deTagFromSatisfies(c.satisfies ?? []);
+  const deMatch = deTag ? deTag.match(/^DE:(\d+):(Fall|Spring)$/i) : null;
   return {
     code: c.code,
     title: c.title,
@@ -54,13 +67,13 @@ function toCourse(c: DbCourse): Course {
     semester: c.semester as Course["semester"],
     category: (c.category as Course["category"]) ?? "core",
     prerequisite: c.prerequisite,
-    satisfies: c.satisfies ?? [],
+    satisfies: satisfiesWithoutDe(c.satisfies ?? []),
     description: c.description,
     optional: c.optional,
     note: c.note ?? undefined,
-    dualEnrollment: c.dual_enrollment ?? false,
-    deHsYear: c.de_hs_year ?? null,
-    deHsSemester: c.de_hs_semester ?? null,
+    dualEnrollment: !!deTag,
+    deHsYear: deMatch ? Number(deMatch[1]) : null,
+    deHsSemester: deMatch ? deMatch[2] : null,
   };
 }
 
