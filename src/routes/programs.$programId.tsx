@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Printer, Download, GraduationCap, Award, Filter, ChevronDown, ChevronUp, Lock, LayoutGrid, Info } from "lucide-react";
+import { ArrowLeft, Printer, Download, GraduationCap, Award, Filter, ChevronDown, ChevronUp, Lock, LayoutGrid, Info, CheckCircle2, Circle } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
@@ -93,6 +93,24 @@ function ProgramPage() {
   const [pdfShowCheckboxes, setPdfShowCheckboxes] = useState(true);
   const effectiveActive = activeTags ?? new Set(allTags);
 
+  const [showDe, setShowDe] = useState(false);
+  const [deDone, setDeDone] = useState<Set<string>>(() => {
+    if (typeof window === "undefined") return new Set();
+    const stored = window.localStorage.getItem(`de-done:${programId}`);
+    return stored ? new Set(JSON.parse(stored) as string[]) : new Set();
+  });
+
+  function toggleDeDone(code: string) {
+    setDeDone((prev) => {
+      const next = new Set(prev);
+      if (next.has(code)) next.delete(code); else next.add(code);
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem(`de-done:${programId}`, JSON.stringify([...next]));
+      }
+      return next;
+    });
+  }
+
   const visibleCourses = useMemo(() => {
     if (!program) return [];
     return program.courses.filter((c) => {
@@ -165,6 +183,30 @@ function ProgramPage() {
   const visibleUnits = visibleCourses.reduce((s, c) => s + c.units, 0);
   const isAssociateDegree = /A\.[SA]\./.test(program.degreeType);
   const showSepNotice = isAssociateDegree && visibleUnits < 60;
+
+  const GRADE_LABEL: Record<number, string> = {
+    9: "9th Grade", 10: "10th Grade", 11: "11th Grade", 12: "12th Grade",
+  };
+
+  const deCourses = program.courses.filter((c) => c.dualEnrollment);
+
+  type DeGroup = { hsYear: number; hsSemester: string; courses: typeof deCourses };
+  const deTermGroups: DeGroup[] = (() => {
+    const map = new Map<string, DeGroup>();
+    const HS_SEM_ORDER: Record<string, number> = { Fall: 0, Spring: 1 };
+    for (const c of deCourses) {
+      const yr = c.deHsYear ?? 0;
+      const sem = c.deHsSemester ?? "Fall";
+      const key = `${yr}-${sem}`;
+      if (!map.has(key)) map.set(key, { hsYear: yr, hsSemester: sem, courses: [] });
+      map.get(key)!.courses.push(c);
+    }
+    return Array.from(map.values()).sort((a, b) => {
+      if (a.hsYear !== b.hsYear) return a.hsYear - b.hsYear;
+      return (HS_SEM_ORDER[a.hsSemester] ?? 9) - (HS_SEM_ORDER[b.hsSemester] ?? 9);
+    });
+  })();
+  const deGradeYears = Array.from(new Set(deTermGroups.map((g) => g.hsYear))).sort((a, b) => a - b);
 
   function isGeCourse(c: Course): boolean {
     return (c.satisfies ?? []).some((s) => /\b(GE|General Education|Pathways|IGETC|CSU GE)\b/i.test(s));
@@ -807,6 +849,109 @@ function ProgramPage() {
             </div>
           )}
 
+          {deCourses.length > 0 && (
+            <div className="mb-5 flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setShowDe((v) => !v)}
+                className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition-all ${
+                  showDe
+                    ? "border-emerald-600 bg-emerald-600 text-white shadow-sm"
+                    : "border-emerald-300 bg-white text-emerald-700 hover:bg-emerald-50"
+                }`}
+              >
+                <GraduationCap className="h-4 w-4" />
+                Dual Enrollment
+                {showDe && deDone.size > 0 && (
+                  <span className="ml-0.5 rounded-full bg-white/30 px-1.5 text-xs font-bold">
+                    {deDone.size} done
+                  </span>
+                )}
+              </button>
+              {!showDe && (
+                <p className="text-xs text-muted-foreground">
+                  {deCourses.length} {deCourses.length === 1 ? "course" : "courses"} available via high school dual enrollment
+                </p>
+              )}
+            </div>
+          )}
+
+          {showDe && deCourses.length > 0 && (
+            <div className="mb-12">
+              <div className="mb-4 flex items-baseline justify-between border-b-2 border-emerald-200 pb-2">
+                <div className="flex items-center gap-2">
+                  <GraduationCap className="h-5 w-5 text-emerald-700" />
+                  <h2 className="font-serif text-2xl font-semibold text-emerald-800">
+                    High School Dual Enrollment
+                  </h2>
+                </div>
+                <span className="font-mono text-xs text-muted-foreground">
+                  {deCourses.length} {deCourses.length === 1 ? "course" : "courses"} · {deDone.size} completed
+                </span>
+              </div>
+              <p className="mb-6 text-sm text-muted-foreground">
+                These courses may be taken through your high school's dual enrollment program before you begin at Norco College.
+                Mark them done to track your head start — they'll appear grayed out on the college map below.
+              </p>
+              <div className="space-y-8">
+                {deGradeYears.map((hsYear) => {
+                  const yearGroups = deTermGroups.filter((g) => g.hsYear === hsYear);
+                  const yearUnits = yearGroups.flatMap((g) => g.courses).reduce((s, c) => s + c.units, 0);
+                  const gradeLabel = GRADE_LABEL[hsYear] ?? `Grade ${hsYear}`;
+                  return (
+                    <div key={hsYear}>
+                      <div className="mb-3 flex items-baseline justify-between">
+                        <h3 className="font-serif text-lg font-semibold text-emerald-800">{gradeLabel}</h3>
+                        <span className="font-mono text-xs text-muted-foreground">{yearUnits} units</span>
+                      </div>
+                      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                        {(["Fall", "Spring"] as const).map((sem) => {
+                          const group = yearGroups.find((g) => g.hsSemester === sem);
+                          if (!group) return <div key={sem} aria-hidden="true" />;
+                          const semUnits = group.courses.reduce((s, c) => s + c.units, 0);
+                          return (
+                            <div
+                              key={sem}
+                              className="rounded-lg border border-emerald-200 bg-emerald-50/60 p-3 shadow-sm ring-1 ring-inset ring-emerald-100"
+                            >
+                              <div className="mb-3 flex items-center justify-between rounded-md bg-emerald-100/80 px-2 py-1.5">
+                                <h4 className="font-serif text-base font-semibold text-emerald-800">{sem}</h4>
+                                <span className="font-mono text-[10px] font-semibold text-emerald-700/70">
+                                  {semUnits} units
+                                </span>
+                              </div>
+                              <div className="space-y-2">
+                                {group.courses.map((c) => (
+                                  <div key={c.code}>
+                                    <CourseCard course={c} programId={programId} deAvailable />
+                                    <button
+                                      type="button"
+                                      onClick={() => toggleDeDone(c.code)}
+                                      className={`mt-1 flex w-full items-center justify-center gap-1.5 rounded-md border px-2 py-1 text-[11px] font-semibold transition-all ${
+                                        deDone.has(c.code)
+                                          ? "border-emerald-500 bg-emerald-500 text-white"
+                                          : "border-emerald-300 bg-white text-emerald-700 hover:bg-emerald-50"
+                                      }`}
+                                    >
+                                      {deDone.has(c.code)
+                                        ? <><CheckCircle2 className="h-3 w-3" /> Completed via DE</>
+                                        : <><Circle className="h-3 w-3" /> Mark as completed via DE</>
+                                      }
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {years.map((year) => {
             const yearTerms = terms.filter((t) => t.year === year);
             const yearUnits = yearTerms.reduce(
@@ -863,9 +1008,39 @@ function ProgramPage() {
                           </span>
                         </div>
                         <div className="space-y-2">
-                          {t.courses.map((c) => (
-                            <CourseCard key={c.code} course={c} programId={programId} />
-                          ))}
+                          {t.courses.map((c) => {
+                            const isDeAvail = showDe && !!c.dualEnrollment;
+                            const isDeDone = isDeAvail && deDone.has(c.code);
+                            return (
+                              <div key={c.code}>
+                                <div className={isDeDone ? "opacity-40" : ""}>
+                                  <CourseCard
+                                    course={c}
+                                    programId={programId}
+                                    deAvailable={isDeAvail}
+                                  />
+                                </div>
+                                {isDeAvail && (
+                                  <div className="mt-1 flex items-center justify-between px-0.5">
+                                    {isDeDone ? (
+                                      <span className="flex items-center gap-1 text-[10px] font-semibold text-emerald-700">
+                                        <CheckCircle2 className="h-3 w-3" /> Done via DE
+                                      </span>
+                                    ) : (
+                                      <span className="text-[10px] font-medium text-emerald-600">DE available</span>
+                                    )}
+                                    <button
+                                      type="button"
+                                      onClick={() => toggleDeDone(c.code)}
+                                      className="text-[10px] text-muted-foreground hover:text-primary hover:underline"
+                                    >
+                                      {isDeDone ? "Undo" : "Mark done"}
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
                     );

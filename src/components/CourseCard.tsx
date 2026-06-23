@@ -28,9 +28,11 @@ const storageKey = (programId: string | undefined, code: string) =>
 export function CourseCard({
   course,
   programId,
+  deAvailable = false,
 }: {
   course: Course;
   programId?: string;
+  deAvailable?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [choice, setChoice] = useState<string>("");
@@ -157,6 +159,11 @@ export function CourseCard({
             {choice && (
               <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary">
                 Selected
+              </span>
+            )}
+            {deAvailable && (
+              <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-700">
+                DE
               </span>
             )}
           </div>

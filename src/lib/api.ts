@@ -27,6 +27,9 @@ export type DbCourse = {
   optional: boolean;
   note: string | null;
   sort_order: number;
+  dual_enrollment: boolean;
+  de_hs_year: number | null;
+  de_hs_semester: string | null;
 };
 
 function toProgram(p: DbProgram, courses: DbCourse[]): Program {
@@ -55,6 +58,9 @@ function toCourse(c: DbCourse): Course {
     description: c.description,
     optional: c.optional,
     note: c.note ?? undefined,
+    dualEnrollment: c.dual_enrollment ?? false,
+    deHsYear: c.de_hs_year ?? null,
+    deHsSemester: c.de_hs_semester ?? null,
   };
 }
 

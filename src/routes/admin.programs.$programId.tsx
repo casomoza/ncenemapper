@@ -346,6 +346,9 @@ function CourseRow({ course }: { course: DbCourse }) {
           optional: c.optional,
           note: c.note,
           sort_order: c.sort_order,
+          dual_enrollment: c.dual_enrollment,
+          de_hs_year: c.de_hs_year ?? null,
+          de_hs_semester: c.de_hs_semester ?? null,
         })
         .eq("id", c.id);
       if (error) throw error;
@@ -498,6 +501,53 @@ function CourseRow({ course }: { course: DbCourse }) {
                   rows={3}
                   className="mt-1 w-full rounded-md border border-input bg-background px-2 py-1 text-sm"
                 />
+              </div>
+
+              <div className="md:col-span-2 rounded-md border border-emerald-200 bg-emerald-50/50 p-3">
+                <p className="mb-2 text-xs font-semibold text-emerald-800 uppercase tracking-wide">Dual Enrollment</p>
+                <label className="flex items-center gap-2 text-sm text-foreground">
+                  <input
+                    type="checkbox"
+                    checked={c.dual_enrollment ?? false}
+                    onChange={(e) =>
+                      setC({
+                        ...c,
+                        dual_enrollment: e.target.checked,
+                        de_hs_year: e.target.checked ? (c.de_hs_year ?? 11) : null,
+                        de_hs_semester: e.target.checked ? (c.de_hs_semester ?? "Fall") : null,
+                      })
+                    }
+                  />
+                  Available via high school dual enrollment
+                </label>
+                {c.dual_enrollment && (
+                  <div className="mt-3 flex flex-wrap gap-4">
+                    <div>
+                      <label className="block text-xs text-muted-foreground">HS Grade Year</label>
+                      <select
+                        value={c.de_hs_year ?? 11}
+                        onChange={(e) => setC({ ...c, de_hs_year: Number(e.target.value) })}
+                        className="mt-1 rounded border border-input bg-background px-2 py-1.5 text-sm"
+                      >
+                        <option value={9}>9th Grade</option>
+                        <option value={10}>10th Grade</option>
+                        <option value={11}>11th Grade</option>
+                        <option value={12}>12th Grade</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs text-muted-foreground">HS Semester</label>
+                      <select
+                        value={c.de_hs_semester ?? "Fall"}
+                        onChange={(e) => setC({ ...c, de_hs_semester: e.target.value })}
+                        className="mt-1 rounded border border-input bg-background px-2 py-1.5 text-sm"
+                      >
+                        <option>Fall</option>
+                        <option>Spring</option>
+                      </select>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </td>

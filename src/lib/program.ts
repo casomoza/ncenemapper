@@ -12,6 +12,9 @@ export type Course = {
   description: string | null;
   optional?: boolean;
   note?: string;
+  dualEnrollment?: boolean;
+  deHsYear?: number | null;
+  deHsSemester?: string | null;
 };
 
 export type Program = {
