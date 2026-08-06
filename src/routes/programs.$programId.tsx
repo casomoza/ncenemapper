@@ -578,18 +578,26 @@ function ProgramPage() {
                     <dd className="font-serif text-2xl text-primary">{terms.length}</dd>
                   </div>
                 </dl>
-                {showSepNotice && (
-                  <div className="mt-4 flex gap-2 rounded-md border border-amber-300 bg-amber-50 p-3 text-xs leading-relaxed text-amber-900">
-                    <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-600" aria-hidden />
-                    <p>
-                      Associate's degrees require a minimum of{" "}
-                      <span className="font-semibold">60 units</span>. This
-                      pathway shows {visibleUnits} units — please see a{" "}
-                      <span className="font-semibold">Norco College counselor</span>{" "}
-                      to build your complete Student Education Plan (SEP).
-                    </p>
-                  </div>
-                )}
+                <div className="mt-4 flex gap-2 rounded-md border border-amber-300 bg-amber-50 p-3 text-xs leading-relaxed text-amber-900">
+                  <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-600" aria-hidden />
+                  <p>
+                    {isAssociateDegree && visibleUnits < 60 ? (
+                      <>
+                        Associate's degrees require a minimum of{" "}
+                        <span className="font-semibold">60 units</span>. This pathway shows{" "}
+                        {visibleUnits} units.{" "}
+                      </>
+                    ) : (
+                      <>
+                        This pathway is a sample plan and may not reflect every requirement
+                        for your situation.{" "}
+                      </>
+                    )}
+                    Please see a{" "}
+                    <span className="font-semibold">Norco College counselor</span> to build
+                    your complete Student Education Plan (SEP).
+                  </p>
+                </div>
                 <button
                   type="button"
                   onClick={() => window.print()}
