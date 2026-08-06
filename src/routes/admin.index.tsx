@@ -119,6 +119,8 @@ function AdminPage() {
           </div>
         </div>
 
+        <AssociateVisibilityToggle />
+
         {showNew && <NewProgramForm onClose={() => setShowNew(false)} />}
 
         <div className="mt-8 grid gap-4">
