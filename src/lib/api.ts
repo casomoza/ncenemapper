@@ -229,6 +229,16 @@ export function isAssociateDegreeType(degreeType: string): boolean {
   return /A\.[SA]\./.test(degreeType ?? "");
 }
 
+/**
+ * True when a program is Associate's-degree-only (no certificate track), i.e.
+ * the program that gets hidden when "Show Associate's Degree Maps to Public"
+ * is turned off. Programs that also award a certificate stay visible.
+ */
+export function isAssociateOnlyProgram(degreeType: string): boolean {
+  const d = degreeType ?? "";
+  return isAssociateDegreeType(d) && !/certificate|\bcert\b/i.test(d);
+}
+
 export async function fetchShowAssociateMaps(): Promise<boolean> {
   const { data, error } = await supabase
     .from("site_settings" as never)
