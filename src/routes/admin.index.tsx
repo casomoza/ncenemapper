@@ -4,9 +4,10 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { SiteHeader, SiteFooter } from "@/components/SiteHeader";
-import { fetchPrograms } from "@/lib/api";
+import { fetchPrograms, fetchShowAssociateMaps, setShowAssociateMaps } from "@/lib/api";
 import { NORCO_SCHOOLS } from "@/lib/schools";
-import { LogOut, Plus, Pencil, Trash2 } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { LogOut, Plus, Pencil, Trash2, Eye, EyeOff } from "lucide-react";
 
 
 export const Route = createFileRoute("/admin/")({
