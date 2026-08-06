@@ -52,10 +52,21 @@ function normalizeCluster(raw: string): string {
 }
 
 function HomePage() {
-  const { data: programs = [], isLoading } = useQuery({
+  const { data: allPrograms = [], isLoading } = useQuery({
     queryKey: ["programs"],
     queryFn: fetchPrograms,
   });
+  const { data: showAssociate = false } = useQuery({
+    queryKey: ["site-setting", "show_associate_maps_public"],
+    queryFn: fetchShowAssociateMaps,
+  });
+  const programs = useMemo(
+    () =>
+      showAssociate
+        ? allPrograms
+        : allPrograms.filter((p) => !isAssociateDegreeType(p.degreeType)),
+    [allPrograms, showAssociate],
+  );
   const [selectedCluster, setSelectedCluster] = useState<string | null>(null);
   const [search, setSearch] = useState("");
 
