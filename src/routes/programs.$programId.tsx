@@ -178,6 +178,22 @@ function ProgramPage() {
       </div>
     );
   }
+  if (!showAssociate && isAssociateDegreeType(program.degreeType)) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background px-6">
+        <div className="max-w-md text-center">
+          <h1 className="font-serif text-3xl text-foreground">Pathway not yet available</h1>
+          <p className="mt-3 text-sm text-muted-foreground">
+            This Associate's degree pathway map is pending approval and is not published yet.
+            Please see a Norco College counselor for guidance.
+          </p>
+          <Link to="/" className="mt-4 inline-block text-primary hover:underline">
+            ← Back to programs
+          </Link>
+        </div>
+      </div>
+    );
+  }
   const terms = groupByTerm(visibleCourses);
   const years = Array.from(new Set(terms.map((t) => t.year))).sort();
   const visibleUnits = visibleCourses.reduce((s, c) => s + c.units, 0);
