@@ -217,3 +217,41 @@ export async function fetchCatalogCoursesFromDb(): Promise<CatalogCourse[] | nul
   const rows = (data ?? []) as CatalogCourse[];
   return rows.length > 0 ? rows : null;
 }
+
+/* ---------------------------------------------------------------------------
+ * Site settings (admin-controlled, publicly readable)
+ * ------------------------------------------------------------------------- */
+
+export const SHOW_ASSOCIATE_MAPS_KEY = "show_associate_maps_public";
+
+/** True when a program's degree type is an Associate's degree (A.S. / A.A.). */
+export function isAssociateDegreeType(degreeType: string): boolean {
+  return /A\.[SA]\./.test(degreeType ?? "");
+}
+
+/**
+ * True when a program is Associate's-degree-only (no certificate track), i.e.
+ * the program that gets hidden when "Show Associate's Degree Maps to Public"
+ * is turned off. Programs that also award a certificate stay visible.
+ */
+export function isAssociateOnlyProgram(degreeType: string): boolean {
+  const d = degreeType ?? "";
+  return isAssociateDegreeType(d) && !/certificate|\bcert\b/i.test(d);
+}
+
+export async function fetchShowAssociateMaps(): Promise<boolean> {
+  const { data, error } = await supabase
+    .from("site_settings" as never)
+    .select("bool_value")
+    .eq("key", SHOW_ASSOCIATE_MAPS_KEY)
+    .maybeSingle();
+  if (error) return false;
+  return !!(data as { bool_value?: boolean } | null)?.bool_value;
+}
+
+export async function setShowAssociateMaps(value: boolean): Promise<void> {
+  const { error } = await supabase
+    .from("site_settings" as never)
+    .upsert({ key: SHOW_ASSOCIATE_MAPS_KEY, bool_value: value } as never, { onConflict: "key" });
+  if (error) throw error;
+}

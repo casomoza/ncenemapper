@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { fetchPrograms } from "@/lib/api";
+import { fetchPrograms, fetchShowAssociateMaps, isAssociateOnlyProgram } from "@/lib/api";
 import { SiteHeader, SiteFooter } from "@/components/SiteHeader";
 import { NORCO_SCHOOLS } from "@/lib/schools";
 import { ArrowRight, ArrowLeft, GraduationCap, BookOpen, Layers, Search, X } from "lucide-react";
@@ -52,10 +52,21 @@ function normalizeCluster(raw: string): string {
 }
 
 function HomePage() {
-  const { data: programs = [], isLoading } = useQuery({
+  const { data: allPrograms = [], isLoading } = useQuery({
     queryKey: ["programs"],
     queryFn: fetchPrograms,
   });
+  const { data: showAssociate = false } = useQuery({
+    queryKey: ["site-setting", "show_associate_maps_public"],
+    queryFn: fetchShowAssociateMaps,
+  });
+  const programs = useMemo(
+    () =>
+      showAssociate
+        ? allPrograms
+        : allPrograms.filter((p) => !isAssociateOnlyProgram(p.degreeType)),
+    [allPrograms, showAssociate],
+  );
   const [selectedCluster, setSelectedCluster] = useState<string | null>(null);
   const [search, setSearch] = useState("");
 

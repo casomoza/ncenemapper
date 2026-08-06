@@ -4,9 +4,10 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { SiteHeader, SiteFooter } from "@/components/SiteHeader";
-import { fetchPrograms } from "@/lib/api";
+import { fetchPrograms, fetchShowAssociateMaps, setShowAssociateMaps } from "@/lib/api";
 import { NORCO_SCHOOLS } from "@/lib/schools";
-import { LogOut, Plus, Pencil, Trash2 } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { LogOut, Plus, Pencil, Trash2, Eye, EyeOff } from "lucide-react";
 
 
 export const Route = createFileRoute("/admin/")({
@@ -118,6 +119,8 @@ function AdminPage() {
           </div>
         </div>
 
+        <AssociateVisibilityToggle />
+
         {showNew && <NewProgramForm onClose={() => setShowNew(false)} />}
 
         <div className="mt-8 grid gap-4">
@@ -163,13 +166,78 @@ function AdminPage() {
   );
 }
 
+function AssociateVisibilityToggle() {
+  const qc = useQueryClient();
+  const [error, setError] = useState<string | null>(null);
+  const { data: show = false, isLoading } = useQuery({
+    queryKey: ["site-setting", "show_associate_maps_public"],
+    queryFn: fetchShowAssociateMaps,
+  });
+
+  const save = useMutation({
+    mutationFn: (v: boolean) => setShowAssociateMaps(v),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: ["site-setting", "show_associate_maps_public"] }),
+    onError: (e: Error) => setError(e.message),
+  });
+
+  return (
+    <div className="mt-8 rounded-lg border border-border bg-card p-5">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="flex items-start gap-3">
+          {show ? (
+            <Eye className="mt-0.5 h-5 w-5 text-primary" aria-hidden />
+          ) : (
+            <EyeOff className="mt-0.5 h-5 w-5 text-muted-foreground" aria-hidden />
+          )}
+          <div>
+            <label
+              htmlFor="show-associate-maps"
+              className="font-serif text-lg text-foreground"
+            >
+              Show Associate's Degree Maps to Public
+            </label>
+            <p className="mt-1 max-w-xl text-sm text-muted-foreground">
+              When off, Associate's degree (A.S. / A.A.) pathway maps are hidden from the
+              public site. Certificate program maps always stay visible.
+            </p>
+            <p className="mt-2 text-xs font-medium text-foreground">
+              Currently:{" "}
+              {isLoading
+                ? "loading…"
+                : show
+                  ? "Associate's degree maps are VISIBLE to the public"
+                  : "Associate's degree maps are HIDDEN from the public"}
+            </p>
+          </div>
+        </div>
+        <Switch
+          id="show-associate-maps"
+          checked={show}
+          disabled={isLoading || save.isPending}
+          onCheckedChange={(v) => {
+            setError(null);
+            save.mutate(v);
+          }}
+        />
+      </div>
+      {error && (
+        <p className="mt-3 rounded bg-destructive/10 px-3 py-2 text-sm text-destructive">
+          {error}
+        </p>
+      )}
+    </div>
+  );
+}
+
+
 function NewProgramForm({ onClose }: { onClose: () => void }) {
   const qc = useQueryClient();
   const [slug, setSlug] = useState("");
   const [name, setName] = useState("");
   const [degreeType, setDegreeType] = useState("");
   const [totalUnits, setTotalUnits] = useState(60);
-  const [cluster, setCluster] = useState(NORCO_SCHOOLS[0]);
+  const [cluster, setCluster] = useState<string>(NORCO_SCHOOLS[0]);
   const [description, setDescription] = useState("");
   const [error, setError] = useState<string | null>(null);
 

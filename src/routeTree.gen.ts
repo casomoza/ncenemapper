@@ -9,20 +9,20 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as GeRouteImport } from './routes/ge'
-import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as GeRouteImport } from './routes/ge'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
-import { Route as ProgramsProgramIdRouteImport } from './routes/programs.$programId'
-import { Route as AdminImportRouteImport } from './routes/admin.import'
-import { Route as AdminGeImportRouteImport } from './routes/admin.ge-import'
-import { Route as AdminGeRouteImport } from './routes/admin.ge'
 import { Route as AdminCatalogRouteImport } from './routes/admin.catalog'
+import { Route as AdminGeRouteImport } from './routes/admin.ge'
+import { Route as AdminGeImportRouteImport } from './routes/admin.ge-import'
+import { Route as AdminImportRouteImport } from './routes/admin.import'
+import { Route as ProgramsProgramIdRouteImport } from './routes/programs.$programId'
 import { Route as AdminProgramsProgramIdRouteImport } from './routes/admin.programs.$programId'
 
-const GeRoute = GeRouteImport.update({
-  id: '/ge',
-  path: '/ge',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -30,9 +30,9 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const GeRoute = GeRouteImport.update({
+  id: '/ge',
+  path: '/ge',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
@@ -40,19 +40,9 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   path: '/admin/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ProgramsProgramIdRoute = ProgramsProgramIdRouteImport.update({
-  id: '/programs/$programId',
-  path: '/programs/$programId',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminImportRoute = AdminImportRouteImport.update({
-  id: '/admin/import',
-  path: '/admin/import',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminGeImportRoute = AdminGeImportRouteImport.update({
-  id: '/admin/ge-import',
-  path: '/admin/ge-import',
+const AdminCatalogRoute = AdminCatalogRouteImport.update({
+  id: '/admin/catalog',
+  path: '/admin/catalog',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminGeRoute = AdminGeRouteImport.update({
@@ -60,9 +50,19 @@ const AdminGeRoute = AdminGeRouteImport.update({
   path: '/admin/ge',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminCatalogRoute = AdminCatalogRouteImport.update({
-  id: '/admin/catalog',
-  path: '/admin/catalog',
+const AdminGeImportRoute = AdminGeImportRouteImport.update({
+  id: '/admin/ge-import',
+  path: '/admin/ge-import',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminImportRoute = AdminImportRouteImport.update({
+  id: '/admin/import',
+  path: '/admin/import',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProgramsProgramIdRoute = ProgramsProgramIdRouteImport.update({
+  id: '/programs/$programId',
+  path: '/programs/$programId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminProgramsProgramIdRoute = AdminProgramsProgramIdRouteImport.update({
@@ -162,11 +162,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/ge': {
-      id: '/ge'
-      path: '/ge'
-      fullPath: '/ge'
-      preLoaderRoute: typeof GeRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -176,11 +176,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/ge': {
+      id: '/ge'
+      path: '/ge'
+      fullPath: '/ge'
+      preLoaderRoute: typeof GeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/': {
@@ -190,25 +190,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/programs/$programId': {
-      id: '/programs/$programId'
-      path: '/programs/$programId'
-      fullPath: '/programs/$programId'
-      preLoaderRoute: typeof ProgramsProgramIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin/import': {
-      id: '/admin/import'
-      path: '/admin/import'
-      fullPath: '/admin/import'
-      preLoaderRoute: typeof AdminImportRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin/ge-import': {
-      id: '/admin/ge-import'
-      path: '/admin/ge-import'
-      fullPath: '/admin/ge-import'
-      preLoaderRoute: typeof AdminGeImportRouteImport
+    '/admin/catalog': {
+      id: '/admin/catalog'
+      path: '/admin/catalog'
+      fullPath: '/admin/catalog'
+      preLoaderRoute: typeof AdminCatalogRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/ge': {
@@ -218,11 +204,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminGeRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin/catalog': {
-      id: '/admin/catalog'
-      path: '/admin/catalog'
-      fullPath: '/admin/catalog'
-      preLoaderRoute: typeof AdminCatalogRouteImport
+    '/admin/ge-import': {
+      id: '/admin/ge-import'
+      path: '/admin/ge-import'
+      fullPath: '/admin/ge-import'
+      preLoaderRoute: typeof AdminGeImportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/import': {
+      id: '/admin/import'
+      path: '/admin/import'
+      fullPath: '/admin/import'
+      preLoaderRoute: typeof AdminImportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/programs/$programId': {
+      id: '/programs/$programId'
+      path: '/programs/$programId'
+      fullPath: '/programs/$programId'
+      preLoaderRoute: typeof ProgramsProgramIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/programs/$programId': {
@@ -250,13 +250,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
