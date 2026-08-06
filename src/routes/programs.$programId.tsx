@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
-import { fetchProgramBySlug, fetchShowAssociateMaps, isAssociateDegreeType } from "@/lib/api";
+import { fetchProgramBySlug, fetchShowAssociateMaps, isAssociateOnlyProgram } from "@/lib/api";
 import { groupByTerm, type Course } from "@/lib/program";
 import { SiteHeader, SiteFooter } from "@/components/SiteHeader";
 import { CourseCard } from "@/components/CourseCard";
@@ -182,7 +182,7 @@ function ProgramPage() {
       </div>
     );
   }
-  if (!showAssociate && isAssociateDegreeType(program.degreeType)) {
+  if (!showAssociate && isAssociateOnlyProgram(program.degreeType)) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background px-6">
         <div className="max-w-md text-center">
