@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
-import { fetchProgramBySlug, fetchShowAssociateMaps, isAssociateOnlyProgram } from "@/lib/api";
+import { fetchProgramBySlug } from "@/lib/api";
 import { groupByTerm, type Course } from "@/lib/program";
 import { SiteHeader, SiteFooter } from "@/components/SiteHeader";
 import { CourseCard } from "@/components/CourseCard";
@@ -74,10 +74,6 @@ function ProgramPage() {
   const { data: program, isLoading, error } = useQuery({
     queryKey: ["program", programId],
     queryFn: () => fetchProgramBySlug(programId),
-  });
-  const { data: showAssociate = false } = useQuery({
-    queryKey: ["site-setting", "show_associate_maps_public"],
-    queryFn: fetchShowAssociateMaps,
   });
 
   const allTags = useMemo(() => {
@@ -182,26 +178,11 @@ function ProgramPage() {
       </div>
     );
   }
-  if (!showAssociate && isAssociateOnlyProgram(program.degreeType)) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background px-6">
-        <div className="max-w-md text-center">
-          <h1 className="font-serif text-3xl text-foreground">Pathway not yet available</h1>
-          <p className="mt-3 text-sm text-muted-foreground">
-            This Associate's degree pathway map is pending approval and is not published yet.
-            Please see a Norco College counselor for guidance.
-          </p>
-          <Link to="/" className="mt-4 inline-block text-primary hover:underline">
-            ← Back to programs
-          </Link>
-        </div>
-      </div>
-    );
-  }
   const terms = groupByTerm(visibleCourses);
   const years = Array.from(new Set(terms.map((t) => t.year))).sort();
   const visibleUnits = visibleCourses.reduce((s, c) => s + c.units, 0);
   const isAssociateDegree = /A\.[SA]\./.test(program.degreeType);
+  const showSepNotice = isAssociateDegree && visibleUnits < 60;
 
   const GRADE_LABEL: Record<number, string> = {
     9: "9th Grade", 10: "10th Grade", 11: "11th Grade", 12: "12th Grade",
@@ -598,26 +579,18 @@ function ProgramPage() {
                     <dd className="font-serif text-2xl text-primary">{terms.length}</dd>
                   </div>
                 </dl>
-                <div className="mt-4 flex gap-2 rounded-md border border-amber-300 bg-amber-50 p-3 text-xs leading-relaxed text-amber-900">
-                  <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-600" aria-hidden />
-                  <p>
-                    {isAssociateDegree && visibleUnits < 60 ? (
-                      <>
-                        Associate's degrees require a minimum of{" "}
-                        <span className="font-semibold">60 units</span>. This pathway shows{" "}
-                        {visibleUnits} units.{" "}
-                      </>
-                    ) : (
-                      <>
-                        This pathway is a sample plan and may not reflect every requirement
-                        for your situation.{" "}
-                      </>
-                    )}
-                    Please see a{" "}
-                    <span className="font-semibold">Norco College counselor</span> to build
-                    your complete Student Education Plan (SEP).
-                  </p>
-                </div>
+                {showSepNotice && (
+                  <div className="mt-4 flex gap-2 rounded-md border border-amber-300 bg-amber-50 p-3 text-xs leading-relaxed text-amber-900">
+                    <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-600" aria-hidden />
+                    <p>
+                      Associate's degrees require a minimum of{" "}
+                      <span className="font-semibold">60 units</span>. This
+                      pathway shows {visibleUnits} units — please see a{" "}
+                      <span className="font-semibold">Norco College counselor</span>{" "}
+                      to build your complete Student Education Plan (SEP).
+                    </p>
+                  </div>
+                )}
                 <button
                   type="button"
                   onClick={() => window.print()}
