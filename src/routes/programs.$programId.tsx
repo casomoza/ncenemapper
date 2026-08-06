@@ -182,7 +182,6 @@ function ProgramPage() {
   const years = Array.from(new Set(terms.map((t) => t.year))).sort();
   const visibleUnits = visibleCourses.reduce((s, c) => s + c.units, 0);
   const isAssociateDegree = /A\.[SA]\./.test(program.degreeType);
-  const showSepNotice = isAssociateDegree && visibleUnits < 60;
 
   const GRADE_LABEL: Record<number, string> = {
     9: "9th Grade", 10: "10th Grade", 11: "11th Grade", 12: "12th Grade",
