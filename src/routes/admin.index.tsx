@@ -36,6 +36,18 @@ function AdminPage() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["programs"] }),
   });
 
+  const { data: showAssociate = false, isLoading: settingLoading } = useQuery({
+    queryKey: ["site-setting", SHOW_ASSOCIATE_MAPS_KEY],
+    queryFn: () => fetchSiteSetting(SHOW_ASSOCIATE_MAPS_KEY),
+  });
+
+  const saveSetting = useMutation({
+    mutationFn: (value: boolean) => setSiteSetting(SHOW_ASSOCIATE_MAPS_KEY, value),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: ["site-setting", SHOW_ASSOCIATE_MAPS_KEY] }),
+  });
+
+
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center text-muted-foreground">
