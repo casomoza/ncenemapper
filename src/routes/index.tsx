@@ -215,7 +215,7 @@ function HomePage() {
                 </p>
               </div>
 
-              {isLoading ? (
+              {isLoading || settingLoading ? (
                 <p className="text-sm text-muted-foreground">Loading schools…</p>
               ) : schools.length === 0 ? (
                 <p className="text-sm text-muted-foreground">No programs yet.</p>
