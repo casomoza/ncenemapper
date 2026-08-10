@@ -118,7 +118,27 @@ function AdminPage() {
           </div>
         </div>
 
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-card p-5">
+          <div>
+            <label htmlFor="show-associate" className="text-sm font-medium text-foreground">
+              Show Associate's Degree Maps to Public
+            </label>
+            <p className="mt-1 text-xs text-muted-foreground">
+              When off, Associate's degree pathway maps are hidden from the public
+              site. Certificate maps stay visible.
+            </p>
+          </div>
+          <Switch
+            id="show-associate"
+            checked={showAssociate}
+            disabled={settingLoading || saveSetting.isPending}
+            onCheckedChange={(v) => saveSetting.mutate(v)}
+          />
+        </div>
+
         {showNew && <NewProgramForm onClose={() => setShowNew(false)} />}
+
+
 
         <div className="mt-8 grid gap-4">
           {programs?.map((p) => (
