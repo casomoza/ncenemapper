@@ -57,12 +57,25 @@ function normalizeCluster(raw: string): string {
 }
 
 function HomePage() {
-  const { data: programs = [], isLoading } = useQuery({
+  const { data: allPrograms = [], isLoading } = useQuery({
     queryKey: ["programs"],
     queryFn: fetchPrograms,
   });
+  const { data: showAssociate = false, isLoading: settingLoading } = useQuery({
+    queryKey: ["site-setting", SHOW_ASSOCIATE_MAPS_KEY],
+    queryFn: () => fetchSiteSetting(SHOW_ASSOCIATE_MAPS_KEY),
+  });
+  const programs = useMemo(
+    () =>
+      showAssociate
+        ? allPrograms
+        : allPrograms.filter((p) => !isAssociateOnlyProgram(p.degreeType)),
+    [allPrograms, showAssociate],
+  );
   const [selectedCluster, setSelectedCluster] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+
+
 
   // Group programs by school, preserving the canonical school order.
   // normalizeCluster handles programs with old cluster values (missing "School of ").
