@@ -5,6 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { SiteHeader, SiteFooter } from "@/components/SiteHeader";
 import { fetchPrograms } from "@/lib/api";
+import { SHOW_ASSOCIATE_MAPS_KEY, fetchSiteSetting, setSiteSetting } from "@/lib/settings";
+import { Switch } from "@/components/ui/switch";
 import { NORCO_SCHOOLS } from "@/lib/schools";
 import { LogOut, Plus, Pencil, Trash2 } from "lucide-react";
 
@@ -33,6 +35,18 @@ function AdminPage() {
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["programs"] }),
   });
+
+  const { data: showAssociate = false, isLoading: settingLoading } = useQuery({
+    queryKey: ["site-setting", SHOW_ASSOCIATE_MAPS_KEY],
+    queryFn: () => fetchSiteSetting(SHOW_ASSOCIATE_MAPS_KEY),
+  });
+
+  const saveSetting = useMutation({
+    mutationFn: (value: boolean) => setSiteSetting(SHOW_ASSOCIATE_MAPS_KEY, value),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: ["site-setting", SHOW_ASSOCIATE_MAPS_KEY] }),
+  });
+
 
   if (loading) {
     return (
@@ -118,7 +132,27 @@ function AdminPage() {
           </div>
         </div>
 
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-card p-5">
+          <div>
+            <label htmlFor="show-associate" className="text-sm font-medium text-foreground">
+              Show Associate's Degree Maps to Public
+            </label>
+            <p className="mt-1 text-xs text-muted-foreground">
+              When off, Associate's degree pathway maps are hidden from the public
+              site. Certificate maps stay visible.
+            </p>
+          </div>
+          <Switch
+            id="show-associate"
+            checked={showAssociate}
+            disabled={settingLoading || saveSetting.isPending}
+            onCheckedChange={(v) => saveSetting.mutate(v)}
+          />
+        </div>
+
         {showNew && <NewProgramForm onClose={() => setShowNew(false)} />}
+
+
 
         <div className="mt-8 grid gap-4">
           {programs?.map((p) => (
@@ -169,7 +203,7 @@ function NewProgramForm({ onClose }: { onClose: () => void }) {
   const [name, setName] = useState("");
   const [degreeType, setDegreeType] = useState("");
   const [totalUnits, setTotalUnits] = useState(60);
-  const [cluster, setCluster] = useState(NORCO_SCHOOLS[0]);
+  const [cluster, setCluster] = useState<string>(NORCO_SCHOOLS[0]);
   const [description, setDescription] = useState("");
   const [error, setError] = useState<string | null>(null);
 

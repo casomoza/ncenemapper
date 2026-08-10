@@ -2,6 +2,11 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { fetchProgramBySlug } from "@/lib/api";
+import {
+  SHOW_ASSOCIATE_MAPS_KEY,
+  fetchSiteSetting,
+  isAssociateOnlyProgram,
+} from "@/lib/settings";
 import { groupByTerm, type Course } from "@/lib/program";
 import { SiteHeader, SiteFooter } from "@/components/SiteHeader";
 import { CourseCard } from "@/components/CourseCard";
@@ -75,6 +80,11 @@ function ProgramPage() {
     queryKey: ["program", programId],
     queryFn: () => fetchProgramBySlug(programId),
   });
+  const { data: showAssociate = false, isLoading: settingLoading } = useQuery({
+    queryKey: ["site-setting", SHOW_ASSOCIATE_MAPS_KEY],
+    queryFn: () => fetchSiteSetting(SHOW_ASSOCIATE_MAPS_KEY),
+  });
+
 
   const allTags = useMemo(() => {
     const set = new Set<string>();
@@ -157,7 +167,7 @@ function ProgramPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [program?.id]);
 
-  if (isLoading) {
+  if (isLoading || settingLoading) {
     return (
       <div className="flex min-h-screen flex-col">
         <SiteHeader />
@@ -178,6 +188,28 @@ function ProgramPage() {
       </div>
     );
   }
+  if (!showAssociate && isAssociateOnlyProgram(program.degreeType)) {
+    return (
+      <div className="flex min-h-screen flex-col">
+        <SiteHeader />
+        <main className="mx-auto flex max-w-xl flex-1 flex-col justify-center px-6 py-16 text-center">
+          <h1 className="font-serif text-3xl text-foreground">
+            This pathway map is not yet available
+          </h1>
+          <p className="mt-3 text-muted-foreground">
+            Associate's degree pathway maps are still pending approval. Certificate
+            pathway maps are available now — please see a Norco College counselor
+            for degree planning.
+          </p>
+          <Link to="/" className="mt-6 inline-block text-primary hover:underline">
+            ← Back to programs
+          </Link>
+        </main>
+        <SiteFooter />
+      </div>
+    );
+  }
+
   const terms = groupByTerm(visibleCourses);
   const years = Array.from(new Set(terms.map((t) => t.year))).sort();
   const visibleUnits = visibleCourses.reduce((s, c) => s + c.units, 0);
@@ -579,9 +611,9 @@ function ProgramPage() {
                     <dd className="font-serif text-2xl text-primary">{terms.length}</dd>
                   </div>
                 </dl>
-                {showSepNotice && (
-                  <div className="mt-4 flex gap-2 rounded-md border border-amber-300 bg-amber-50 p-3 text-xs leading-relaxed text-amber-900">
-                    <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-600" aria-hidden />
+                <div className="mt-4 flex gap-2 rounded-md border border-amber-300 bg-amber-50 p-3 text-xs leading-relaxed text-amber-900">
+                  <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-600" aria-hidden />
+                  {showSepNotice ? (
                     <p>
                       Associate's degrees require a minimum of{" "}
                       <span className="font-semibold">60 units</span>. This
@@ -589,8 +621,16 @@ function ProgramPage() {
                       <span className="font-semibold">Norco College counselor</span>{" "}
                       to build your complete Student Education Plan (SEP).
                     </p>
-                  </div>
-                )}
+                  ) : (
+                    <p>
+                      This is a sample plan and may not reflect every requirement
+                      for your situation. Please see a{" "}
+                      <span className="font-semibold">Norco College counselor</span>{" "}
+                      to build your complete Student Education Plan (SEP).
+                    </p>
+                  )}
+                </div>
+
                 <button
                   type="button"
                   onClick={() => window.print()}
