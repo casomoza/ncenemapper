@@ -169,7 +169,7 @@ function NewProgramForm({ onClose }: { onClose: () => void }) {
   const [name, setName] = useState("");
   const [degreeType, setDegreeType] = useState("");
   const [totalUnits, setTotalUnits] = useState(60);
-  const [cluster, setCluster] = useState(NORCO_SCHOOLS[0]);
+  const [cluster, setCluster] = useState<string>(NORCO_SCHOOLS[0]);
   const [description, setDescription] = useState("");
   const [error, setError] = useState<string | null>(null);
 
