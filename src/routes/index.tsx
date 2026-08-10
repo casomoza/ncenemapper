@@ -2,6 +2,11 @@ import { useState, useMemo } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { fetchPrograms } from "@/lib/api";
+import {
+  SHOW_ASSOCIATE_MAPS_KEY,
+  fetchSiteSetting,
+  isAssociateOnlyProgram,
+} from "@/lib/settings";
 import { SiteHeader, SiteFooter } from "@/components/SiteHeader";
 import { NORCO_SCHOOLS } from "@/lib/schools";
 import { ArrowRight, ArrowLeft, GraduationCap, BookOpen, Layers, Search, X } from "lucide-react";
