@@ -2,6 +2,11 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { fetchProgramBySlug } from "@/lib/api";
+import {
+  SHOW_ASSOCIATE_MAPS_KEY,
+  fetchSiteSetting,
+  isAssociateOnlyProgram,
+} from "@/lib/settings";
 import { groupByTerm, type Course } from "@/lib/program";
 import { SiteHeader, SiteFooter } from "@/components/SiteHeader";
 import { CourseCard } from "@/components/CourseCard";
