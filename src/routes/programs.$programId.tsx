@@ -75,6 +75,11 @@ function ProgramPage() {
     queryKey: ["program", programId],
     queryFn: () => fetchProgramBySlug(programId),
   });
+  const { data: showAssociate = false, isLoading: settingLoading } = useQuery({
+    queryKey: ["site-setting", SHOW_ASSOCIATE_MAPS_KEY],
+    queryFn: () => fetchSiteSetting(SHOW_ASSOCIATE_MAPS_KEY),
+  });
+
 
   const allTags = useMemo(() => {
     const set = new Set<string>();
