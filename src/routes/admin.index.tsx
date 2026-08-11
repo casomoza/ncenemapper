@@ -53,6 +53,17 @@ function AdminPage() {
       qc.invalidateQueries({ queryKey: ["site-setting", SHOW_ASSOCIATE_MAPS_KEY] }),
   });
 
+  const { data: showUcr = false, isLoading: ucrLoading } = useQuery({
+    queryKey: ["site-setting", SHOW_UCR_TRANSFER_KEY],
+    queryFn: () => fetchSiteSetting(SHOW_UCR_TRANSFER_KEY),
+  });
+
+  const saveUcrSetting = useMutation({
+    mutationFn: (value: boolean) => setSiteSetting(SHOW_UCR_TRANSFER_KEY, value),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: ["site-setting", SHOW_UCR_TRANSFER_KEY] }),
+  });
+
 
   if (loading) {
     return (
