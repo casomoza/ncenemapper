@@ -81,7 +81,7 @@ const TERM_STYLE: Record<string, { bg: string; ring: string; text: string }> = {
 
 function ProgramPage() {
   const { programId } = Route.useParams();
-  const { data: program, isLoading, error } = useQuery({
+  const { data: rawProgram, isLoading, error } = useQuery({
     queryKey: ["program", programId],
     queryFn: () => fetchProgramBySlug(programId),
   });
@@ -89,6 +89,30 @@ function ProgramPage() {
     queryKey: ["site-setting", SHOW_ASSOCIATE_MAPS_KEY],
     queryFn: () => fetchSiteSetting(SHOW_ASSOCIATE_MAPS_KEY),
   });
+  const { data: showUcr = false, isLoading: ucrLoading } = useQuery({
+    queryKey: ["site-setting", SHOW_UCR_TRANSFER_KEY],
+    queryFn: () => fetchSiteSetting(SHOW_UCR_TRANSFER_KEY),
+  });
+
+  // While A.S. content is unapproved, dual programs render as certificate-only.
+  const certOnlyMode =
+    !!rawProgram &&
+    !showAssociate &&
+    !isUcrTransferProgram(rawProgram.cluster) &&
+    isDualProgram(rawProgram.degreeType);
+
+  const program = useMemo(() => {
+    if (!rawProgram) return rawProgram;
+    if (!certOnlyMode) return rawProgram;
+    const courses = certificateOnlyCourses(rawProgram.courses);
+    return {
+      ...rawProgram,
+      degreeType: "Certificate of Achievement",
+      courses,
+      totalUnits: courses.reduce((s, c) => s + c.units, 0),
+    };
+  }, [rawProgram, certOnlyMode]);
+
 
 
   const allTags = useMemo(() => {
