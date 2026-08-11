@@ -242,7 +242,7 @@ function HomePage() {
                 </p>
               </div>
 
-              {isLoading || settingLoading ? (
+              {isLoading || settingLoading || ucrLoading ? (
                 <p className="text-sm text-muted-foreground">Loading schools…</p>
               ) : schools.length === 0 ? (
                 <p className="text-sm text-muted-foreground">No programs yet.</p>
