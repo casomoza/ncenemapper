@@ -5,7 +5,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { SiteHeader, SiteFooter } from "@/components/SiteHeader";
 import { fetchPrograms } from "@/lib/api";
-import { SHOW_ASSOCIATE_MAPS_KEY, fetchSiteSetting, setSiteSetting } from "@/lib/settings";
+import {
+  SHOW_ASSOCIATE_MAPS_KEY,
+  SHOW_UCR_TRANSFER_KEY,
+  fetchSiteSetting,
+  setSiteSetting,
+} from "@/lib/settings";
+
 import { Switch } from "@/components/ui/switch";
 import { NORCO_SCHOOLS } from "@/lib/schools";
 import { LogOut, Plus, Pencil, Trash2 } from "lucide-react";
