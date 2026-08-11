@@ -4,9 +4,14 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchPrograms } from "@/lib/api";
 import {
   SHOW_ASSOCIATE_MAPS_KEY,
+  SHOW_UCR_TRANSFER_KEY,
   fetchSiteSetting,
   isAssociateOnlyProgram,
+  isDualProgram,
+  isUcrTransferProgram,
+  certificateOnlyCourses,
 } from "@/lib/settings";
+
 import { SiteHeader, SiteFooter } from "@/components/SiteHeader";
 import { NORCO_SCHOOLS } from "@/lib/schools";
 import { ArrowRight, ArrowLeft, GraduationCap, BookOpen, Layers, Search, X } from "lucide-react";
@@ -65,13 +70,35 @@ function HomePage() {
     queryKey: ["site-setting", SHOW_ASSOCIATE_MAPS_KEY],
     queryFn: () => fetchSiteSetting(SHOW_ASSOCIATE_MAPS_KEY),
   });
+  const { data: showUcr = false, isLoading: ucrLoading } = useQuery({
+    queryKey: ["site-setting", SHOW_UCR_TRANSFER_KEY],
+    queryFn: () => fetchSiteSetting(SHOW_UCR_TRANSFER_KEY),
+  });
   const programs = useMemo(
     () =>
-      showAssociate
-        ? allPrograms
-        : allPrograms.filter((p) => !isAssociateOnlyProgram(p.degreeType)),
-    [allPrograms, showAssociate],
+      allPrograms
+        .filter((p) => {
+          // UCR transfer cluster is governed solely by its own toggle
+          if (isUcrTransferProgram(p.cluster)) return showUcr;
+          if (showAssociate) return true;
+          return !isAssociateOnlyProgram(p.degreeType);
+        })
+        .map((p) => {
+          // Dual programs fall back to certificate-only content when A.S.
+          // content is not yet approved.
+          if (showAssociate || isUcrTransferProgram(p.cluster)) return p;
+          if (!isDualProgram(p.degreeType)) return p;
+          const courses = certificateOnlyCourses(p.courses);
+          return {
+            ...p,
+            degreeType: "Certificate of Achievement",
+            courses,
+            totalUnits: courses.reduce((s, c) => s + c.units, 0),
+          };
+        }),
+    [allPrograms, showAssociate, showUcr],
   );
+
   const [selectedCluster, setSelectedCluster] = useState<string | null>(null);
   const [search, setSearch] = useState("");
 
@@ -215,7 +242,7 @@ function HomePage() {
                 </p>
               </div>
 
-              {isLoading || settingLoading ? (
+              {isLoading || settingLoading || ucrLoading ? (
                 <p className="text-sm text-muted-foreground">Loading schools…</p>
               ) : schools.length === 0 ? (
                 <p className="text-sm text-muted-foreground">No programs yet.</p>

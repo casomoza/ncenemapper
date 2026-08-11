@@ -5,7 +5,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { SiteHeader, SiteFooter } from "@/components/SiteHeader";
 import { fetchPrograms } from "@/lib/api";
-import { SHOW_ASSOCIATE_MAPS_KEY, fetchSiteSetting, setSiteSetting } from "@/lib/settings";
+import {
+  SHOW_ASSOCIATE_MAPS_KEY,
+  SHOW_UCR_TRANSFER_KEY,
+  fetchSiteSetting,
+  setSiteSetting,
+} from "@/lib/settings";
+
 import { Switch } from "@/components/ui/switch";
 import { NORCO_SCHOOLS } from "@/lib/schools";
 import { LogOut, Plus, Pencil, Trash2 } from "lucide-react";
@@ -45,6 +51,17 @@ function AdminPage() {
     mutationFn: (value: boolean) => setSiteSetting(SHOW_ASSOCIATE_MAPS_KEY, value),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: ["site-setting", SHOW_ASSOCIATE_MAPS_KEY] }),
+  });
+
+  const { data: showUcr = false, isLoading: ucrLoading } = useQuery({
+    queryKey: ["site-setting", SHOW_UCR_TRANSFER_KEY],
+    queryFn: () => fetchSiteSetting(SHOW_UCR_TRANSFER_KEY),
+  });
+
+  const saveUcrSetting = useMutation({
+    mutationFn: (value: boolean) => setSiteSetting(SHOW_UCR_TRANSFER_KEY, value),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: ["site-setting", SHOW_UCR_TRANSFER_KEY] }),
   });
 
 
@@ -132,23 +149,46 @@ function AdminPage() {
           </div>
         </div>
 
-        <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-card p-5">
-          <div>
-            <label htmlFor="show-associate" className="text-sm font-medium text-foreground">
-              Show Associate's Degree Maps to Public
-            </label>
-            <p className="mt-1 text-xs text-muted-foreground">
-              When off, Associate's degree pathway maps are hidden from the public
-              site. Certificate maps stay visible.
-            </p>
+        <div className="mt-6 grid gap-4">
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-card p-5">
+            <div>
+              <label htmlFor="show-associate" className="text-sm font-medium text-foreground">
+                Show A.S. Degree content to public (approved)
+              </label>
+              <p className="mt-1 text-xs text-muted-foreground">
+                When off, A.S.-degree-only programs are hidden, and programs that offer
+                both a degree and a certificate show only their certificate content
+                (GE requirements and degree-only units are hidden). Certificate-only
+                maps are unaffected. Does not affect the UCR Transfer Pathway cluster.
+              </p>
+            </div>
+            <Switch
+              id="show-associate"
+              checked={showAssociate}
+              disabled={settingLoading || saveSetting.isPending}
+              onCheckedChange={(v) => saveSetting.mutate(v)}
+            />
           </div>
-          <Switch
-            id="show-associate"
-            checked={showAssociate}
-            disabled={settingLoading || saveSetting.isPending}
-            onCheckedChange={(v) => saveSetting.mutate(v)}
-          />
+
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-card p-5">
+            <div>
+              <label htmlFor="show-ucr" className="text-sm font-medium text-foreground">
+                Show UCR Transfer Pathway Maps to Public
+              </label>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Controls only the "NC &amp; UCR Bourns College of Engineering Transfer
+                Pathway" programs. Independent of the A.S. degree toggle above.
+              </p>
+            </div>
+            <Switch
+              id="show-ucr"
+              checked={showUcr}
+              disabled={ucrLoading || saveUcrSetting.isPending}
+              onCheckedChange={(v) => saveUcrSetting.mutate(v)}
+            />
+          </div>
         </div>
+
 
         {showNew && <NewProgramForm onClose={() => setShowNew(false)} />}
 

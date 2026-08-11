@@ -4,9 +4,14 @@ import { useEffect, useMemo, useState } from "react";
 import { fetchProgramBySlug } from "@/lib/api";
 import {
   SHOW_ASSOCIATE_MAPS_KEY,
+  SHOW_UCR_TRANSFER_KEY,
   fetchSiteSetting,
   isAssociateOnlyProgram,
+  isDualProgram,
+  isUcrTransferProgram,
+  certificateOnlyCourses,
 } from "@/lib/settings";
+
 import { groupByTerm, type Course } from "@/lib/program";
 import { SiteHeader, SiteFooter } from "@/components/SiteHeader";
 import { CourseCard } from "@/components/CourseCard";
@@ -76,7 +81,7 @@ const TERM_STYLE: Record<string, { bg: string; ring: string; text: string }> = {
 
 function ProgramPage() {
   const { programId } = Route.useParams();
-  const { data: program, isLoading, error } = useQuery({
+  const { data: rawProgram, isLoading, error } = useQuery({
     queryKey: ["program", programId],
     queryFn: () => fetchProgramBySlug(programId),
   });
@@ -84,6 +89,30 @@ function ProgramPage() {
     queryKey: ["site-setting", SHOW_ASSOCIATE_MAPS_KEY],
     queryFn: () => fetchSiteSetting(SHOW_ASSOCIATE_MAPS_KEY),
   });
+  const { data: showUcr = false, isLoading: ucrLoading } = useQuery({
+    queryKey: ["site-setting", SHOW_UCR_TRANSFER_KEY],
+    queryFn: () => fetchSiteSetting(SHOW_UCR_TRANSFER_KEY),
+  });
+
+  // While A.S. content is unapproved, dual programs render as certificate-only.
+  const certOnlyMode =
+    !!rawProgram &&
+    !showAssociate &&
+    !isUcrTransferProgram(rawProgram.cluster) &&
+    isDualProgram(rawProgram.degreeType);
+
+  const program = useMemo(() => {
+    if (!rawProgram) return rawProgram;
+    if (!certOnlyMode) return rawProgram;
+    const courses = certificateOnlyCourses(rawProgram.courses);
+    return {
+      ...rawProgram,
+      degreeType: "Certificate of Achievement",
+      courses,
+      totalUnits: courses.reduce((s, c) => s + c.units, 0),
+    };
+  }, [rawProgram, certOnlyMode]);
+
 
 
   const allTags = useMemo(() => {
@@ -167,7 +196,7 @@ function ProgramPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [program?.id]);
 
-  if (isLoading || settingLoading) {
+  if (isLoading || settingLoading || ucrLoading) {
     return (
       <div className="flex min-h-screen flex-col">
         <SiteHeader />
@@ -188,7 +217,32 @@ function ProgramPage() {
       </div>
     );
   }
-  if (!showAssociate && isAssociateOnlyProgram(program.degreeType)) {
+  if (isUcrTransferProgram(program.cluster) && !showUcr) {
+    return (
+      <div className="flex min-h-screen flex-col">
+        <SiteHeader />
+        <main className="mx-auto flex max-w-xl flex-1 flex-col justify-center px-6 py-16 text-center">
+          <h1 className="font-serif text-3xl text-foreground">
+            This pathway map is not yet available
+          </h1>
+          <p className="mt-3 text-muted-foreground">
+            UCR transfer pathway maps are still pending approval. Please see a
+            Norco College counselor for transfer planning.
+          </p>
+          <Link to="/" className="mt-6 inline-block text-primary hover:underline">
+            ← Back to programs
+          </Link>
+        </main>
+        <SiteFooter />
+      </div>
+    );
+  }
+  if (
+    !showAssociate &&
+    !isUcrTransferProgram(program.cluster) &&
+    isAssociateOnlyProgram(program.degreeType)
+  ) {
+
     return (
       <div className="flex min-h-screen flex-col">
         <SiteHeader />
