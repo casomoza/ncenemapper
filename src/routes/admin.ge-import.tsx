@@ -74,7 +74,7 @@ function AdminGeImportPage() {
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/auth" });
-    if (!loading && user && !isAdmin) navigate({ to: "/admin/" });
+    if (!loading && user && !isAdmin) navigate({ to: "/admin" });
   }, [loading, user, isAdmin, navigate]);
 
   useEffect(() => {
