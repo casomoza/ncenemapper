@@ -539,7 +539,7 @@ function ProgramPage() {
   const hasRccdGeTags  = allTags.some(isRccdGeTag);
   const hasCalGetcTags = allTags.some(isCalGetcTag);
   const hasGeTags      = hasRccdGeTags || hasCalGetcTags;
-  const showPathwaySelector = hasAsTags && hasCertTags;
+  const showPathwaySelector = hasAsTags && hasCertTags && !certOnlyMode;
 
   // Derive the active track from current filter state
   const asNowActive   = allTags.some((t) => isAsTag(t)   && effectiveActive.has(t));
