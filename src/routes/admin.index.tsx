@@ -361,3 +361,136 @@ function Field({
     </div>
   );
 }
+
+function AdminAccessSection({ currentUserId }: { currentUserId: string }) {
+  const qc = useQueryClient();
+  const [email, setEmail] = useState("");
+  const [msg, setMsg] = useState<string | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+
+  const list = useServerFn(listAdmins);
+  const invite = useServerFn(inviteAdmin);
+  const revoke = useServerFn(revokeAdmin);
+
+  const { data: admins, isLoading } = useQuery({
+    queryKey: ["admin-users"],
+    queryFn: () => list(),
+  });
+
+  const inviteMut = useMutation({
+    mutationFn: (e: string) =>
+      invite({
+        data: {
+          email: e,
+          redirectTo:
+            typeof window !== "undefined" ? `${window.location.origin}/auth` : undefined,
+        },
+      }),
+    onSuccess: (r) => {
+      setEmail("");
+      setErr(null);
+      setMsg(
+        r.invited
+          ? `Invite email sent to ${r.email}. They have admin access once they set their password.`
+          : `${r.email} already had an account — admin access granted.`,
+      );
+      qc.invalidateQueries({ queryKey: ["admin-users"] });
+    },
+    onError: (e: Error) => {
+      setMsg(null);
+      setErr(e.message);
+    },
+  });
+
+  const revokeMut = useMutation({
+    mutationFn: (userId: string) => revoke({ data: { userId } }),
+    onSuccess: () => {
+      setErr(null);
+      setMsg("Admin access revoked.");
+      qc.invalidateQueries({ queryKey: ["admin-users"] });
+    },
+    onError: (e: Error) => {
+      setMsg(null);
+      setErr(e.message);
+    },
+  });
+
+  return (
+    <section className="mt-8 rounded-lg border border-border bg-card p-5">
+      <h2 className="font-serif text-xl text-foreground">Admin access</h2>
+      <p className="mt-1 text-xs text-muted-foreground">
+        Invite a teammate by email. They receive an invite link to set their own password and
+        get admin access immediately.
+      </p>
+
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          setMsg(null);
+          setErr(null);
+          inviteMut.mutate(email);
+        }}
+        className="mt-4 flex flex-wrap gap-2"
+      >
+        <input
+          type="email"
+          required
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="teammate@norcocollege.edu"
+          className="min-w-[16rem] flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm"
+        />
+        <button
+          type="submit"
+          disabled={inviteMut.isPending}
+          className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-burgundy disabled:opacity-60"
+        >
+          <UserPlus className="h-4 w-4" /> {inviteMut.isPending ? "Inviting…" : "Invite"}
+        </button>
+      </form>
+
+      {msg && (
+        <p className="mt-3 rounded bg-primary/10 px-3 py-2 text-sm text-primary">{msg}</p>
+      )}
+      {err && (
+        <p className="mt-3 rounded bg-destructive/10 px-3 py-2 text-sm text-destructive">{err}</p>
+      )}
+
+      <div className="mt-5 grid gap-2">
+        {isLoading && <p className="text-sm text-muted-foreground">Loading admins…</p>}
+        {admins?.map((a) => (
+          <div
+            key={a.userId}
+            className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-border px-3 py-2"
+          >
+            <div className="text-sm text-foreground">
+              {a.email}
+              {!a.confirmed && (
+                <span className="ml-2 rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">
+                  invite pending
+                </span>
+              )}
+              {a.userId === currentUserId && (
+                <span className="ml-2 text-xs text-muted-foreground">(you)</span>
+              )}
+            </div>
+            {a.userId !== currentUserId && (
+              <button
+                onClick={() => {
+                  if (confirm(`Revoke admin access for ${a.email}?`)) revokeMut.mutate(a.userId);
+                }}
+                disabled={revokeMut.isPending}
+                className="inline-flex items-center gap-1.5 rounded-md border border-destructive/50 px-2.5 py-1 text-xs text-destructive hover:bg-destructive/10 disabled:opacity-60"
+              >
+                <Trash2 className="h-3.5 w-3.5" /> Revoke
+              </button>
+            )}
+          </div>
+        ))}
+        {admins && admins.length === 0 && (
+          <p className="text-sm text-muted-foreground">No admins found.</p>
+        )}
+      </div>
+    </section>
+  );
+}
