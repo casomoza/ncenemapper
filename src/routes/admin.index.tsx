@@ -192,6 +192,10 @@ function AdminPage() {
 
         {showNew && <NewProgramForm onClose={() => setShowNew(false)} />}
 
+        <AdminAccessSection currentUserId={user.id} />
+
+
+
 
 
         <div className="mt-8 grid gap-4">
