@@ -1,10 +1,12 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { SiteHeader, SiteFooter } from "@/components/SiteHeader";
 import { fetchPrograms } from "@/lib/api";
+import { listAdmins, inviteAdmin, revokeAdmin } from "@/lib/admins.functions";
 import {
   SHOW_ASSOCIATE_MAPS_KEY,
   SHOW_UCR_TRANSFER_KEY,
@@ -14,7 +16,8 @@ import {
 
 import { Switch } from "@/components/ui/switch";
 import { NORCO_SCHOOLS } from "@/lib/schools";
-import { LogOut, Plus, Pencil, Trash2 } from "lucide-react";
+import { LogOut, Plus, Pencil, Trash2, UserPlus } from "lucide-react";
+
 
 
 export const Route = createFileRoute("/admin/")({
