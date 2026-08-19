@@ -1129,6 +1129,20 @@ function ProgramPage() {
                 </span>
                 Course has a prerequisite
               </span>
+              <span className="flex items-center gap-2">
+                <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-700">
+                  Dual Enroll
+                </span>
+                Can be taken free while in high school through{" "}
+                <a
+                  href="https://norcocollege.edu/dualenrollment"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-medium text-primary hover:underline"
+                >
+                  Dual Enrollment
+                </a>
+              </span>
               <span className="text-muted-foreground">Click any course for details.</span>
             </div>
           </div>
