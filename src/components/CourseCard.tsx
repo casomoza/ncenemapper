@@ -161,9 +161,25 @@ export function CourseCard({
                 Selected
               </span>
             )}
-            {deAvailable && (
-              <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-700">
-                DE
+            {(course.dualEnrollment || deAvailable) && (
+              <span
+                role="link"
+                tabIndex={0}
+                title="Learn about Norco College Dual Enrollment"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  window.open("https://norcocollege.edu/dualenrollment", "_blank", "noopener,noreferrer");
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    window.open("https://norcocollege.edu/dualenrollment", "_blank", "noopener,noreferrer");
+                  }
+                }}
+                className="cursor-pointer rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-700 underline-offset-2 hover:bg-emerald-200 hover:underline"
+              >
+                Dual Enroll
               </span>
             )}
           </div>
