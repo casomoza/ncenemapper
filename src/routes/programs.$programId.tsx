@@ -943,8 +943,6 @@ function ProgramPage() {
             </div>
           )}
 
-          )}
-
           {years.map((year) => {
             const yearTerms = terms.filter((t) => t.year === year);
             const yearUnits = yearTerms.reduce(
