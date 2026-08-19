@@ -1102,39 +1102,9 @@ function ProgramPage() {
                           </span>
                         </div>
                         <div className="space-y-2">
-                          {t.courses.map((c) => {
-                            const isDeAvail = showDe && !!c.dualEnrollment;
-                            const isDeDone = isDeAvail && deDone.has(c.code);
-                            return (
-                              <div key={c.code}>
-                                <div className={isDeDone ? "opacity-40" : ""}>
-                                  <CourseCard
-                                    course={c}
-                                    programId={programId}
-                                    deAvailable={isDeAvail}
-                                  />
-                                </div>
-                                {isDeAvail && (
-                                  <div className="mt-1 flex items-center justify-between px-0.5">
-                                    {isDeDone ? (
-                                      <span className="flex items-center gap-1 text-[10px] font-semibold text-emerald-700">
-                                        <CheckCircle2 className="h-3 w-3" /> Done via DE
-                                      </span>
-                                    ) : (
-                                      <span className="text-[10px] font-medium text-emerald-600">DE available</span>
-                                    )}
-                                    <button
-                                      type="button"
-                                      onClick={() => toggleDeDone(c.code)}
-                                      className="text-[10px] text-muted-foreground hover:text-primary hover:underline"
-                                    >
-                                      {isDeDone ? "Undo" : "Mark done"}
-                                    </button>
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          })}
+                          {t.courses.map((c) => (
+                            <CourseCard key={c.code} course={c} programId={programId} />
+                          ))}
                         </div>
                       </div>
                     );
