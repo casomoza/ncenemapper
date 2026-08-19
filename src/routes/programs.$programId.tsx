@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Printer, Download, GraduationCap, Award, Filter, ChevronDown, ChevronUp, Lock, LayoutGrid, Info, CheckCircle2, Circle } from "lucide-react";
+import { ArrowLeft, Printer, Download, GraduationCap, Award, Filter, ChevronDown, ChevronUp, Lock, LayoutGrid, Info } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
@@ -131,24 +131,6 @@ function ProgramPage() {
   const [pdfShowGe, setPdfShowGe] = useState(true);
   const [pdfShowCheckboxes, setPdfShowCheckboxes] = useState(true);
   const effectiveActive = activeTags ?? new Set(allTags);
-
-  const [showDe, setShowDe] = useState(false);
-  const [deDone, setDeDone] = useState<Set<string>>(() => {
-    if (typeof window === "undefined") return new Set();
-    const stored = window.localStorage.getItem(`de-done:${programId}`);
-    return stored ? new Set(JSON.parse(stored) as string[]) : new Set();
-  });
-
-  function toggleDeDone(code: string) {
-    setDeDone((prev) => {
-      const next = new Set(prev);
-      if (next.has(code)) next.delete(code); else next.add(code);
-      if (typeof window !== "undefined") {
-        window.localStorage.setItem(`de-done:${programId}`, JSON.stringify([...next]));
-      }
-      return next;
-    });
-  }
 
   const visibleCourses = useMemo(() => {
     if (!program) return [];
@@ -269,30 +251,6 @@ function ProgramPage() {
   const visibleUnits = visibleCourses.reduce((s, c) => s + c.units, 0);
   const isAssociateDegree = /A\.[SA]\./.test(program.degreeType);
   const showSepNotice = isAssociateDegree && visibleUnits < 60;
-
-  const GRADE_LABEL: Record<number, string> = {
-    9: "9th Grade", 10: "10th Grade", 11: "11th Grade", 12: "12th Grade",
-  };
-
-  const deCourses = program.courses.filter((c) => c.dualEnrollment);
-
-  type DeGroup = { hsYear: number; hsSemester: string; courses: typeof deCourses };
-  const deTermGroups: DeGroup[] = (() => {
-    const map = new Map<string, DeGroup>();
-    const HS_SEM_ORDER: Record<string, number> = { Fall: 0, Spring: 1 };
-    for (const c of deCourses) {
-      const yr = c.deHsYear ?? 0;
-      const sem = c.deHsSemester ?? "Fall";
-      const key = `${yr}-${sem}`;
-      if (!map.has(key)) map.set(key, { hsYear: yr, hsSemester: sem, courses: [] });
-      map.get(key)!.courses.push(c);
-    }
-    return Array.from(map.values()).sort((a, b) => {
-      if (a.hsYear !== b.hsYear) return a.hsYear - b.hsYear;
-      return (HS_SEM_ORDER[a.hsSemester] ?? 9) - (HS_SEM_ORDER[b.hsSemester] ?? 9);
-    });
-  })();
-  const deGradeYears = Array.from(new Set(deTermGroups.map((g) => g.hsYear))).sort((a, b) => a - b);
 
   function isGeCourse(c: Course): boolean {
     return (c.satisfies ?? []).some((s) => /\b(GE|General Education|Pathways|IGETC|CSU GE)\b/i.test(s));
@@ -672,14 +630,14 @@ function ProgramPage() {
                       Associate's degrees require a minimum of{" "}
                       <span className="font-semibold">60 units</span>. This
                       pathway shows {visibleUnits} units — please see a{" "}
-                      <span className="font-semibold">Norco College counselor</span>{" "}
+                      <a href="https://norcocollege.edu/counseling" target="_blank" rel="noopener noreferrer" className="font-semibold text-primary underline underline-offset-2 hover:text-burgundy">Norco College counselor</a>{" "}
                       to build your complete Student Education Plan (SEP).
                     </p>
                   ) : (
                     <p>
                       This is a sample plan and may not reflect every requirement
                       for your situation. Please see a{" "}
-                      <span className="font-semibold">Norco College counselor</span>{" "}
+                      <a href="https://norcocollege.edu/counseling" target="_blank" rel="noopener noreferrer" className="font-semibold text-primary underline underline-offset-2 hover:text-burgundy">Norco College counselor</a>{" "}
                       to build your complete Student Education Plan (SEP).
                     </p>
                   )}
