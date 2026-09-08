@@ -15,6 +15,8 @@ export type Course = {
   dualEnrollment?: boolean;
   deHsYear?: number | null;
   deHsSemester?: string | null;
+  termsOffered?: string[];
+
 };
 
 export type Program = {
