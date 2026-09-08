@@ -264,12 +264,21 @@ export function CourseCard({
                 {course.note}
               </div>
             )}
+            {otherTerms.length > 0 && (
+              <div className="rounded-md border border-sky-200 bg-sky-50 p-3 text-xs leading-relaxed text-sky-900">
+                <span className="font-semibold uppercase tracking-wide">Also offered in · </span>
+                {otherTerms.join(", ")}. This course is mapped to {course.semester}, but it is also
+                offered in {otherTerms.length === 1 ? "this term" : "these terms"} — ask a counselor
+                before rearranging your plan.
+              </div>
+            )}
             {course.prerequisite && (
               <div>
                 <span className="font-semibold text-foreground">Prerequisite: </span>
                 <span className="font-mono">{course.prerequisite}</span>
               </div>
             )}
+
             {course.satisfies.length > 0 && (
               <div>
                 <p className="mb-1 font-semibold text-foreground">Satisfies</p>
