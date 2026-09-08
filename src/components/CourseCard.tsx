@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { CalendarDays } from "lucide-react";
 import type { Course } from "@/lib/program";
 import { fetchGeAreas, fetchProgramElectivesBySlug } from "@/lib/api";
 import {
@@ -110,6 +111,8 @@ export function CourseCard({
 
   const isCore = course.category === "core";
   const displayTitle = choice || course.title;
+  const otherTerms = (course.termsOffered ?? []).filter((t) => t !== course.semester);
+
 
   return (
     <>
