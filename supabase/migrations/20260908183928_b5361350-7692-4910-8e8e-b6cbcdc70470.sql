@@ -1,0 +1,1 @@
+ALTER TABLE public.courses ADD COLUMN IF NOT EXISTS terms_offered text[] NOT NULL DEFAULT '{}'::text[];
