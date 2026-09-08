@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { CalendarDays } from "lucide-react";
 import type { Course } from "@/lib/program";
 import { fetchGeAreas, fetchProgramElectivesBySlug } from "@/lib/api";
 import {
@@ -110,6 +111,8 @@ export function CourseCard({
 
   const isCore = course.category === "core";
   const displayTitle = choice || course.title;
+  const otherTerms = (course.termsOffered ?? []).filter((t) => t !== course.semester);
+
 
   return (
     <>
@@ -182,7 +185,16 @@ export function CourseCard({
                 Dual Enroll
               </span>
             )}
+            {otherTerms.length > 0 && (
+              <span
+                title={`Also offered in ${otherTerms.join(", ")}`}
+                className="inline-flex items-center gap-1 rounded-full bg-sky-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-sky-700"
+              >
+                <CalendarDays className="h-3 w-3" /> Flexible
+              </span>
+            )}
           </div>
+
 
           {slot && (
             <div
@@ -252,12 +264,21 @@ export function CourseCard({
                 {course.note}
               </div>
             )}
+            {otherTerms.length > 0 && (
+              <div className="rounded-md border border-sky-200 bg-sky-50 p-3 text-xs leading-relaxed text-sky-900">
+                <span className="font-semibold uppercase tracking-wide">Also offered in · </span>
+                {otherTerms.join(", ")}. This course is mapped to {course.semester}, but it is also
+                offered in {otherTerms.length === 1 ? "this term" : "these terms"} — ask a counselor
+                before rearranging your plan.
+              </div>
+            )}
             {course.prerequisite && (
               <div>
                 <span className="font-semibold text-foreground">Prerequisite: </span>
                 <span className="font-mono">{course.prerequisite}</span>
               </div>
             )}
+
             {course.satisfies.length > 0 && (
               <div>
                 <p className="mb-1 font-semibold text-foreground">Satisfies</p>

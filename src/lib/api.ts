@@ -27,7 +27,17 @@ export type DbCourse = {
   optional: boolean;
   note: string | null;
   sort_order: number;
+  terms_offered?: string[] | null;
 };
+
+export const ALL_TERMS = ["Fall", "Winter", "Spring", "Summer"] as const;
+
+/** Normalized list of terms a course is offered in — always includes its mapped term. */
+export function normalizeTermsOffered(semester: string, terms?: string[] | null): string[] {
+  const set = new Set<string>([semester, ...(terms ?? [])]);
+  return ALL_TERMS.filter((t) => set.has(t));
+}
+
 
 const DE_TAG_RE = /^DE:(\d+):(Fall|Spring)$/i;
 
@@ -74,6 +84,8 @@ function toCourse(c: DbCourse): Course {
     dualEnrollment: !!deTag,
     deHsYear: deMatch ? Number(deMatch[1]) : null,
     deHsSemester: deMatch ? deMatch[2] : null,
+    termsOffered: normalizeTermsOffered(c.semester, c.terms_offered),
+
   };
 }
 

@@ -28,6 +28,7 @@ export type Database = {
           satisfies: string[]
           semester: string
           sort_order: number
+          terms_offered: string[]
           title: string
           units: number
           updated_at: string
@@ -46,6 +47,7 @@ export type Database = {
           satisfies?: string[]
           semester?: string
           sort_order?: number
+          terms_offered?: string[]
           title?: string
           units?: number
           updated_at?: string
@@ -64,6 +66,7 @@ export type Database = {
           satisfies?: string[]
           semester?: string
           sort_order?: number
+          terms_offered?: string[]
           title?: string
           units?: number
           updated_at?: string
