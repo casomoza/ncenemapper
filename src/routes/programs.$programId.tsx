@@ -998,6 +998,13 @@ function ProgramPage() {
                   Dual Enrollment
                 </a>
               </span>
+              <span className="flex items-center gap-2">
+                <span className="rounded-full bg-sky-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-sky-700">
+                  Flexible
+                </span>
+                This course is also offered in other terms — ask your counselor about alternate
+                scheduling.
+              </span>
               <span className="text-muted-foreground">Click any course for details.</span>
             </div>
           </div>

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { SiteHeader, SiteFooter } from "@/components/SiteHeader";
-import { fetchDbProgramBySlug, fetchDbCourses, type DbCourse, type DbProgram, deTagFromSatisfies, satisfiesWithoutDe, buildDeTag } from "@/lib/api";
+import { fetchDbProgramBySlug, fetchDbCourses, type DbCourse, type DbProgram, deTagFromSatisfies, satisfiesWithoutDe, buildDeTag, ALL_TERMS, normalizeTermsOffered } from "@/lib/api";
 import { NORCO_SCHOOLS } from "@/lib/schools";
 import { ArrowLeft, Plus, Trash2, Save, BookOpen } from "lucide-react";
 import { CatalogSearchDialog } from "@/components/CatalogSearchDialog";
@@ -330,6 +330,7 @@ function initCourseState(course: DbCourse): CourseEditState {
     _deEnabled: !!deTag,
     _deHsYear: deMatch ? Number(deMatch[1]) : 11,
     _deHsSemester: deMatch ? deMatch[2] : "Fall",
+    terms_offered: normalizeTermsOffered(course.semester, course.terms_offered),
   };
 }
 
@@ -362,6 +363,7 @@ function CourseRow({ course }: { course: DbCourse }) {
           optional: c.optional,
           note: c.note,
           sort_order: c.sort_order,
+          terms_offered: normalizeTermsOffered(c.semester, c.terms_offered),
         })
         .eq("id", c.id);
       if (error) throw error;
@@ -554,6 +556,43 @@ function CourseRow({ course }: { course: DbCourse }) {
                     </div>
                   </div>
                 )}
+              </div>
+
+              <div className="md:col-span-2 rounded-md border border-sky-200 bg-sky-50/50 p-3">
+                <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-sky-800">
+                  Also offered in:
+                </p>
+                <p className="mb-2 text-xs text-muted-foreground">
+                  Check every term this course is available. The term it is mapped to ({c.semester})
+                  is always included.
+                </p>
+                <div className="flex flex-wrap gap-4">
+                  {ALL_TERMS.map((t) => {
+                    const selected = normalizeTermsOffered(c.semester, c.terms_offered).includes(t);
+                    return (
+                      <label key={t} className="flex items-center gap-2 text-sm text-foreground">
+                        <input
+                          type="checkbox"
+                          checked={selected}
+                          disabled={t === c.semester}
+                          onChange={(e) => {
+                            const set = new Set(normalizeTermsOffered(c.semester, c.terms_offered));
+                            if (e.target.checked) set.add(t);
+                            else set.delete(t);
+                            setC({
+                              ...c,
+                              terms_offered: ALL_TERMS.filter((x) => set.has(x)),
+                            });
+                          }}
+                        />
+                        {t}
+                        {t === c.semester && (
+                          <span className="text-[10px] text-muted-foreground">(mapped term)</span>
+                        )}
+                      </label>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           </td>
