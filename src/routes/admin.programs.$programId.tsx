@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { SiteHeader, SiteFooter } from "@/components/SiteHeader";
-import { fetchDbProgramBySlug, fetchDbCourses, type DbCourse, type DbProgram, deTagFromSatisfies, satisfiesWithoutDe, buildDeTag } from "@/lib/api";
+import { fetchDbProgramBySlug, fetchDbCourses, type DbCourse, type DbProgram, deTagFromSatisfies, satisfiesWithoutDe, buildDeTag, ALL_TERMS, normalizeTermsOffered } from "@/lib/api";
 import { NORCO_SCHOOLS } from "@/lib/schools";
 import { ArrowLeft, Plus, Trash2, Save, BookOpen } from "lucide-react";
 import { CatalogSearchDialog } from "@/components/CatalogSearchDialog";
