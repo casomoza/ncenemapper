@@ -363,6 +363,7 @@ function CourseRow({ course }: { course: DbCourse }) {
           optional: c.optional,
           note: c.note,
           sort_order: c.sort_order,
+          terms_offered: normalizeTermsOffered(c.semester, c.terms_offered),
         })
         .eq("id", c.id);
       if (error) throw error;
