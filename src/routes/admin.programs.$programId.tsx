@@ -330,6 +330,7 @@ function initCourseState(course: DbCourse): CourseEditState {
     _deEnabled: !!deTag,
     _deHsYear: deMatch ? Number(deMatch[1]) : 11,
     _deHsSemester: deMatch ? deMatch[2] : "Fall",
+    terms_offered: normalizeTermsOffered(course.semester, course.terms_offered),
   };
 }
 
