@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { SiteHeader, SiteFooter } from "@/components/SiteHeader";
-import { fetchDbProgramBySlug, fetchDbCourses, type DbCourse, type DbProgram, deTagFromSatisfies, satisfiesWithoutDe, buildDeTag, ALL_TERMS, normalizeTermsOffered } from "@/lib/api";
+import { fetchDbProgramBySlug, fetchDbCourses, type DbCourse, type DbProgram, deTagFromSatisfies, satisfiesWithoutDe, buildDeTag, ALL_TERMS, normalizeTermsOffered, fetchConcurrentPairs, setConcurrentPair, concurrencyKey } from "@/lib/api";
 import { NORCO_SCHOOLS } from "@/lib/schools";
 import { ArrowLeft, Plus, Trash2, Save, BookOpen } from "lucide-react";
 import { CatalogSearchDialog } from "@/components/CatalogSearchDialog";
@@ -377,6 +377,19 @@ function CourseRow({ course }: { course: DbCourse }) {
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-courses", course.program_id] }),
+  });
+
+  const { data: concurrentPairs = [] } = useQuery({
+    queryKey: ["concurrent-pairs"],
+    queryFn: fetchConcurrentPairs,
+  });
+  const prereqCode = (c.prerequisite ?? "").trim();
+  const isConcurrent =
+    !!prereqCode && concurrentPairs.includes(concurrencyKey(c.code, prereqCode));
+  const setConcurrent = useMutation({
+    mutationFn: (enabled: boolean) => setConcurrentPair(c.code, prereqCode, enabled),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["concurrent-pairs"] }),
+    onError: (e: Error) => alert(`Could not save: ${e.message}`),
   });
 
   return (
