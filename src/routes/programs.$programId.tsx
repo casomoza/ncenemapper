@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
-import { fetchProgramBySlug } from "@/lib/api";
+import { fetchProgramBySlug, fetchConcurrentPairs, concurrencyKey, normalizeTermsOffered } from "@/lib/api";
 import {
   SHOW_ASSOCIATE_MAPS_KEY,
   SHOW_UCR_TRANSFER_KEY,
@@ -131,6 +131,39 @@ function ProgramPage() {
   const [pdfShowGe, setPdfShowGe] = useState(true);
   const [pdfShowCheckboxes, setPdfShowCheckboxes] = useState(true);
   const effectiveActive = activeTags ?? new Set(allTags);
+
+  // ---- Personal (local-only) rescheduling -------------------------------
+  const layoutKey = `pathway-layout:${programId}`;
+  const [overrides, setOverrides] = useState<Record<string, { year: number; semester: string }>>({});
+  const [layoutReady, setLayoutReady] = useState(false);
+  const [dragging, setDragging] = useState<{ code: string; terms: string[] } | null>(null);
+  const [dropMsg, setDropMsg] = useState<string | null>(null);
+
+  useEffect(() => {
+    setLayoutReady(false);
+    try {
+      const raw = window.localStorage.getItem(layoutKey);
+      setOverrides(raw ? JSON.parse(raw) : {});
+    } catch {
+      setOverrides({});
+    }
+    setLayoutReady(true);
+  }, [layoutKey]);
+
+  useEffect(() => {
+    if (!layoutReady) return;
+    try {
+      if (Object.keys(overrides).length === 0) window.localStorage.removeItem(layoutKey);
+      else window.localStorage.setItem(layoutKey, JSON.stringify(overrides));
+    } catch {
+      /* ignore quota / private mode errors */
+    }
+  }, [overrides, layoutReady, layoutKey]);
+
+  const { data: concurrentPairs = [] } = useQuery({
+    queryKey: ["concurrent-pairs"],
+    queryFn: fetchConcurrentPairs,
+  });
 
   const visibleCourses = useMemo(() => {
     if (!program) return [];
