@@ -279,8 +279,67 @@ function ProgramPage() {
     );
   }
 
-  const terms = groupByTerm(visibleCourses);
-  const years = Array.from(new Set(terms.map((t) => t.year))).sort();
+  const TERM_INDEX: Record<string, number> = { Summer: 0, Fall: 1, Winter: 2, Spring: 3 };
+  const MAX_TERM_UNITS = 18;
+
+  function termsFor(c: Course): string[] {
+    return normalizeTermsOffered(c.semester, c.termsOffered ?? []);
+  }
+
+  const laidOutCourses = visibleCourses.map((c) => {
+    const o = overrides[c.code];
+    return o ? { ...c, year: o.year, semester: o.semester as Course["semester"] } : c;
+  });
+
+  const terms = groupByTerm(laidOutCourses);
+  const years = Array.from(
+    new Set([...terms.map((t) => t.year), ...visibleCourses.map((c) => c.year)]),
+  ).sort();
+
+  const slotIndex = (year: number, semester: string) => year * 10 + (TERM_INDEX[semester] ?? 9);
+
+  // Soft prerequisite-order warnings for the current (possibly customized) layout.
+  const prereqWarnings: Record<string, string[]> = {};
+  for (const c of laidOutCourses) {
+    const raw = (c.prerequisite ?? "").toUpperCase();
+    if (!raw) continue;
+    for (const p of laidOutCourses) {
+      if (p.code === c.code) continue;
+      if (!raw.includes(p.code.toUpperCase())) continue;
+      const ci = slotIndex(c.year, c.semester);
+      const pi = slotIndex(p.year, p.semester);
+      if (ci < pi) {
+        (prereqWarnings[c.code] ??= []).push(
+          `Scheduled before its prerequisite ${p.code}.`,
+        );
+      } else if (ci === pi && !concurrentPairs.includes(concurrencyKey(c.code, p.code))) {
+        (prereqWarnings[c.code] ??= []).push(
+          `Same term as its prerequisite ${p.code} — usually taken after.`,
+        );
+      }
+    }
+  }
+
+  function handleDrop(year: number, semester: string) {
+    if (!dragging) return;
+    if (!dragging.terms.includes(semester)) {
+      setDropMsg(
+        `${dragging.code} can't move to ${semester} — it is only offered in ${dragging.terms.join(", ")}.`,
+      );
+      setDragging(null);
+      return;
+    }
+    const code = dragging.code;
+    const original = visibleCourses.find((c) => c.code === code);
+    setOverrides((prev) => {
+      const next = { ...prev };
+      if (original && original.year === year && original.semester === semester) delete next[code];
+      else next[code] = { year, semester };
+      return next;
+    });
+    setDropMsg(null);
+    setDragging(null);
+  }
   const visibleUnits = visibleCourses.reduce((s, c) => s + c.units, 0);
   const isAssociateDegree = /A\.[SA]\./.test(program.degreeType);
   const showSepNotice = isAssociateDegree && visibleUnits < 60;
