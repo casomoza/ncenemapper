@@ -32,6 +32,47 @@ export type DbCourse = {
 
 export const ALL_TERMS = ["Fall", "Winter", "Spring", "Summer"] as const;
 
+/** Key for a course/prerequisite pair that may be taken in the same semester. */
+export function concurrencyKey(courseCode: string, prereqCode: string): string {
+  return `${courseCode.trim().toUpperCase()}|${prereqCode.trim().toUpperCase()}`;
+}
+
+/** All course/prerequisite pairs flagged as "can be taken concurrently" (site-wide). */
+export async function fetchConcurrentPairs(): Promise<string[]> {
+  const { data, error } = await supabase
+    .from("prereq_concurrency" as never)
+    .select("course_code, prereq_code");
+  if (error) return [];
+  return ((data ?? []) as unknown as { course_code: string; prereq_code: string }[]).map((r) =>
+    concurrencyKey(r.course_code, r.prereq_code),
+  );
+}
+
+export async function setConcurrentPair(
+  courseCode: string,
+  prereqCode: string,
+  enabled: boolean,
+): Promise<void> {
+  const course = courseCode.trim().toUpperCase();
+  const prereq = prereqCode.trim().toUpperCase();
+  if (!course || !prereq) return;
+  if (enabled) {
+    const { error } = await supabase
+      .from("prereq_concurrency" as never)
+      .upsert({ course_code: course, prereq_code: prereq } as never, {
+        onConflict: "course_code,prereq_code",
+      });
+    if (error) throw error;
+  } else {
+    const { error } = await supabase
+      .from("prereq_concurrency" as never)
+      .delete()
+      .eq("course_code", course)
+      .eq("prereq_code", prereq);
+    if (error) throw error;
+  }
+}
+
 /** Normalized list of terms a course is offered in — always includes its mapped term. */
 export function normalizeTermsOffered(semester: string, terms?: string[] | null): string[] {
   const set = new Set<string>([semester, ...(terms ?? [])]);
