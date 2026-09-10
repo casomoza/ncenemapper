@@ -121,6 +121,30 @@ export type Database = {
         }
         Relationships: []
       }
+      prereq_concurrency: {
+        Row: {
+          course_code: string
+          created_at: string
+          id: string
+          prereq_code: string
+          updated_at: string
+        }
+        Insert: {
+          course_code: string
+          created_at?: string
+          id?: string
+          prereq_code: string
+          updated_at?: string
+        }
+        Update: {
+          course_code?: string
+          created_at?: string
+          id?: string
+          prereq_code?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       program_electives: {
         Row: {
           course_descriptions: Json

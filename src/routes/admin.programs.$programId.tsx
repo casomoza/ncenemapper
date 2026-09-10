@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { SiteHeader, SiteFooter } from "@/components/SiteHeader";
-import { fetchDbProgramBySlug, fetchDbCourses, type DbCourse, type DbProgram, deTagFromSatisfies, satisfiesWithoutDe, buildDeTag, ALL_TERMS, normalizeTermsOffered } from "@/lib/api";
+import { fetchDbProgramBySlug, fetchDbCourses, type DbCourse, type DbProgram, deTagFromSatisfies, satisfiesWithoutDe, buildDeTag, ALL_TERMS, normalizeTermsOffered, fetchConcurrentPairs, setConcurrentPair, concurrencyKey } from "@/lib/api";
 import { NORCO_SCHOOLS } from "@/lib/schools";
 import { ArrowLeft, Plus, Trash2, Save, BookOpen } from "lucide-react";
 import { CatalogSearchDialog } from "@/components/CatalogSearchDialog";
@@ -379,6 +379,19 @@ function CourseRow({ course }: { course: DbCourse }) {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-courses", course.program_id] }),
   });
 
+  const { data: concurrentPairs = [] } = useQuery({
+    queryKey: ["concurrent-pairs"],
+    queryFn: fetchConcurrentPairs,
+  });
+  const prereqCode = (c.prerequisite ?? "").trim();
+  const isConcurrent =
+    !!prereqCode && concurrentPairs.includes(concurrencyKey(c.code, prereqCode));
+  const setConcurrent = useMutation({
+    mutationFn: (enabled: boolean) => setConcurrentPair(c.code, prereqCode, enabled),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["concurrent-pairs"] }),
+    onError: (e: Error) => alert(`Could not save: ${e.message}`),
+  });
+
   return (
     <>
       <tr className="border-t border-border">
@@ -593,6 +606,32 @@ function CourseRow({ course }: { course: DbCourse }) {
                     );
                   })}
                 </div>
+              </div>
+
+              <div className="md:col-span-2 rounded-md border border-amber-200 bg-amber-50/50 p-3">
+                <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-amber-800">
+                  Prerequisite timing
+                </p>
+                {prereqCode ? (
+                  <>
+                    <label className="flex items-center gap-2 text-sm text-foreground">
+                      <input
+                        type="checkbox"
+                        checked={isConcurrent}
+                        disabled={setConcurrent.isPending}
+                        onChange={(e) => setConcurrent.mutate(e.target.checked)}
+                      />
+                      Can be taken in the same semester as {prereqCode}
+                    </label>
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      Saves immediately and applies to {c.code} + {prereqCode} in every program.
+                    </p>
+                  </>
+                ) : (
+                  <p className="text-xs text-muted-foreground">
+                    Add a prerequisite for this course to set same-semester timing.
+                  </p>
+                )}
               </div>
             </div>
           </td>
