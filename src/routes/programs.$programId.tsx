@@ -993,6 +993,32 @@ function ProgramPage() {
             </div>
           )}
 
+          <div className="mb-6 flex flex-wrap items-center gap-3 rounded-lg border border-dashed border-border bg-muted/30 px-4 py-3 text-sm">
+            <span className="text-muted-foreground">
+              Drag a course into another term to plan your own schedule. This stays on your device
+              only.
+            </span>
+            {Object.keys(overrides).length > 0 && (
+              <button
+                onClick={() => {
+                  setOverrides({});
+                  setDropMsg(null);
+                }}
+                className="rounded-md border border-primary px-3 py-1 text-xs font-semibold text-primary hover:bg-primary/10"
+              >
+                Reset to official map
+              </button>
+            )}
+          </div>
+          {dropMsg && (
+            <div
+              role="status"
+              className="mb-4 rounded-md border border-destructive/40 bg-destructive/10 px-4 py-2 text-sm text-destructive"
+            >
+              {dropMsg}
+            </div>
+          )}
+
           {years.map((year) => {
             const yearTerms = terms.filter((t) => t.year === year);
             const yearUnits = yearTerms.reduce(
@@ -1029,29 +1055,77 @@ function ProgramPage() {
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                   {(["Summer", "Fall", "Winter", "Spring"] as const).map((semester) => {
                     const t = yearTerms.find((t) => t.semester === semester);
-                    if (!t) {
-                      // Placeholder keeps the column fixed even when the term is absent
+                    const style = TERM_STYLE[semester] ?? TERM_STYLE.Fall;
+                    const courses = t?.courses ?? [];
+                    const termUnits = courses.reduce((s, c) => s + c.units, 0);
+                    const canDrop = dragging ? dragging.terms.includes(semester) : null;
+                    const dropClass =
+                      canDrop === null
+                        ? ""
+                        : canDrop
+                          ? "outline-dashed outline-2 outline-primary/60"
+                          : "opacity-50";
+                    if (!t && !dragging) {
                       return <div key={`${year}-${semester}-empty`} aria-hidden="true" />;
                     }
-                    const style = TERM_STYLE[t.semester] ?? TERM_STYLE.Fall;
-                    const termUnits = t.courses.reduce((s, c) => s + c.units, 0);
                     return (
                       <div
-                        key={`${t.year}-${t.semester}`}
-                        className={`rounded-lg border border-border bg-card p-3 shadow-sm ring-1 ring-inset ${style.ring}`}
+                        key={`${year}-${semester}`}
+                        onDragOver={(e) => {
+                          if (canDrop) e.preventDefault();
+                        }}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          handleDrop(year, semester);
+                        }}
+                        title={
+                          canDrop === false && dragging
+                            ? `${dragging.code} is only offered in ${dragging.terms.join(", ")}`
+                            : undefined
+                        }
+                        className={`rounded-lg border border-border bg-card p-3 shadow-sm ring-1 ring-inset ${style.ring} ${dropClass}`}
                       >
                         <div className={`mb-3 flex items-center justify-between rounded-md px-2 py-1.5 ${style.bg}`}>
                           <h3 className={`font-serif text-base font-semibold ${style.text}`}>
-                            {t.semester}
+                            {semester}
                           </h3>
                           <span className="font-mono text-[10px] font-semibold text-muted-foreground">
                             {termUnits} units
                           </span>
                         </div>
+                        {termUnits > MAX_TERM_UNITS && (
+                          <p className="mb-2 rounded-md bg-amber-100 px-2 py-1 text-[11px] text-amber-900">
+                            Heavier than usual — {termUnits} units this term.
+                          </p>
+                        )}
                         <div className="space-y-2">
-                          {t.courses.map((c) => (
-                            <CourseCard key={c.code} course={c} programId={programId} />
+                          {courses.map((c) => (
+                            <div
+                              key={c.code}
+                              draggable
+                              onDragStart={() => {
+                                setDropMsg(null);
+                                setDragging({ code: c.code, terms: termsFor(c) });
+                              }}
+                              onDragEnd={() => setDragging(null)}
+                              className="cursor-grab active:cursor-grabbing"
+                            >
+                              <CourseCard course={c} programId={programId} />
+                              {(prereqWarnings[c.code] ?? []).map((w) => (
+                                <p
+                                  key={w}
+                                  className="mt-1 rounded-md bg-amber-100 px-2 py-1 text-[11px] text-amber-900"
+                                >
+                                  {w}
+                                </p>
+                              ))}
+                            </div>
                           ))}
+                          {courses.length === 0 && (
+                            <p className="py-4 text-center text-xs text-muted-foreground">
+                              Drop a course here
+                            </p>
+                          )}
                         </div>
                       </div>
                     );
