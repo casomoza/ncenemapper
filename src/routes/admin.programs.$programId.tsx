@@ -607,6 +607,32 @@ function CourseRow({ course }: { course: DbCourse }) {
                   })}
                 </div>
               </div>
+
+              <div className="md:col-span-2 rounded-md border border-amber-200 bg-amber-50/50 p-3">
+                <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-amber-800">
+                  Prerequisite timing
+                </p>
+                {prereqCode ? (
+                  <>
+                    <label className="flex items-center gap-2 text-sm text-foreground">
+                      <input
+                        type="checkbox"
+                        checked={isConcurrent}
+                        disabled={setConcurrent.isPending}
+                        onChange={(e) => setConcurrent.mutate(e.target.checked)}
+                      />
+                      Can be taken in the same semester as {prereqCode}
+                    </label>
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      Saves immediately and applies to {c.code} + {prereqCode} in every program.
+                    </p>
+                  </>
+                ) : (
+                  <p className="text-xs text-muted-foreground">
+                    Add a prerequisite for this course to set same-semester timing.
+                  </p>
+                )}
+              </div>
             </div>
           </td>
         </tr>
