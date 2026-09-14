@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { SiteHeader, SiteFooter } from "@/components/SiteHeader";
@@ -16,7 +16,7 @@ import {
 
 import { Switch } from "@/components/ui/switch";
 import { NORCO_SCHOOLS } from "@/lib/schools";
-import { LogOut, Plus, Pencil, Trash2, UserPlus } from "lucide-react";
+import { LogOut, Plus, Pencil, Trash2, UserPlus, Search, ChevronDown } from "lucide-react";
 
 
 
@@ -201,50 +201,184 @@ function AdminPage() {
 
 
 
-        <div className="mt-8 grid gap-4">
-          {programs?.map((p) => (
-            <div
-              key={p.id}
-              className="flex items-center justify-between rounded-lg border border-border bg-card p-5"
-            >
-              <div>
-                <h2 className="font-serif text-xl text-foreground">{p.name}</h2>
-                <p className="text-sm text-muted-foreground">
-                  {p.degreeType} · {p.courses.length} courses · {p.totalUnits} units
-                </p>
-              </div>
-              <div className="flex gap-2">
-                <Link
-                  to="/admin/programs/$programId"
-                  params={{ programId: p.id }}
-                  className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-sm hover:bg-accent/30"
-                >
-                  <Pencil className="h-3.5 w-3.5" /> Edit
-                </Link>
-                <button
-                  onClick={() => {
-                    if (confirm(`Delete program "${p.name}"? This removes all its courses.`)) {
-                      del.mutate(p.id);
-                    }
-                  }}
-                  className="inline-flex items-center gap-1.5 rounded-md border border-destructive/50 px-3 py-1.5 text-sm text-destructive hover:bg-destructive/10"
-                >
-                  <Trash2 className="h-3.5 w-3.5" /> Delete
-                </button>
-              </div>
-            </div>
-          ))}
-          {programs && programs.length === 0 && (
-            <p className="text-sm text-muted-foreground">No programs yet.</p>
-          )}
-        </div>
+        <ProgramList programs={programs ?? []} onDelete={(id: string) => del.mutate(id)} />
+
       </main>
       <SiteFooter />
     </div>
   );
 }
 
+type ListProgram = {
+  id: string;
+  name: string;
+  cluster?: string | null;
+  degreeType?: string | null;
+  totalUnits?: number | null;
+  courses: unknown[];
+};
+
+const COLLAPSED_KEY = "admin-collapsed-clusters";
+
+export function ProgramList({
+  programs,
+  onDelete,
+}: {
+  programs: ListProgram[];
+  onDelete: (id: string) => void;
+}) {
+  const [query, setQuery] = useState("");
+  const [collapsed, setCollapsed] = useState<string[]>([]);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(COLLAPSED_KEY);
+      if (raw) setCollapsed(JSON.parse(raw));
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  const toggle = (cluster: string) => {
+    setCollapsed((prev) => {
+      const next = prev.includes(cluster)
+        ? prev.filter((c) => c !== cluster)
+        : [...prev, cluster];
+      try {
+        localStorage.setItem(COLLAPSED_KEY, JSON.stringify(next));
+      } catch {
+        /* ignore */
+      }
+      return next;
+    });
+  };
+
+  const q = query.trim().toLowerCase();
+  const matches = (p: ListProgram) =>
+    !q ||
+    p.name.toLowerCase().includes(q) ||
+    (p.cluster ?? "").toLowerCase().includes(q);
+
+  const filtered = programs.filter(matches);
+  const sorted = [...filtered].sort((a, b) => a.name.localeCompare(b.name));
+
+  const groups = new Map<string, ListProgram[]>();
+  for (const p of sorted) {
+    const key = p.cluster?.trim() || "Uncategorized";
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key)!.push(p);
+  }
+  const clusters = Array.from(groups.keys()).sort((a, b) => a.localeCompare(b));
+
+  return (
+    <div className="mt-8">
+      <div className="relative">
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <input
+          type="search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search programs or schools…"
+          aria-label="Search programs"
+          className="w-full rounded-md border border-input bg-background py-2 pl-9 pr-3 text-sm"
+        />
+      </div>
+
+      {q ? (
+        <div className="mt-4 grid gap-3">
+          <p className="text-xs text-muted-foreground">
+            {sorted.length} {sorted.length === 1 ? "result" : "results"}
+          </p>
+          {sorted.map((p) => (
+            <ProgramRow key={p.id} p={p} onDelete={onDelete} showCluster />
+          ))}
+          {sorted.length === 0 && (
+            <p className="text-sm text-muted-foreground">No programs match your search.</p>
+          )}
+        </div>
+      ) : (
+        <div className="mt-4 grid gap-4">
+          {clusters.map((cluster) => {
+            const isOpen = !collapsed.includes(cluster);
+            const items = groups.get(cluster)!;
+            return (
+              <section key={cluster} className="rounded-lg border border-border bg-card">
+                <button
+                  type="button"
+                  onClick={() => toggle(cluster)}
+                  aria-expanded={isOpen}
+                  className="flex w-full items-center justify-between gap-3 px-5 py-3 text-left"
+                >
+                  <span className="font-serif text-lg text-foreground">{cluster}</span>
+                  <span className="flex items-center gap-2 text-xs text-muted-foreground">
+                    {items.length} {items.length === 1 ? "program" : "programs"}
+                    <ChevronDown
+                      className={`h-4 w-4 transition-transform ${isOpen ? "rotate-180" : ""}`}
+                    />
+                  </span>
+                </button>
+                {isOpen && (
+                  <div className="grid gap-3 border-t border-border p-4">
+                    {items.map((p) => (
+                      <ProgramRow key={p.id} p={p} onDelete={onDelete} />
+                    ))}
+                  </div>
+                )}
+              </section>
+            );
+          })}
+          {programs.length === 0 && (
+            <p className="text-sm text-muted-foreground">No programs yet.</p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ProgramRow({
+  p,
+  onDelete,
+  showCluster,
+}: {
+  p: ListProgram;
+  onDelete: (id: string) => void;
+  showCluster?: boolean;
+}) {
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-background p-4">
+      <div>
+        <h2 className="font-serif text-lg text-foreground">{p.name}</h2>
+        <p className="text-sm text-muted-foreground">
+          {p.degreeType} · {p.courses.length} courses · {p.totalUnits} units
+          {showCluster && p.cluster ? ` · ${p.cluster}` : ""}
+        </p>
+      </div>
+      <div className="flex gap-2">
+        <Link
+          to="/admin/programs/$programId"
+          params={{ programId: p.id }}
+          className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-sm hover:bg-accent/30"
+        >
+          <Pencil className="h-3.5 w-3.5" /> Edit
+        </Link>
+        <button
+          onClick={() => {
+            if (confirm(`Delete program "${p.name}"? This removes all its courses.`)) {
+              onDelete(p.id);
+            }
+          }}
+          className="inline-flex items-center gap-1.5 rounded-md border border-destructive/50 px-3 py-1.5 text-sm text-destructive hover:bg-destructive/10"
+        >
+          <Trash2 className="h-3.5 w-3.5" /> Delete
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function NewProgramForm({ onClose }: { onClose: () => void }) {
+
   const qc = useQueryClient();
   const [slug, setSlug] = useState("");
   const [name, setName] = useState("");
