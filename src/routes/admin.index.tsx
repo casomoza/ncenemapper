@@ -201,43 +201,8 @@ function AdminPage() {
 
 
 
-        <div className="mt-8 grid gap-4">
-          {programs?.map((p) => (
-            <div
-              key={p.id}
-              className="flex items-center justify-between rounded-lg border border-border bg-card p-5"
-            >
-              <div>
-                <h2 className="font-serif text-xl text-foreground">{p.name}</h2>
-                <p className="text-sm text-muted-foreground">
-                  {p.degreeType} · {p.courses.length} courses · {p.totalUnits} units
-                </p>
-              </div>
-              <div className="flex gap-2">
-                <Link
-                  to="/admin/programs/$programId"
-                  params={{ programId: p.id }}
-                  className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-sm hover:bg-accent/30"
-                >
-                  <Pencil className="h-3.5 w-3.5" /> Edit
-                </Link>
-                <button
-                  onClick={() => {
-                    if (confirm(`Delete program "${p.name}"? This removes all its courses.`)) {
-                      del.mutate(p.id);
-                    }
-                  }}
-                  className="inline-flex items-center gap-1.5 rounded-md border border-destructive/50 px-3 py-1.5 text-sm text-destructive hover:bg-destructive/10"
-                >
-                  <Trash2 className="h-3.5 w-3.5" /> Delete
-                </button>
-              </div>
-            </div>
-          ))}
-          {programs && programs.length === 0 && (
-            <p className="text-sm text-muted-foreground">No programs yet.</p>
-          )}
-        </div>
+        <ProgramList programs={programs ?? []} onDelete={(id) => del.mutate(id)} />
+
       </main>
       <SiteFooter />
     </div>
