@@ -16,7 +16,7 @@ import {
 
 import { Switch } from "@/components/ui/switch";
 import { NORCO_SCHOOLS } from "@/lib/schools";
-import { LogOut, Plus, Pencil, Trash2, UserPlus } from "lucide-react";
+import { LogOut, Plus, Pencil, Trash2, UserPlus, Search, ChevronDown } from "lucide-react";
 
 
 
