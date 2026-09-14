@@ -201,7 +201,7 @@ function AdminPage() {
 
 
 
-        <ProgramList programs={programs ?? []} onDelete={(id) => del.mutate(id)} />
+        <ProgramList programs={programs ?? []} onDelete={(id: string) => del.mutate(id)} />
 
       </main>
       <SiteFooter />
