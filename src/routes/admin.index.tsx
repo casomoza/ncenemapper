@@ -220,7 +220,7 @@ type ListProgram = {
 
 const COLLAPSED_KEY = "admin-collapsed-clusters";
 
-function ProgramList({
+export function ProgramList({
   programs,
   onDelete,
 }: {
