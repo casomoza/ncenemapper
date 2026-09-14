@@ -2,11 +2,13 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 
-vi.mock("@tanstack/react-router", () => ({
+vi.mock("@tanstack/react-router", async (importOriginal) => ({
+  ...(await importOriginal<Record<string, unknown>>()),
   createFileRoute: () => (o: unknown) => o,
   Link: ({ children }: { children: React.ReactNode }) => <a href="#">{children}</a>,
   useNavigate: () => () => {},
 }));
+
 vi.mock("@tanstack/react-start", () => ({ useServerFn: (f: unknown) => f }));
 
 const { ProgramList } = await import("./admin.index");
