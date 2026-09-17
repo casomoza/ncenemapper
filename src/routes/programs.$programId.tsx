@@ -27,8 +27,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ArrowLeft, Printer, Download, GraduationCap, Award, Filter, ChevronDown, ChevronUp, Lock, LayoutGrid, Info } from "lucide-react";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
+import { Button } from "@/components/ui/button";
+import { createPathwayPdf } from "@/lib/pathway-pdf";
+import norcoLogo from "@/assets/norco-logo.png";
 
 const TERM_ORDER: Record<string, number> = { Summer: 0, Fall: 1, Winter: 2, Spring: 3 };
 
@@ -348,196 +349,74 @@ function ProgramPage() {
     return (c.satisfies ?? []).some((s) => /\b(GE|General Education|Pathways|IGETC|CSU GE)\b/i.test(s));
   }
 
-  function downloadPdf() {
-    if (!program) return;
-    const doc = new jsPDF({ unit: "pt", format: "letter" });
-    const margin = 40;
-    const pageHeight = doc.internal.pageSize.getHeight();
-    const bottomLimit = pageHeight - margin;
-    let y = margin;
+  function selectedCourse(c: Course): { code: string; title: string } {
+    const isSlot = /^(CalGETC\s|RCCD GE\s|ELEC\s)/i.test(c.code);
+    const rawChoice = isSlot ? getGeChoice(programId, c.code) : null;
+    if (!rawChoice) return { code: c.code, title: c.title };
+    const spaceIdx = rawChoice.indexOf(" ");
+    return spaceIdx === -1
+      ? { code: rawChoice, title: c.title }
+      : { code: rawChoice.slice(0, spaceIdx), title: rawChoice.slice(spaceIdx + 1) };
+  }
 
-    const title = pdfTitle.trim() || program.name;
-    const coursesForPdf = visibleCourses.filter((c) => pdfShowGe || !isGeCourse(c));
-
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(18);
-    doc.text(title, margin, y);
-    y += 20;
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(11);
-    doc.setTextColor(90);
-    doc.text(`${program.degreeType} · ${program.cluster}`, margin, y);
-    y += 18;
-
-    if (pdfIncludeSummary) {
-      doc.setFontSize(13);
-      doc.setTextColor(20);
-      doc.setFont("helvetica", "bold");
-      doc.text("Summary", margin, y);
-      y += 16;
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(10);
-      doc.setTextColor(60);
-
-      const totalUnits = coursesForPdf.reduce((s, c) => s + c.units, 0);
-      const summaryLines = [
-        `Total units (in PDF): ${totalUnits}`,
-        `Program total units: ${program.totalUnits}`,
-        `Courses included: ${coursesForPdf.length} of ${program.courses.length}`,
-        `GE requirements: ${pdfShowGe ? "included" : "excluded"}`,
-        `Grouping: ${pdfShowTerms ? "By term" : "By year"}`,
-      ];
-      for (const line of summaryLines) {
-        doc.text(line, margin, y);
-        y += 12;
-      }
-      if (program.description) {
-        const desc = doc.splitTextToSize(program.description, 540 - margin);
-        y += 4;
-        doc.text(desc, margin, y);
-        y += desc.length * 12;
-      }
-
-      const active = activeTags ?? new Set(allTags);
-      if (allTags.length > 0) {
-        const filterLabel =
-          active.size === allTags.length
-            ? "Filters: All requirements"
-            : `Filters: ${Array.from(active).join(", ") || "None"}`;
-        const lines = doc.splitTextToSize(filterLabel, 540 - margin);
-        y += 4;
-        doc.text(lines, margin, y);
-        y += lines.length * 12;
-      }
-      y += 10;
-    }
-
-    const visibleTerms = groupByTerm(coursesForPdf);
-    const visibleYears = Array.from(new Set(visibleTerms.map((t) => t.year))).sort();
-
-    // Checkbox column is col 0 when enabled; all other cols shift right by 1
-    const cbCol = pdfShowCheckboxes;
-    const shift = cbCol ? 1 : 0;
-
-    const dataCols = pdfShowSatisfies
-      ? ["Course", "Title", "Units", "Satisfies"]
-      : ["Course", "Title", "Units"];
-    const head = cbCol
-      ? [[" ", ...dataCols]]
-      : [[...dataCols]];
-
-    const dataColStyles: Record<number, Record<string, unknown>> = pdfShowSatisfies
-      ? {
-          [0 + shift]: { cellWidth: 70, fontStyle: "bold" },
-          [1 + shift]: { cellWidth: pdfShowCheckboxes ? 220 : 240 },
-          [2 + shift]: { cellWidth: 40, halign: "center" },
-          [3 + shift]: { cellWidth: 172 },
-        }
-      : {
-          [0 + shift]: { cellWidth: 85, fontStyle: "bold" },
-          [1 + shift]: { cellWidth: pdfShowCheckboxes ? 358 : 380 },
-          [2 + shift]: { cellWidth: 50, halign: "center" },
-        };
-    const columnStyles: Record<number, Record<string, unknown>> = cbCol
-      ? { 0: { cellWidth: 18, halign: "center" }, ...dataColStyles }
-      : dataColStyles;
-
-    // Draws an empty checkbox square in body rows of the checkbox column
-    const didDrawCell = cbCol
-      ? (data: { section: string; column: { index: number }; cell: { x: number; y: number; width: number; height: number } }) => {
-          if (data.section === "body" && data.column.index === 0) {
-            const boxSize = 8;
-            const bx = data.cell.x + (data.cell.width - boxSize) / 2;
-            const by = data.cell.y + (data.cell.height - boxSize) / 2;
-            doc.setDrawColor(80);
-            doc.setLineWidth(0.5);
-            doc.rect(bx, by, boxSize, boxSize);
-          }
-        }
-      : undefined;
-
-    function buildRows(courses: Course[]) {
-      return courses.map((c) => {
-        // For GE slots (CalGETC / RCCD GE) and elective slots, replace the
-        // placeholder code+title with the user's actual selected course.
-        // Choices are stored as "CODE Title text…" — split on the first space.
-        const isSlot = /^(CalGETC\s|RCCD GE\s|ELEC\s)/i.test(c.code);
-        const rawChoice = isSlot ? getGeChoice(programId, c.code) : null;
-
-        let displayCode = c.code;
-        let displayTitle = c.title;
-
-        if (rawChoice) {
-          const spaceIdx = rawChoice.indexOf(" ");
-          if (spaceIdx !== -1) {
-            displayCode = rawChoice.slice(0, spaceIdx);
-            displayTitle = rawChoice.slice(spaceIdx + 1);
-          } else {
-            displayCode = rawChoice;
-          }
-        }
-
-        const dataRow = pdfShowSatisfies
-          ? [displayCode, displayTitle, String(c.units), c.satisfies.join("; ")]
-          : [displayCode, displayTitle, String(c.units)];
-        return cbCol ? [" ", ...dataRow] : dataRow;
+  async function loadLogoDataUrl(): Promise<string | undefined> {
+    try {
+      const response = await fetch(norcoLogo);
+      const blob = await response.blob();
+      return await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(typeof reader.result === "string" ? reader.result : undefined);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
       });
+    } catch {
+      return undefined;
     }
+  }
 
-    for (const yr of visibleYears) {
-      const yrTerms = visibleTerms.filter((t) => t.year === yr);
-      const yrUnits = yrTerms.reduce((s, t) => s + t.courses.reduce((a, c) => a + c.units, 0), 0);
-      if (y > bottomLimit - 60) { doc.addPage(); y = margin; }
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(13);
-      doc.setTextColor(20);
-      doc.text(`Year ${yr}  (${yrUnits} units)`, margin, y);
-      y += 6;
+  async function buildPdf() {
+    if (!program) return;
+    const coursesForPdf = laidOutCourses.filter((c) => pdfShowGe || !isGeCourse(c));
+    const active = activeTags ?? new Set(allTags);
+    const counselorNotice = showSepNotice
+      ? `Associate's degrees require a minimum of 60 units. This pathway shows ${visibleUnits} units — please see a Norco College counselor to build your complete Student Education Plan (SEP).`
+      : "This is a sample plan and may not reflect every requirement for your situation. Please see a Norco College counselor to build your complete Student Education Plan (SEP).";
+    return createPathwayPdf(program, coursesForPdf, {
+      title: pdfTitle.trim() || program.name,
+      includeSummary: pdfIncludeSummary,
+      showSatisfies: pdfShowSatisfies,
+      showTerms: pdfShowTerms,
+      showCheckboxes: pdfShowCheckboxes,
+      counselorNotice,
+      activeFilters: allTags.length === 0 || active.size === allTags.length
+        ? "All requirements"
+        : Array.from(active).join(", ") || "None",
+      logoDataUrl: await loadLogoDataUrl(),
+      selectedCourse,
+    });
+  }
 
-      if (pdfShowTerms) {
-        const sortedTerms = [...yrTerms].sort(
-          (a, b) => (TERM_ORDER[a.semester] ?? 9) - (TERM_ORDER[b.semester] ?? 9),
-        );
-        for (const t of sortedTerms) {
-          const termHead = cbCol
-            ? [[" ", `${t.semester} ${t.year}`, ...dataCols.slice(1)]]
-            : [[`${t.semester} ${t.year}`, ...dataCols.slice(1)]];
-          autoTable(doc, {
-            startY: y + 8,
-            head: termHead,
-            body: buildRows(t.courses),
-            theme: "grid",
-            styles: { fontSize: 9, cellPadding: 4, overflow: "linebreak" },
-            headStyles: { fillColor: [124, 30, 48], textColor: 255 },
-            columnStyles,
-            margin: { left: margin, right: margin },
-            didDrawCell,
-          });
-          // @ts-expect-error lastAutoTable is attached by plugin
-          y = doc.lastAutoTable.finalY + 10;
-          if (y > bottomLimit) { doc.addPage(); y = margin; }
-        }
-      } else {
-        const allYearCourses = yrTerms.flatMap((t) => t.courses);
-        autoTable(doc, {
-          startY: y + 8,
-          head,
-          body: buildRows(allYearCourses),
-          theme: "grid",
-          styles: { fontSize: 9, cellPadding: 4, overflow: "linebreak" },
-          headStyles: { fillColor: [124, 30, 48], textColor: 255 },
-          columnStyles,
-          margin: { left: margin, right: margin },
-          didDrawCell,
-        });
-        // @ts-expect-error lastAutoTable is attached by plugin
-        y = doc.lastAutoTable.finalY + 10;
-        if (y > bottomLimit) { doc.addPage(); y = margin; }
-      }
-      y += 6;
-    }
-
+  async function downloadPdf() {
+    const doc = await buildPdf();
+    if (!doc) return;
     doc.save(`${program.id}-pathway.pdf`);
+    setPdfOpen(false);
+  }
+
+  async function printPdf() {
+    const printWindow = window.open("", "_blank");
+    const doc = await buildPdf();
+    if (!doc) {
+      printWindow?.close();
+      return;
+    }
+    const url = doc.output("bloburl");
+    if (printWindow) {
+      printWindow.location.href = url.toString();
+      printWindow.focus();
+    } else {
+      window.open(url.toString(), "_blank", "noopener,noreferrer");
+    }
     setPdfOpen(false);
   }
 
@@ -735,23 +614,16 @@ function ProgramPage() {
                   )}
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => window.print()}
-                  className="mt-5 inline-flex w-full items-center justify-center gap-1.5 rounded-md border border-primary bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-burgundy"
-                >
-                  <Printer className="h-4 w-4" /> Print pathway
-                </button>
-                <button
+                <Button
                   type="button"
                   onClick={() => {
                     if (!pdfTitle) setPdfTitle(program.name);
                     setPdfOpen(true);
                   }}
-                  className="mt-2 inline-flex w-full items-center justify-center gap-1.5 rounded-md border border-primary bg-card px-3 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary/5"
+                  className="mt-5 w-full"
                 >
-                  <Download className="h-4 w-4" /> Download PDF
-                </button>
+                  <Printer className="h-4 w-4" /> Print / Download Pathway
+                </Button>
               </aside>
             </div>
 
@@ -1180,9 +1052,9 @@ function ProgramPage() {
       <Dialog open={pdfOpen} onOpenChange={setPdfOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>PDF options</DialogTitle>
+            <DialogTitle>Print / Download Pathway</DialogTitle>
             <DialogDescription>
-              Customize what's included in the downloaded pathway PDF.
+              Both actions use the same print-ready pathway PDF.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
@@ -1234,20 +1106,26 @@ function ProgramPage() {
             </div>
           </div>
           <DialogFooter>
-            <button
+            <Button
               type="button"
+              variant="outline"
               onClick={() => setPdfOpen(false)}
-              className="inline-flex items-center justify-center rounded-md border border-border bg-card px-3 py-2 text-sm font-medium text-foreground hover:bg-muted"
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={printPdf}
+            >
+              <Printer className="h-4 w-4" /> Print PDF
+            </Button>
+            <Button
               type="button"
               onClick={downloadPdf}
-              className="inline-flex items-center justify-center gap-1.5 rounded-md border border-primary bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-burgundy"
             >
-              <Download className="h-4 w-4" /> Download
-            </button>
+              <Download className="h-4 w-4" /> Download PDF
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
