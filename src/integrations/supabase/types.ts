@@ -191,6 +191,7 @@ export type Database = {
           degree_type: string
           description: string
           id: string
+          is_public: boolean
           name: string
           outcomes: string[]
           slug: string
@@ -203,6 +204,7 @@ export type Database = {
           degree_type?: string
           description?: string
           id?: string
+          is_public?: boolean
           name: string
           outcomes?: string[]
           slug: string
@@ -215,6 +217,7 @@ export type Database = {
           degree_type?: string
           description?: string
           id?: string
+          is_public?: boolean
           name?: string
           outcomes?: string[]
           slug?: string
