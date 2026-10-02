@@ -12,7 +12,7 @@ import {
   certificateOnlyCourses,
 } from "@/lib/settings";
 
-import { groupByTerm, type Course } from "@/lib/program";
+import { courseKey, groupByTerm, type Course } from "@/lib/program";
 import { SiteHeader, SiteFooter } from "@/components/SiteHeader";
 import { CourseCard } from "@/components/CourseCard";
 import { Checkbox } from "@/components/ui/checkbox";
