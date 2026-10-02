@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { fetchPrograms } from "@/lib/api";
@@ -61,6 +61,8 @@ function normalizeCluster(raw: string): string {
   return raw;
 }
 
+const OPEN_SCHOOL_KEY = "home-open-school";
+
 function HomePage() {
   const { data: allPrograms = [], isLoading } = useQuery({
     queryKey: ["programs"],
@@ -77,6 +79,7 @@ function HomePage() {
   const programs = useMemo(
     () =>
       allPrograms
+        .filter((p) => p.isPublic !== false)
         .filter((p) => {
           // UCR transfer cluster is governed solely by its own toggle
           if (isUcrTransferProgram(p.cluster)) return showUcr;
@@ -99,7 +102,25 @@ function HomePage() {
     [allPrograms, showAssociate, showUcr],
   );
 
-  const [selectedCluster, setSelectedCluster] = useState<string | null>(null);
+  const [selectedCluster, setSelectedClusterState] = useState<string | null>(null);
+  // Remember the open school for this browsing session so "All Programs" returns to it.
+  useEffect(() => {
+    try {
+      const saved = window.sessionStorage.getItem(OPEN_SCHOOL_KEY);
+      if (saved) setSelectedClusterState(saved);
+    } catch {
+      /* ignore */
+    }
+  }, []);
+  const setSelectedCluster = (value: string | null) => {
+    setSelectedClusterState(value);
+    try {
+      if (value) window.sessionStorage.setItem(OPEN_SCHOOL_KEY, value);
+      else window.sessionStorage.removeItem(OPEN_SCHOOL_KEY);
+    } catch {
+      /* ignore */
+    }
+  };
   const [search, setSearch] = useState("");
 
 

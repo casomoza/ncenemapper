@@ -10,6 +10,7 @@ export type DbProgram = {
   description: string | null;
   outcomes: string[];
   cluster: string | null;
+  is_public?: boolean;
 };
 
 export type DbCourse = {
@@ -103,6 +104,7 @@ function toProgram(p: DbProgram, courses: DbCourse[]): Program {
     description: p.description ?? "",
     outcomes: p.outcomes ?? [],
     cluster: p.cluster ?? "",
+    isPublic: p.is_public !== false,
     courses: courses.map(toCourse),
   };
 }
@@ -270,4 +272,9 @@ export async function fetchCatalogCoursesFromDb(): Promise<CatalogCourse[] | nul
   }
   const rows = (data ?? []) as CatalogCourse[];
   return rows.length > 0 ? rows : null;
+}
+
+export async function setProgramPublic(slug: string, isPublic: boolean): Promise<void> {
+  const { error } = await supabase.from("programs").update({ is_public: isPublic } as never).eq("slug", slug);
+  if (error) throw error;
 }
