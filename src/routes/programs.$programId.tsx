@@ -233,6 +233,26 @@ function ProgramPage() {
       </div>
     );
   }
+  if (program.isPublic === false) {
+    return (
+      <div className="flex min-h-screen flex-col">
+        <SiteHeader />
+        <main className="mx-auto flex max-w-xl flex-1 flex-col justify-center px-6 py-16 text-center">
+          <h1 className="font-serif text-3xl text-foreground">
+            This pathway map is not yet available
+          </h1>
+          <p className="mt-3 text-muted-foreground">
+            This program map isn't published yet. Please see a Norco College counselor
+            for help planning your courses.
+          </p>
+          <Link to="/" className="mt-6 inline-block text-primary hover:underline">
+            ← Back to programs
+          </Link>
+        </main>
+        <SiteFooter />
+      </div>
+    );
+  }
   if (isUcrTransferProgram(program.cluster) && !showUcr) {
     return (
       <div className="flex min-h-screen flex-col">

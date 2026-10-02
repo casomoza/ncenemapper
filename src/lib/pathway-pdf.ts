@@ -1,6 +1,7 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import type { Course, Program } from "@/lib/program";
+import norcoLogo from "@/assets/norco-logo.png";
 
 const CLARET: [number, number, number] = [137, 23, 40];
 const BURGUNDY: [number, number, number] = [78, 7, 21];
@@ -8,6 +9,23 @@ const GOLD: [number, number, number] = [224, 186, 113];
 const INK: [number, number, number] = [36, 30, 28];
 const MUTED: [number, number, number] = [102, 90, 82];
 const TERM_ORDER = ["Summer", "Fall", "Winter", "Spring"];
+
+/** Shared Norco branding for every generated PDF. */
+export const BRAND = { CLARET, BURGUNDY, GOLD, INK, MUTED };
+
+export async function loadNorcoLogoDataUrl(): Promise<string | undefined> {
+  try {
+    const blob = await (await fetch(norcoLogo)).blob();
+    return await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(typeof reader.result === "string" ? reader.result : undefined);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  } catch {
+    return undefined;
+  }
+}
 
 type PdfOptions = {
   title: string;

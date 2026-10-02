@@ -4,9 +4,10 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { SiteHeader, SiteFooter } from "@/components/SiteHeader";
-import { fetchDbProgramBySlug, fetchDbCourses, type DbCourse, type DbProgram, deTagFromSatisfies, satisfiesWithoutDe, buildDeTag, ALL_TERMS, normalizeTermsOffered, fetchConcurrentPairs, setConcurrentPair, concurrencyKey } from "@/lib/api";
+import { fetchProgramBySlug, fetchDbProgramBySlug, fetchDbCourses, type DbCourse, type DbProgram, deTagFromSatisfies, satisfiesWithoutDe, buildDeTag, ALL_TERMS, normalizeTermsOffered, fetchConcurrentPairs, setConcurrentPair, concurrencyKey } from "@/lib/api";
 import { NORCO_SCHOOLS } from "@/lib/schools";
-import { ArrowLeft, Plus, Trash2, Save, BookOpen } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Save, BookOpen, FileText } from "lucide-react";
+import { createRotationPdf } from "@/lib/rotation-pdf";
 import { CatalogSearchDialog } from "@/components/CatalogSearchDialog";
 import type { CatalogCourse } from "@/components/CatalogSearchDialog";
 
@@ -58,6 +59,20 @@ function AdminProgramPage() {
         >
           <ArrowLeft className="h-4 w-4" /> Back to admin
         </Link>
+        <div className="mt-3 flex justify-end">
+          <button
+            type="button"
+            onClick={async () => {
+              const full = await fetchProgramBySlug(programId);
+              if (!full) return;
+              const doc = await createRotationPdf([full], `${full.name} — Course Rotation`);
+              doc.save(`rotation-${programId}.pdf`);
+            }}
+            className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-sm hover:bg-accent/30"
+          >
+            <FileText className="h-4 w-4" /> Generate rotation report
+          </button>
+        </div>
 
         <ProgramForm program={program} />
 

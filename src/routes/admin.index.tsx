@@ -5,7 +5,9 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { SiteHeader, SiteFooter } from "@/components/SiteHeader";
-import { fetchPrograms } from "@/lib/api";
+import { fetchPrograms, setProgramPublic } from "@/lib/api";
+import { createRotationPdf } from "@/lib/rotation-pdf";
+import type { Program } from "@/lib/program";
 import { listAdmins, inviteAdmin, revokeAdmin } from "@/lib/admins.functions";
 import {
   SHOW_ASSOCIATE_MAPS_KEY,
@@ -16,7 +18,7 @@ import {
 
 import { Switch } from "@/components/ui/switch";
 import { NORCO_SCHOOLS } from "@/lib/schools";
-import { LogOut, Plus, Pencil, Trash2, UserPlus, Search, ChevronDown } from "lucide-react";
+import { LogOut, Plus, Pencil, Trash2, UserPlus, Search, ChevronDown, FileText } from "lucide-react";
 
 
 
@@ -216,6 +218,7 @@ type ListProgram = {
   degreeType?: string | null;
   totalUnits?: number | null;
   courses: unknown[];
+  isPublic?: boolean;
 };
 
 const COLLAPSED_KEY = "admin-collapsed-clusters";
@@ -227,6 +230,23 @@ export function ProgramList({
   programs: ListProgram[];
   onDelete: (id: string) => void;
 }) {
+  const qc = useQueryClient();
+  const [busySchool, setBusySchool] = useState<string | null>(null);
+  const toggleVisible = useMutation({
+    mutationFn: ({ id, value }: { id: string; value: boolean }) => setProgramPublic(id, value),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["programs"] }),
+    onError: (e: Error) => alert(`Could not update visibility: ${e.message}`),
+  });
+  const onToggleVisible = (id: string, value: boolean) => toggleVisible.mutate({ id, value });
+  async function schoolReport(cluster: string, items: ListProgram[]) {
+    setBusySchool(cluster);
+    try {
+      const doc = await createRotationPdf(items as unknown as Program[], `${cluster} — Course Rotation`);
+      doc.save(`rotation-${cluster.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.pdf`);
+    } finally {
+      setBusySchool(null);
+    }
+  }
   const [query, setQuery] = useState("");
   const [collapsed, setCollapsed] = useState<string[]>([]);
 
@@ -290,7 +310,7 @@ export function ProgramList({
             {sorted.length} {sorted.length === 1 ? "result" : "results"}
           </p>
           {sorted.map((p) => (
-            <ProgramRow key={p.id} p={p} onDelete={onDelete} showCluster />
+            <ProgramRow key={p.id} p={p} onDelete={onDelete} onToggleVisible={onToggleVisible} showCluster />
           ))}
           {sorted.length === 0 && (
             <p className="text-sm text-muted-foreground">No programs match your search.</p>
@@ -319,8 +339,19 @@ export function ProgramList({
                 </button>
                 {isOpen && (
                   <div className="grid gap-3 border-t border-border p-4">
+                    <div className="flex justify-end">
+                      <button
+                        type="button"
+                        onClick={() => schoolReport(cluster, items)}
+                        disabled={busySchool === cluster}
+                        className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-xs hover:bg-accent/30 disabled:opacity-50"
+                      >
+                        <FileText className="h-3.5 w-3.5" />
+                        {busySchool === cluster ? "Generating…" : "School rotation report (PDF)"}
+                      </button>
+                    </div>
                     {items.map((p) => (
-                      <ProgramRow key={p.id} p={p} onDelete={onDelete} />
+                      <ProgramRow key={p.id} p={p} onDelete={onDelete} onToggleVisible={onToggleVisible} />
                     ))}
                   </div>
                 )}
@@ -339,12 +370,15 @@ export function ProgramList({
 function ProgramRow({
   p,
   onDelete,
+  onToggleVisible,
   showCluster,
 }: {
   p: ListProgram;
   onDelete: (id: string) => void;
+  onToggleVisible?: (id: string, value: boolean) => void;
   showCluster?: boolean;
 }) {
+  const visible = p.isPublic !== false;
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-background p-4">
       <div>
@@ -354,7 +388,15 @@ function ProgramRow({
           {showCluster && p.cluster ? ` · ${p.cluster}` : ""}
         </p>
       </div>
-      <div className="flex gap-2">
+      <div className="flex flex-wrap items-center gap-2">
+        <label className="mr-2 inline-flex items-center gap-2 text-xs text-muted-foreground">
+          <Switch
+            checked={visible}
+            onCheckedChange={(v) => onToggleVisible?.(p.id, v)}
+            aria-label={`Visible to public: ${p.name}`}
+          />
+          {visible ? "Visible to public" : "Hidden"}
+        </label>
         <Link
           to="/admin/programs/$programId"
           params={{ programId: p.id }}

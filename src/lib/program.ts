@@ -29,6 +29,8 @@ export type Program = {
   description: string;
   outcomes: string[];
   cluster: string;
+  /** Per-program public visibility (admin toggle). */
+  isPublic?: boolean;
   courses: Course[];
 };
 
