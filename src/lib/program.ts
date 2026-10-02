@@ -1,6 +1,8 @@
 import data from "@/data/program.json";
 
 export type Course = {
+  /** Unique database row ID — codes can repeat (e.g. elective slots). */
+  id?: string;
   code: string;
   title: string;
   units: number;
@@ -69,4 +71,9 @@ export function findGeArea(slot: string): GeArea | undefined {
   const m = slot.match(/(\d+[A-Za-z]?)/);
   if (!m) return undefined;
   return geAreas.find((a) => a.id === m[1]);
+}
+
+/** Stable unique key for a course row; codes are NOT unique. */
+export function courseKey(c: Pick<Course, "id" | "code" | "year" | "semester">): string {
+  return c.id ?? `${c.code}|${c.year}|${c.semester}`;
 }

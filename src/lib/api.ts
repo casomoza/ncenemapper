@@ -111,6 +111,7 @@ function toCourse(c: DbCourse): Course {
   const deTag = deTagFromSatisfies(c.satisfies ?? []);
   const deMatch = deTag ? deTag.match(/^DE:(\d+):(Fall|Spring)$/i) : null;
   return {
+    id: c.id,
     code: c.code,
     title: c.title,
     units: c.units,

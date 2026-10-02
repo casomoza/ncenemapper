@@ -1,3 +1,4 @@
+import { courseKey } from "@/lib/program";
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { CalendarDays } from "lucide-react";
@@ -23,8 +24,8 @@ const isCalGetcSlot = (code: string) => /^CalGETC\s+/i.test(code);
 const isGeSlot = (code: string) => isRccdGeSlot(code) || isCalGetcSlot(code);
 const isElectiveSlot = (code: string) => /^ELEC\s+/i.test(code);
 const electiveGroupCode = (code: string) => code.replace(/^ELEC\s+/i, "").trim();
-const storageKey = (programId: string | undefined, code: string) =>
-  `ge-choice:${programId ?? "_"}:${code}`;
+const storageKey = (programId: string | undefined, id: string) =>
+  `ge-choice:${programId ?? "_"}:${id}`;
 
 export function CourseCard({
   course,
@@ -89,14 +90,14 @@ export function CourseCard({
 
   useEffect(() => {
     if (typeof window === "undefined" || !slot) return;
-    const saved = window.localStorage.getItem(storageKey(programId, course.code));
+    const saved = (window.localStorage.getItem(storageKey(programId, courseKey(course))) ?? (course.id ? null : window.localStorage.getItem(storageKey(programId, courseKey(course)))));
     if (saved) setChoice(saved);
   }, [slot, programId, course.code]);
 
   const handleChoice = (value: string) => {
     setChoice(value);
     if (typeof window !== "undefined") {
-      window.localStorage.setItem(storageKey(programId, course.code), value);
+      window.localStorage.setItem(storageKey(programId, courseKey(course)), value);
     }
   };
 
@@ -104,7 +105,7 @@ export function CourseCard({
     e.stopPropagation();
     setChoice("");
     if (typeof window !== "undefined") {
-      window.localStorage.removeItem(storageKey(programId, course.code));
+      window.localStorage.removeItem(storageKey(programId, courseKey(course)));
     }
   };
 

@@ -33,9 +33,9 @@ import norcoLogo from "@/assets/norco-logo.png";
 
 const TERM_ORDER: Record<string, number> = { Summer: 0, Fall: 1, Winter: 2, Spring: 3 };
 
-function getGeChoice(programId: string, code: string): string | null {
+function getGeChoice(programId: string, c: Course): string | null {
   if (typeof window === "undefined") return null;
-  return window.localStorage.getItem(`ge-choice:${programId}:${code}`);
+  return window.localStorage.getItem(`ge-choice:${programId}:${courseKey(c)}`);
 }
 
 // Normalize satisfies tags so minor variants (e.g. "UCR TAG Requirement" vs
@@ -137,7 +137,7 @@ function ProgramPage() {
   const layoutKey = `pathway-layout:${programId}`;
   const [overrides, setOverrides] = useState<Record<string, { year: number; semester: string }>>({});
   const [layoutReady, setLayoutReady] = useState(false);
-  const [dragging, setDragging] = useState<{ code: string; terms: string[] } | null>(null);
+  const [dragging, setDragging] = useState<{ key: string; code: string; terms: string[] } | null>(null);
   const [dropMsg, setDropMsg] = useState<string | null>(null);
 
   useEffect(() => {
@@ -288,7 +288,7 @@ function ProgramPage() {
   }
 
   const laidOutCourses = visibleCourses.map((c) => {
-    const o = overrides[c.code];
+    const o = overrides[courseKey(c)];
     return o ? { ...c, year: o.year, semester: o.semester as Course["semester"] } : c;
   });
 
@@ -305,16 +305,16 @@ function ProgramPage() {
     const raw = (c.prerequisite ?? "").toUpperCase();
     if (!raw) continue;
     for (const p of laidOutCourses) {
-      if (p.code === c.code) continue;
+      if (courseKey(p) === courseKey(c) || p.code === c.code) continue;
       if (!raw.includes(p.code.toUpperCase())) continue;
       const ci = slotIndex(c.year, c.semester);
       const pi = slotIndex(p.year, p.semester);
       if (ci < pi) {
-        (prereqWarnings[c.code] ??= []).push(
+        (prereqWarnings[courseKey(c)] ??= []).push(
           `Scheduled before its prerequisite ${p.code}.`,
         );
       } else if (ci === pi && !concurrentPairs.includes(concurrencyKey(c.code, p.code))) {
-        (prereqWarnings[c.code] ??= []).push(
+        (prereqWarnings[courseKey(c)] ??= []).push(
           `Same term as its prerequisite ${p.code} — usually taken after.`,
         );
       }
@@ -330,8 +330,8 @@ function ProgramPage() {
       setDragging(null);
       return;
     }
-    const code = dragging.code;
-    const original = visibleCourses.find((c) => c.code === code);
+    const code = dragging.key;
+    const original = visibleCourses.find((c) => courseKey(c) === code);
     setOverrides((prev) => {
       const next = { ...prev };
       if (original && original.year === year && original.semester === semester) delete next[code];
@@ -351,7 +351,7 @@ function ProgramPage() {
 
   function selectedCourse(c: Course): { code: string; title: string } {
     const isSlot = /^(CalGETC\s|RCCD GE\s|ELEC\s)/i.test(c.code);
-    const rawChoice = isSlot ? getGeChoice(programId, c.code) : null;
+    const rawChoice = isSlot ? getGeChoice(programId, c) : null;
     if (!rawChoice) return { code: c.code, title: c.title };
     const spaceIdx = rawChoice.indexOf(" ");
     return spaceIdx === -1
@@ -399,7 +399,7 @@ function ProgramPage() {
   async function downloadPdf() {
     const doc = await buildPdf();
     if (!doc) return;
-    doc.save(`${program.id}-pathway.pdf`);
+    doc.save(`${programId}-pathway.pdf`);
     setPdfOpen(false);
   }
 
@@ -973,17 +973,17 @@ function ProgramPage() {
                         <div className="space-y-2">
                           {courses.map((c) => (
                             <div
-                              key={c.code}
+                              key={courseKey(c)}
                               draggable
                               onDragStart={() => {
                                 setDropMsg(null);
-                                setDragging({ code: c.code, terms: termsFor(c) });
+                                setDragging({ key: courseKey(c), code: c.code, terms: termsFor(c) });
                               }}
                               onDragEnd={() => setDragging(null)}
                               className="cursor-grab active:cursor-grabbing"
                             >
                               <CourseCard course={c} programId={programId} />
-                              {(prereqWarnings[c.code] ?? []).map((w) => (
+                              {(prereqWarnings[courseKey(c)] ?? []).map((w) => (
                                 <p
                                   key={w}
                                   className="mt-1 rounded-md bg-amber-100 px-2 py-1 text-[11px] text-amber-900"
