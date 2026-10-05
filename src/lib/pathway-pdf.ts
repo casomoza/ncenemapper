@@ -13,18 +13,48 @@ const TERM_ORDER = ["Summer", "Fall", "Winter", "Spring"];
 /** Shared Norco branding for every generated PDF. */
 export const BRAND = { CLARET, BURGUNDY, GOLD, INK, MUTED };
 
-export async function loadNorcoLogoDataUrl(): Promise<string | undefined> {
+export type NorcoLogo = { dataUrl: string; width: number; height: number };
+
+export async function loadNorcoLogo(): Promise<NorcoLogo | undefined> {
   try {
     const blob = await (await fetch(norcoLogo)).blob();
-    return await new Promise((resolve, reject) => {
+    const dataUrl = await new Promise<string | undefined>((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => resolve(typeof reader.result === "string" ? reader.result : undefined);
       reader.onerror = reject;
       reader.readAsDataURL(blob);
     });
+    if (!dataUrl) return undefined;
+    const size = await new Promise<{ width: number; height: number }>((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve({ width: img.naturalWidth, height: img.naturalHeight });
+      img.onerror = reject;
+      img.src = dataUrl;
+    });
+    return { dataUrl, ...size };
   } catch {
     return undefined;
   }
+}
+
+export async function loadNorcoLogoDataUrl(): Promise<string | undefined> {
+  return (await loadNorcoLogo())?.dataUrl;
+}
+
+/** Draw the logo fitted inside a max box, preserving its native aspect ratio. Returns the drawn width. */
+export function addNorcoLogo(
+  doc: jsPDF,
+  logo: NorcoLogo,
+  x: number,
+  y: number,
+  maxWidth: number,
+  maxHeight: number,
+): number {
+  const scale = Math.min(maxWidth / logo.width, maxHeight / logo.height);
+  const w = logo.width * scale;
+  const h = logo.height * scale;
+  doc.addImage(logo.dataUrl, "PNG", x, y, w, h, undefined, "FAST");
+  return w;
 }
 
 type PdfOptions = {
