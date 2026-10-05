@@ -111,6 +111,18 @@ function HomePage() {
     } catch {
       /* ignore */
     }
+    // The top-nav "Programs" link clears the saved school and signals a reset,
+    // so clicking it while already on the homepage also collapses everything.
+    const reset = () => {
+      setSelectedClusterState(null);
+      try {
+        window.sessionStorage.removeItem(OPEN_SCHOOL_KEY);
+      } catch {
+        /* ignore */
+      }
+    };
+    window.addEventListener("home-reset-school", reset);
+    return () => window.removeEventListener("home-reset-school", reset);
   }, []);
   const setSelectedCluster = (value: string | null) => {
     setSelectedClusterState(value);
