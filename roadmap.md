@@ -1,8 +1,7 @@
 # Roadmap
 
-- [x] Unify print and download around one branded PDF generator.
-- [x] Preserve current PDF data and add the simplified visual pathway layout and print labels.
-- [ ] Stress-test a long program PDF for a clean 1–2 page result.
-- [ ] Verify download and print behavior on localhost with no errors.
-- [ ] Run the production build.
-- [ ] Publish and confirm the live feature.
+- [x] Unified print/download pathway PDF (verified live).
+- [x] Drag-and-drop duplicate-code freeze fix (verified live).
+- [x] Per-program public visibility switch (verified live; admin switch click needs owner spot-check).
+- [x] Homepage remembers open school via "All Programs" (verified live).
+- [x] Course rotation report PDFs, single program and whole school (sample PDFs checked).
