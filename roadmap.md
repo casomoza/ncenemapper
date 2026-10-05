@@ -5,3 +5,5 @@
 - [x] Per-program public visibility switch (verified live; admin switch click needs owner spot-check).
 - [x] Homepage remembers open school via "All Programs" (verified live).
 - [x] Course rotation report PDFs, single program and whole school (sample PDFs checked).
+- [x] Top-nav "Programs" always resets homepage schools; in-page "All programs" restores (verified live).
+- [x] Legend "Core" label instead of "Core engineering course" (verified live).

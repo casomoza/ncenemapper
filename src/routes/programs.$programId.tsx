@@ -1031,7 +1031,7 @@ function ProgramPage() {
             <p className="font-semibold text-foreground">Legend</p>
             <div className="mt-3 flex flex-wrap gap-4 text-foreground/75">
               <span className="flex items-center gap-2">
-                <span className="inline-block h-3 w-3 rounded-sm bg-primary" /> Core engineering course
+                <span className="inline-block h-3 w-3 rounded-sm bg-primary" /> Core
               </span>
               <span className="flex items-center gap-2">
                 <span className="inline-block h-3 w-3 rounded-sm bg-accent" /> General Education (GE)
