@@ -12,6 +12,17 @@ export function SiteHeader() {
         <nav className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm font-medium">
           <Link
             to="/"
+            // Top-nav "Programs" always shows a clean, fully-reset homepage:
+            // clear any remembered open school (the in-page "All Programs"
+            // link keeps its own restore behavior — this only runs for the nav).
+            onClick={() => {
+              try {
+                window.sessionStorage.removeItem("home-open-school");
+              } catch {
+                /* ignore */
+              }
+              window.dispatchEvent(new Event("home-reset-school"));
+            }}
             className="text-foreground/80 transition-colors hover:text-primary"
             activeProps={{ className: "text-primary" }}
           >
