@@ -65,7 +65,7 @@ type PdfOptions = {
   showCheckboxes: boolean;
   counselorNotice: string;
   activeFilters: string;
-  logoDataUrl?: string;
+  logo?: NorcoLogo;
   selectedCourse: (course: Course) => { code: string; title: string };
 };
 
@@ -101,8 +101,8 @@ export function createPathwayPdf(
   };
 
   addBrand();
-  if (options.logoDataUrl) {
-    doc.addImage(options.logoDataUrl, "PNG", margin, 20, 112, 40, undefined, "FAST");
+  if (options.logo) {
+    addNorcoLogo(doc, options.logo, margin, 20, 112, 40);
   } else {
     doc.setFont("helvetica", "bold");
     doc.setFontSize(14);
@@ -110,7 +110,7 @@ export function createPathwayPdf(
     doc.text("NORCO COLLEGE", margin, 43);
   }
 
-  const titleX = options.logoDataUrl ? 160 : margin;
+  const titleX = options.logo ? 160 : margin;
   doc.setFont("helvetica", "bold");
   doc.setFontSize(17);
   doc.setTextColor(...BURGUNDY);
