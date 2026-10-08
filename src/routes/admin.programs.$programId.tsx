@@ -13,6 +13,7 @@ import type { CatalogCourse } from "@/components/CatalogSearchDialog";
 
 export const Route = createFileRoute("/admin/programs/$programId")({
   component: AdminProgramPage,
+  head: () => ({ meta: [{ title: "Edit Program \u2014 Norco College Pathways" }, { name: "description", content: "Manage program courses and generate a Norco College course rotation report." }, { property: "og:title", content: "Edit Program \u2014 Norco College Pathways" }, { property: "og:description", content: "Manage program courses and generate a Norco College course rotation report." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" } ] }),
 });
 
 const SEMESTERS = ["Summer", "Fall", "Winter", "Spring"];

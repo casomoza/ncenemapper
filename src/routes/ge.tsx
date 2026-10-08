@@ -7,16 +7,7 @@ import type { GeArea } from "@/lib/program";
 
 export const Route = createFileRoute("/ge")({
   component: GePage,
-  head: () => ({
-    meta: [
-      { title: "GE Requirements — Norco College Engineering" },
-      {
-        name: "description",
-        content:
-          "Browse RCCD General Education and Cal-GETC areas and the courses that satisfy each one for UC/CSU/IGETC transfer.",
-      },
-    ],
-  }),
+  head: () => ({ meta: [{ title: "GE Requirements \u2014 Norco College" }, { name: "description", content: "Browse RCCD and Cal-GETC general education areas and qualifying courses." }, { property: "og:title", content: "GE Requirements \u2014 Norco College" }, { property: "og:description", content: "Browse RCCD and Cal-GETC general education areas and qualifying courses." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" } ] }),
 });
 
 const SYSTEM_META: Record<

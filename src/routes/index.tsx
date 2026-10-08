@@ -18,16 +18,7 @@ import { ArrowRight, ArrowLeft, GraduationCap, BookOpen, Layers, Search, X } fro
 
 export const Route = createFileRoute("/")({
   component: HomePage,
-  head: () => ({
-    meta: [
-      { title: "NC CTE Pathway Mapper" },
-      {
-        name: "description",
-        content:
-          "Map out your CTE pathway at Norco College. See semester-by-semester course pathways, prerequisites, and certificate requirements.",
-      },
-    ],
-  }),
+  head: () => ({ meta: [{ title: "NC CTE Pathway Mapper" }, { name: "description", content: "Explore Norco College career and academic pathways, course sequences, and certificate requirements." }, { property: "og:title", content: "NC CTE Pathway Mapper" }, { property: "og:description", content: "Explore Norco College career and academic pathways, course sequences, and certificate requirements." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" } ] }),
 });
 
 // Compute the displayed unit count from actual course data rather than the

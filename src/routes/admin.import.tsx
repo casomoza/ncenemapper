@@ -7,7 +7,7 @@ import { ArrowLeft, Download, CheckCircle2, XCircle, Loader2, Clock } from "luci
 
 export const Route = createFileRoute("/admin/import")({
   component: AdminImportPage,
-  head: () => ({ meta: [{ title: "Import Programs — Admin" }] }),
+  head: () => ({ meta: [{ title: "Import Programs \u2014 Norco College Admin" }, { name: "description", content: "Import Norco College academic programs and course sequences." }, { property: "og:title", content: "Import Programs \u2014 Norco College Admin" }, { property: "og:description", content: "Import Norco College academic programs and course sequences." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" } ] }),
 });
 
 const BA_CORE = [

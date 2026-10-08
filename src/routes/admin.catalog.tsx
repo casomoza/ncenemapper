@@ -11,7 +11,7 @@ import { ArrowLeft, Upload, Database, Package, CheckCircle2, AlertCircle, FileJs
 
 export const Route = createFileRoute("/admin/catalog")({
   component: AdminCatalogPage,
-  head: () => ({ meta: [{ title: "Course Catalog — Admin" }] }),
+  head: () => ({ meta: [{ title: "Course Catalog \u2014 Norco College Admin" }, { name: "description", content: "Manage the Norco College course catalog." }, { property: "og:title", content: "Course Catalog \u2014 Norco College Admin" }, { property: "og:description", content: "Manage the Norco College course catalog." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" } ] }),
 });
 
 const MIGRATION_SQL = `-- Run this once in your Supabase dashboard → SQL Editor
