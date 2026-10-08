@@ -241,7 +241,9 @@ export function ProgramList({
   async function schoolReport(cluster: string, items: ListProgram[]) {
     setBusySchool(cluster);
     try {
-      const doc = await createRotationPdf(items as unknown as Program[], `${cluster} — Course Rotation`);
+      const doc = await createRotationPdf(items as unknown as Program[], `${cluster} — Course Rotation`, {
+        includeMasterList: true,
+      });
       doc.save(`rotation-${cluster.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.pdf`);
     } finally {
       setBusySchool(null);
