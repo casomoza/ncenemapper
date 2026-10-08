@@ -20,8 +20,48 @@ function typeLabel(c: Course): string {
   return c.optional ? "Core (optional)" : "Core";
 }
 
+export type MasterCourse = {
+  code: string;
+  title: string;
+  units: string;
+  terms: string[];
+  programs: string[];
+};
+
+/** Deduplicate rotation courses across programs by course code (case-insensitive). */
+export function buildMasterList(programs: Program[]): MasterCourse[] {
+  const map = new Map<string, { code: string; title: string; units: Set<string>; terms: Set<string>; programs: Set<string> }>();
+  for (const p of programs) {
+    for (const c of rotationCourses(p.courses)) {
+      const code = c.code.trim().replace(/\s+/g, " ");
+      const key = code.toUpperCase();
+      let e = map.get(key);
+      if (!e) {
+        e = { code, title: c.title, units: new Set(), terms: new Set(), programs: new Set() };
+        map.set(key, e);
+      }
+      e.units.add(String(c.units));
+      normalizeTermsOffered(c.semester, c.termsOffered).forEach((t) => e!.terms.add(t));
+      e.programs.add(p.name);
+    }
+  }
+  return [...map.values()]
+    .map((e) => ({
+      code: e.code,
+      title: e.title,
+      units: [...e.units].join(" / "),
+      terms: TERMS.filter((t) => e.terms.has(t)),
+      programs: [...e.programs].sort((a, b) => a.localeCompare(b)),
+    }))
+    .sort((a, b) => a.code.localeCompare(b.code));
+}
+
 /** Build a branded rotation report covering one or more programs. */
-export async function createRotationPdf(programs: Program[], reportTitle: string): Promise<jsPDF> {
+export async function createRotationPdf(
+  programs: Program[],
+  reportTitle: string,
+  options: { includeMasterList?: boolean } = {},
+): Promise<jsPDF> {
   const logo = await loadNorcoLogo();
   const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "letter" });
   const pageWidth = doc.internal.pageSize.getWidth();
@@ -129,6 +169,82 @@ export async function createRotationPdf(programs: Program[], reportTitle: string
       didDrawPage: brandBar,
     });
   });
+
+  if (options.includeMasterList) {
+    const master = buildMasterList(sorted);
+    const sectionHeader = (title: string, sub: string) => {
+      doc.addPage();
+      brandBar();
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(14);
+      doc.setTextColor(...BRAND.BURGUNDY);
+      doc.text(title, margin, 34);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8);
+      doc.setTextColor(...BRAND.MUTED);
+      doc.text(sub, margin, 48, { maxWidth: pageWidth - margin * 2 });
+    };
+    const tableBase = {
+      theme: "grid" as const,
+      margin: { left: margin, right: margin, bottom: 30, top: 24 },
+      styles: { font: "helvetica", fontSize: 7.5, cellPadding: 3, textColor: BRAND.INK, valign: "middle" as const },
+      headStyles: { fillColor: BRAND.CLARET, textColor: [255, 255, 255] as [number, number, number], fontStyle: "bold" as const },
+      alternateRowStyles: { fillColor: [250, 248, 243] as [number, number, number] },
+      rowPageBreak: "avoid" as const,
+      didDrawPage: brandBar,
+    };
+    const row = (m: MasterCourse) => [
+      m.code,
+      m.title,
+      m.units,
+      m.terms.join(", "),
+      `${m.terms.length}x/year`,
+      m.programs.join("\n"),
+    ];
+    const cols = {
+      0: { cellWidth: 78, fontStyle: "bold" as const },
+      2: { cellWidth: 38, halign: "center" as const },
+      3: { cellWidth: 110 },
+      4: { cellWidth: 52, halign: "center" as const },
+      5: { cellWidth: 210 },
+    };
+    const head = [["Course", "Title", "Units", "Offered", "Frequency", "Program(s)"]];
+
+    sectionHeader(
+      "Department master list — by term",
+      `${master.length} unique required/elective courses across ${sorted.length} programs (GE excluded). Courses offered in several terms appear under each term.`,
+    );
+    let ty = 62;
+    TERMS.forEach((term) => {
+      const list = master.filter((m) => m.terms.includes(term));
+      const prev = (doc as unknown as { lastAutoTable?: { finalY: number } }).lastAutoTable;
+      if (term !== "Fall" && prev) {
+        ty = prev.finalY + 24;
+        if (ty > pageHeight - 100) {
+          doc.addPage();
+          brandBar();
+          ty = 36;
+        }
+      }
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(12);
+      doc.setTextColor(...BRAND.BURGUNDY);
+      doc.text(`${term}  (${list.length} course${list.length === 1 ? "" : "s"})`, margin, ty);
+      autoTable(doc, {
+        ...tableBase,
+        startY: ty + 8,
+        head,
+        body: list.length ? list.map(row) : [["—", `No courses offered in ${term}`, "", "", "", ""]],
+        columnStyles: cols,
+      });
+    });
+
+    sectionHeader(
+      "Department master list — alphabetical",
+      `One row per unique course code, sorted by code. ${master.length} courses.`,
+    );
+    autoTable(doc, { ...tableBase, startY: 60, head, body: master.map(row), columnStyles: cols });
+  }
 
   const pageCount = doc.getNumberOfPages();
   for (let page = 1; page <= pageCount; page += 1) {
