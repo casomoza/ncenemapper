@@ -10,7 +10,7 @@ import { ProgramExcelImport } from "@/components/ProgramExcelImport";
 
 export const Route = createFileRoute("/admin/ge")({
   component: AdminGePage,
-  head: () => ({ meta: [{ title: "Admin · GE Areas — Norco College Pathways" }] }),
+  head: () => ({ meta: [{ title: "GE Areas \u2014 Norco College Admin" }, { name: "description", content: "Manage Norco College general education areas and courses." }, { property: "og:title", content: "GE Areas \u2014 Norco College Admin" }, { property: "og:description", content: "Manage Norco College general education areas and courses." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" } ] }),
 });
 
 type GeSystem = "RCCD" | "CalGETC";

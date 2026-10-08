@@ -7,9 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 
 export const Route = createFileRoute("/auth")({
   component: AuthPage,
-  head: () => ({
-    meta: [{ title: "Sign in — Norco College Pathways" }],
-  }),
+  head: () => ({ meta: [{ title: "Sign in \u2014 Norco College Pathways" }, { name: "description", content: "Sign in to manage Norco College program pathways." }, { property: "og:title", content: "Sign in \u2014 Norco College Pathways" }, { property: "og:description", content: "Sign in to manage Norco College program pathways." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" } ] }),
 });
 
 function AuthPage() {

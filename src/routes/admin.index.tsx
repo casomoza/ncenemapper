@@ -24,7 +24,7 @@ import { LogOut, Plus, Pencil, Trash2, UserPlus, Search, ChevronDown, FileText }
 
 export const Route = createFileRoute("/admin/")({
   component: AdminPage,
-  head: () => ({ meta: [{ title: "Admin — Norco College Pathways" }] }),
+  head: () => ({ meta: [{ title: "Admin \u2014 Norco College Pathways" }, { name: "description", content: "Manage Norco College programs, public visibility, and staff rotation reports." }, { property: "og:title", content: "Admin \u2014 Norco College Pathways" }, { property: "og:description", content: "Manage Norco College programs, public visibility, and staff rotation reports." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" } ] }),
 });
 
 function AdminPage() {

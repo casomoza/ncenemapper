@@ -7,3 +7,4 @@
 - [x] Course rotation report PDFs, single program and whole school (sample PDFs checked).
 - [x] Top-nav "Programs" always resets homepage schools; in-page "All programs" restores (verified live).
 - [x] Legend "Core" label instead of "Core engineering course" (verified live).
+- [x] Shared aspect-ratio logo handling in both PDFs; tests/build clean, sample and published PDFs visually checked (live rotation generator tested directly; authenticated report button needs owner spot-check).

@@ -28,8 +28,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ArrowLeft, Printer, Download, GraduationCap, Award, Filter, ChevronDown, ChevronUp, Lock, LayoutGrid, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { createPathwayPdf } from "@/lib/pathway-pdf";
-import norcoLogo from "@/assets/norco-logo.png";
+import { createPathwayPdf, loadNorcoLogo } from "@/lib/pathway-pdf";
 
 const TERM_ORDER: Record<string, number> = { Summer: 0, Fall: 1, Winter: 2, Spring: 3 };
 
@@ -68,9 +67,7 @@ const isGeTag     = (t: string) => isRccdGeTag(t) || isCalGetcTag(t);
 
 export const Route = createFileRoute("/programs/$programId")({
   component: ProgramPage,
-  head: () => ({
-    meta: [{ title: "Program — Norco College Engineering" }],
-  }),
+  head: () => ({ meta: [{ title: "Program Pathway \u2014 Norco College" }, { name: "description", content: "Explore a Norco College program course map and download a personalized pathway PDF." }, { property: "og:title", content: "Program Pathway \u2014 Norco College" }, { property: "og:description", content: "Explore a Norco College program course map and download a personalized pathway PDF." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" } ] }),
 });
 
 const TERM_STYLE: Record<string, { bg: string; ring: string; text: string }> = {
@@ -379,21 +376,6 @@ function ProgramPage() {
       : { code: rawChoice.slice(0, spaceIdx), title: rawChoice.slice(spaceIdx + 1) };
   }
 
-  async function loadLogoDataUrl(): Promise<string | undefined> {
-    try {
-      const response = await fetch(norcoLogo);
-      const blob = await response.blob();
-      return await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(typeof reader.result === "string" ? reader.result : undefined);
-        reader.onerror = reject;
-        reader.readAsDataURL(blob);
-      });
-    } catch {
-      return undefined;
-    }
-  }
-
   async function buildPdf() {
     if (!program) return;
     const coursesForPdf = laidOutCourses.filter((c) => pdfShowGe || !isGeCourse(c));
@@ -411,7 +393,7 @@ function ProgramPage() {
       activeFilters: allTags.length === 0 || active.size === allTags.length
         ? "All requirements"
         : Array.from(active).join(", ") || "None",
-      logoDataUrl: await loadLogoDataUrl(),
+      logo: await loadNorcoLogo(),
       selectedCourse,
     });
   }

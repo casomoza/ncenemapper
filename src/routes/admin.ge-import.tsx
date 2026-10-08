@@ -7,7 +7,7 @@ import { ArrowLeft, CheckCircle2, XCircle, Loader2, Clock } from "lucide-react";
 
 export const Route = createFileRoute("/admin/ge-import")({
   component: AdminGeImportPage,
-  head: () => ({ meta: [{ title: "Add GE Courses — Admin" }] }),
+  head: () => ({ meta: [{ title: "Add GE Courses \u2014 Norco College Admin" }, { name: "description", content: "Add general education courses to Norco College program maps." }, { property: "og:title", content: "Add GE Courses \u2014 Norco College Admin" }, { property: "og:description", content: "Add general education courses to Norco College program maps." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" } ] }),
 });
 
 type Status = "pending" | "running" | "done" | "skipped" | "error";

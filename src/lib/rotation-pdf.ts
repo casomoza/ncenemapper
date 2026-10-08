@@ -2,7 +2,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import type { Course, Program } from "@/lib/program";
 import { normalizeTermsOffered } from "@/lib/api";
-import { BRAND, loadNorcoLogoDataUrl } from "@/lib/pathway-pdf";
+import { BRAND, loadNorcoLogo, addNorcoLogo } from "@/lib/pathway-pdf";
 
 const TERMS = ["Fall", "Winter", "Spring", "Summer"] as const;
 
@@ -22,7 +22,7 @@ function typeLabel(c: Course): string {
 
 /** Build a branded rotation report covering one or more programs. */
 export async function createRotationPdf(programs: Program[], reportTitle: string): Promise<jsPDF> {
-  const logo = await loadNorcoLogoDataUrl();
+  const logo = await loadNorcoLogo();
   const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "letter" });
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
@@ -34,7 +34,7 @@ export async function createRotationPdf(programs: Program[], reportTitle: string
 
   // Cover header
   brandBar();
-  if (logo) doc.addImage(logo, "PNG", margin, 20, 112, 40, undefined, "FAST");
+  if (logo) addNorcoLogo(doc, logo, margin, 20, 112, 40);
   const titleX = logo ? 160 : margin;
   doc.setFont("helvetica", "bold");
   doc.setFontSize(17);
