@@ -9,8 +9,8 @@ describe("PDF logo aspect ratio", () => {
     const width = addNorcoLogo(doc, { dataUrl: "logo", width: 761, height: 200 }, 34, 20, 112, 40);
     expect(width).toBe(112);
     const args = addImage.mock.calls[0];
-    expect(args?.[5]).toBe(112);
-    expect(args?.[6]).toBeCloseTo(112 * 200 / 761);
-    expect(Number(args?.[5]) / Number(args?.[6])).toBeCloseTo(761 / 200);
+    expect(args?.[4]).toBe(112);
+    expect(args?.[5]).toBeCloseTo(112 * 200 / 761);
+    expect(Number(args?.[4]) / Number(args?.[5])).toBeCloseTo(761 / 200);
   });
 });
