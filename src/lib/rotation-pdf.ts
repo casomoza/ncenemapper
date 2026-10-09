@@ -41,7 +41,7 @@ export function buildMasterList(programs: Program[]): MasterCourse[] {
         map.set(key, e);
       }
       e.units.add(String(c.units));
-      normalizeTermsOffered(c.semester, c.termsOffered).forEach((t) => e!.terms.add(t));
+      for (const term of normalizeTermsOffered(c.semester, c.termsOffered)) e.terms.add(term);
       e.programs.add(p.name);
     }
   }
@@ -54,6 +54,11 @@ export function buildMasterList(programs: Program[]): MasterCourse[] {
       programs: [...e.programs].sort((a, b) => a.localeCompare(b)),
     }))
     .sort((a, b) => a.code.localeCompare(b.code));
+}
+
+/** Shared term order for the department's at-a-glance grid. */
+export function masterTermMarks(course: MasterCourse): string[] {
+  return TERMS.map((term) => course.terms.includes(term) ? "X" : "");
 }
 
 /** Build a branded rotation report covering one or more programs. */
@@ -209,6 +214,33 @@ export async function createRotationPdf(
       5: { cellWidth: 210 },
     };
     const head = [["Course", "Title", "Units", "Offered", "Frequency", "Program(s)"]];
+
+    sectionHeader(
+      "Department master list — term grid",
+      `${master.length} unique required/elective courses across ${sorted.length} programs (GE excluded). X = offered that term; terms combine offerings across programs.`,
+    );
+    autoTable(doc, {
+      ...tableBase,
+      startY: 60,
+      head: [["Course", "Title", "Units", ...TERMS, "Frequency", "Program(s)"]],
+      body: master.map((course) => [course.code, course.title, course.units, ...masterTermMarks(course), `${course.terms.length}x/year`, course.programs.join("\n")]),
+      columnStyles: {
+        0: { cellWidth: 78, fontStyle: "bold" },
+        2: { cellWidth: 32, halign: "center" },
+        3: { cellWidth: 36, halign: "center", fontStyle: "bold" },
+        4: { cellWidth: 36, halign: "center", fontStyle: "bold" },
+        5: { cellWidth: 36, halign: "center", fontStyle: "bold" },
+        6: { cellWidth: 36, halign: "center", fontStyle: "bold" },
+        7: { cellWidth: 48, halign: "center" },
+        8: { cellWidth: 210 },
+      },
+      didParseCell: (data) => {
+        if (data.section === "body" && data.column.index >= 3 && data.column.index <= 6 && data.cell.raw === "X") {
+          data.cell.styles.fillColor = [250, 244, 218];
+          data.cell.styles.textColor = BRAND.BURGUNDY;
+        }
+      },
+    });
 
     sectionHeader(
       "Department master list — by term",
