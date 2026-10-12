@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as CounselorRouteImport } from './routes/counselor'
 import { Route as GeRouteImport } from './routes/ge'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminCatalogRouteImport } from './routes/admin.catalog'
@@ -28,6 +29,11 @@ const IndexRoute = IndexRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CounselorRoute = CounselorRouteImport.update({
+  id: '/counselor',
+  path: '/counselor',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GeRoute = GeRouteImport.update({
@@ -74,6 +80,7 @@ const AdminProgramsProgramIdRoute = AdminProgramsProgramIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/counselor': typeof CounselorRoute
   '/ge': typeof GeRoute
   '/admin/catalog': typeof AdminCatalogRoute
   '/admin/ge': typeof AdminGeRoute
@@ -86,6 +93,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/counselor': typeof CounselorRoute
   '/ge': typeof GeRoute
   '/admin/catalog': typeof AdminCatalogRoute
   '/admin/ge': typeof AdminGeRoute
@@ -99,6 +107,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/counselor': typeof CounselorRoute
   '/ge': typeof GeRoute
   '/admin/catalog': typeof AdminCatalogRoute
   '/admin/ge': typeof AdminGeRoute
@@ -113,6 +122,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/counselor'
     | '/ge'
     | '/admin/catalog'
     | '/admin/ge'
@@ -125,6 +135,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/counselor'
     | '/ge'
     | '/admin/catalog'
     | '/admin/ge'
@@ -137,6 +148,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/auth'
+    | '/counselor'
     | '/ge'
     | '/admin/catalog'
     | '/admin/ge'
@@ -150,6 +162,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
+  CounselorRoute: typeof CounselorRoute
   GeRoute: typeof GeRoute
   AdminCatalogRoute: typeof AdminCatalogRoute
   AdminGeRoute: typeof AdminGeRoute
@@ -174,6 +187,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/counselor': {
+      id: '/counselor'
+      path: '/counselor'
+      fullPath: '/counselor'
+      preLoaderRoute: typeof CounselorRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/ge': {
@@ -238,6 +258,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
+  CounselorRoute: CounselorRoute,
   GeRoute: GeRoute,
   AdminCatalogRoute: AdminCatalogRoute,
   AdminGeRoute: AdminGeRoute,
