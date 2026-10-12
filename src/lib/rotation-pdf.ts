@@ -67,6 +67,7 @@ export async function createRotationPdf(
   reportTitle: string,
   options: { includeMasterList?: boolean } = {},
 ): Promise<jsPDF> {
+  const generatedAt = new Date().toLocaleString("en-US", { dateStyle: "long", timeStyle: "short" });
   const logo = await loadNorcoLogo();
   const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "letter" });
   const pageWidth = doc.internal.pageSize.getWidth();
@@ -89,7 +90,7 @@ export async function createRotationPdf(
   doc.setFontSize(8.5);
   doc.setTextColor(...BRAND.MUTED);
   doc.text(
-    `Course rotation report  |  Staff planning reference  |  Generated ${new Date().toLocaleDateString()}`,
+    `Course rotation report  |  Staff planning reference  |  Generated on ${generatedAt}`,
     titleX,
     52,
   );
@@ -198,23 +199,6 @@ export async function createRotationPdf(
       rowPageBreak: "avoid" as const,
       didDrawPage: brandBar,
     };
-    const row = (m: MasterCourse) => [
-      m.code,
-      m.title,
-      m.units,
-      m.terms.join(", "),
-      `${m.terms.length}x/year`,
-      m.programs.join("\n"),
-    ];
-    const cols = {
-      0: { cellWidth: 78, fontStyle: "bold" as const },
-      2: { cellWidth: 38, halign: "center" as const },
-      3: { cellWidth: 110 },
-      4: { cellWidth: 52, halign: "center" as const },
-      5: { cellWidth: 210 },
-    };
-    const head = [["Course", "Title", "Units", "Offered", "Frequency", "Program(s)"]];
-
     sectionHeader(
       "Department master list — term grid",
       `${master.length} unique required/elective courses across ${sorted.length} programs (GE excluded). X = offered that term; terms combine offerings across programs.`,
@@ -242,40 +226,6 @@ export async function createRotationPdf(
       },
     });
 
-    sectionHeader(
-      "Department master list — by term",
-      `${master.length} unique required/elective courses across ${sorted.length} programs (GE excluded). Courses offered in several terms appear under each term.`,
-    );
-    let ty = 62;
-    TERMS.forEach((term) => {
-      const list = master.filter((m) => m.terms.includes(term));
-      const prev = (doc as unknown as { lastAutoTable?: { finalY: number } }).lastAutoTable;
-      if (term !== "Fall" && prev) {
-        ty = prev.finalY + 24;
-        if (ty > pageHeight - 100) {
-          doc.addPage();
-          brandBar();
-          ty = 36;
-        }
-      }
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(12);
-      doc.setTextColor(...BRAND.BURGUNDY);
-      doc.text(`${term}  (${list.length} course${list.length === 1 ? "" : "s"})`, margin, ty);
-      autoTable(doc, {
-        ...tableBase,
-        startY: ty + 8,
-        head,
-        body: list.length ? list.map(row) : [["—", `No courses offered in ${term}`, "", "", "", ""]],
-        columnStyles: cols,
-      });
-    });
-
-    sectionHeader(
-      "Department master list — alphabetical",
-      `One row per unique course code, sorted by code. ${master.length} courses.`,
-    );
-    autoTable(doc, { ...tableBase, startY: 60, head, body: master.map(row), columnStyles: cols });
   }
 
   const pageCount = doc.getNumberOfPages();
@@ -284,7 +234,7 @@ export async function createRotationPdf(
     doc.setFont("helvetica", "normal");
     doc.setFontSize(6.5);
     doc.setTextColor(...BRAND.MUTED);
-    doc.text("Norco College Program Pathways · Course rotation (staff reference) · Schedules subject to change.", margin, pageHeight - 12);
+    doc.text(`Norco College Program Pathways · Course rotation · Generated on ${generatedAt} · Schedules subject to change.`, margin, pageHeight - 12);
     doc.text(`Page ${page} of ${pageCount}`, pageWidth - margin, pageHeight - 12, { align: "right" });
   }
   return doc;
