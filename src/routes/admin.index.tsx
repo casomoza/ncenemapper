@@ -249,6 +249,15 @@ export function ProgramList({
       setBusySchool(null);
     }
   }
+  async function schoolExcel(cluster: string, items: ListProgram[]) {
+    setBusySchool(cluster);
+    try {
+      const { downloadRotationXlsx } = await import("@/lib/rotation-xlsx");
+      await downloadRotationXlsx(items as unknown as Program[], cluster);
+    } finally {
+      setBusySchool(null);
+    }
+  }
   const [query, setQuery] = useState("");
   const [collapsed, setCollapsed] = useState<string[]>([]);
 
@@ -350,6 +359,15 @@ export function ProgramList({
                       >
                         <FileText className="h-3.5 w-3.5" />
                         {busySchool === cluster ? "Generating…" : "School rotation report (PDF)"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => schoolExcel(cluster, items)}
+                        disabled={busySchool === cluster}
+                        className="ml-2 inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-xs hover:bg-accent/30 disabled:opacity-50"
+                      >
+                        <FileText className="h-3.5 w-3.5" />
+                        School rotation report (Excel)
                       </button>
                     </div>
                     {items.map((p) => (

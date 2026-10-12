@@ -5,7 +5,7 @@ import { fetchPrograms } from "@/lib/api";
 import { NORCO_SCHOOLS, normalizeCluster } from "@/lib/schools";
 import { buildMasterList, masterTermMarks, rotationCourses } from "@/lib/rotation-pdf";
 import { SiteHeader, SiteFooter } from "@/components/SiteHeader";
-import { Download } from "lucide-react";
+import { Download, FileSpreadsheet } from "lucide-react";
 
 const TERMS = ["Fall", "Winter", "Spring", "Summer"] as const;
 
@@ -60,6 +60,17 @@ function CounselorPage() {
     }
   }
 
+  async function downloadXlsx() {
+    if (!school || !selected.length) return;
+    setBusy(true);
+    try {
+      const { downloadRotationXlsx } = await import("@/lib/rotation-xlsx");
+      await downloadRotationXlsx(selected, school);
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <SiteHeader />
@@ -89,6 +100,15 @@ function CounselorPage() {
               className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-60"
             >
               <Download className="h-4 w-4" /> {busy ? "Generating…" : "Download current PDF"}
+            </button>
+          )}
+          {school && selected.length > 0 && (
+            <button
+              onClick={downloadXlsx}
+              disabled={busy}
+              className="inline-flex items-center gap-2 rounded-md border border-primary px-4 py-2 text-sm font-semibold text-primary hover:bg-accent disabled:opacity-60"
+            >
+              <FileSpreadsheet className="h-4 w-4" /> Download as Excel
             </button>
           )}
         </div>
