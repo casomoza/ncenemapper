@@ -876,7 +876,7 @@ function ElectiveGroupRow({ group }: { group: DbElective }) {
               <p className="text-xs text-muted-foreground">Term checkboxes feed the rotation reports and Counselor page. A course left with no terms shows as "Not set".</p>
               <div className="mt-2 space-y-2">
                 {g.courses.map((code) => (
-                  <div key={code} className="grid grid-cols-[140px_1fr] items-start gap-2">
+                  <div key={code} className="grid grid-cols-[200px_1fr] items-start gap-2">
                     <div className="mt-2">
                       <span className="font-mono text-xs text-primary">{code}</span>
                       <div className="mt-1 flex flex-wrap gap-x-2 gap-y-1" role="group" aria-label={`Terms offered for ${optionKey(code)}`}>
