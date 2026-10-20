@@ -1,6 +1,5 @@
 import type { Program } from "@/lib/program";
-import { normalizeTermsOffered } from "@/lib/api";
-import { buildMasterList, masterTermMarks, rotationCourses } from "@/lib/rotation-pdf";
+import { buildMasterList, frequencyLabel, masterTermMarks, programRotationRows } from "@/lib/rotation-pdf";
 
 const TERMS = ["Fall", "Winter", "Spring", "Summer"] as const;
 const CLARET = "891728";
@@ -13,25 +12,18 @@ type Cell = string | number;
 /** Rows for the school-wide term grid sheet (same columns as the PDF grid). */
 export function gridRows(programs: Program[]): Cell[][] {
   return buildMasterList(programs).map((m) => [
-    m.code, m.title, m.units, ...masterTermMarks(m), `${m.terms.length}x/year`, m.programs.join("\n"),
+    m.code, m.title, m.units, ...masterTermMarks(m), m.terms.length ? `${m.terms.length}x/year` : "Not set", m.programs.join("\n"),
   ]);
 }
 
 /** Rows for the combined per-program sheet (PDF per-program columns plus a Program column). */
 export function programRows(programs: Program[]): Cell[][] {
   return [...programs].sort((a, b) => a.name.localeCompare(b.name)).flatMap((p) =>
-    rotationCourses(p.courses)
-      .sort((a, b) => a.year - b.year || a.code.localeCompare(b.code))
-      .map((c) => {
-        const off = normalizeTermsOffered(c.semester, c.termsOffered);
-        return [
-          p.name, p.degreeType, c.code, c.title, c.units,
-          /^ELEC\s/i.test(c.code) ? "Elective" : c.optional ? "Core (optional)" : "Core",
-          `Y${c.year} ${c.semester}`,
-          ...TERMS.map((t) => (off.includes(t) ? "X" : "")),
-          off.length === 1 ? "Once a year" : `${off.length} terms`,
-        ];
-      }),
+    programRotationRows(p).map((c) => [
+      p.name, p.degreeType, c.code, c.title, c.units, c.type, c.mapped,
+      ...TERMS.map((t) => (c.terms.includes(t) ? "X" : "")),
+      frequencyLabel(c.terms),
+    ]),
   );
 }
 
