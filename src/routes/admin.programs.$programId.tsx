@@ -689,8 +689,12 @@ type DbElective = {
   units_note: string;
   courses: string[];
   course_descriptions: Record<string, string> | null;
+  option_terms?: Record<string, string[]> | null;
   sort_order: number;
 };
+
+const OPTION_TERMS = ["Fall", "Winter", "Spring", "Summer"] as const;
+const optionKey = (raw: string) => raw.trim().split(/\s+/)[0]?.toUpperCase() ?? "";
 
 function ElectiveGroupsSection({ programId }: { programId: string }) {
   const qc = useQueryClient();
@@ -778,6 +782,7 @@ function ElectiveGroupRow({ group }: { group: DbElective }) {
           units_note: g.units_note,
           courses: g.courses,
           course_descriptions: g.course_descriptions ?? {},
+          option_terms: g.option_terms ?? {},
           sort_order: g.sort_order,
         } as never)
         .eq("id", g.id);
@@ -802,6 +807,13 @@ function ElectiveGroupRow({ group }: { group: DbElective }) {
 
   const courseText = g.courses.join("\n");
   const descs = g.course_descriptions ?? {};
+  const optTerms = g.option_terms ?? {};
+  const toggleTerm = (raw: string, term: string, on: boolean) => {
+    const k = optionKey(raw);
+    const cur = new Set(optTerms[k] ?? []);
+    if (on) cur.add(term); else cur.delete(term);
+    setG({ ...g, option_terms: { ...optTerms, [k]: OPTION_TERMS.filter((t) => cur.has(t)) } });
+  };
 
   return (
     <div className="rounded-lg border border-border bg-card">
@@ -860,11 +872,27 @@ function ElectiveGroupRow({ group }: { group: DbElective }) {
           </div>
           {g.courses.length > 0 && (
             <div>
-              <p className="text-xs font-medium">Course descriptions (optional)</p>
+              <p className="text-xs font-medium">Terms offered &amp; descriptions for each course</p>
+              <p className="text-xs text-muted-foreground">Term checkboxes feed the rotation reports and Counselor page. A course left with no terms shows as "Not set".</p>
               <div className="mt-2 space-y-2">
                 {g.courses.map((code) => (
                   <div key={code} className="grid grid-cols-[140px_1fr] items-start gap-2">
-                    <span className="mt-2 font-mono text-xs text-primary">{code}</span>
+                    <div className="mt-2">
+                      <span className="font-mono text-xs text-primary">{code}</span>
+                      <div className="mt-1 flex flex-wrap gap-x-2 gap-y-1" role="group" aria-label={`Terms offered for ${optionKey(code)}`}>
+                        {OPTION_TERMS.map((t) => (
+                          <label key={t} className="inline-flex items-center gap-1 text-[11px]">
+                            <input
+                              type="checkbox"
+                              aria-label={`${optionKey(code)} ${t}`}
+                              checked={(optTerms[optionKey(code)] ?? []).includes(t)}
+                              onChange={(e) => toggleTerm(code, t, e.target.checked)}
+                            />
+                            {t}
+                          </label>
+                        ))}
+                      </div>
+                    </div>
                     <textarea
                       rows={2}
                       value={descs[code] ?? ""}
