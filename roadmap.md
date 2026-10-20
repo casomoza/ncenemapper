@@ -10,3 +10,4 @@
 - [x] Shared aspect-ratio logo handling in both PDFs; tests/build clean, sample and published PDFs visually checked (live rotation generator tested directly; authenticated report button needs owner spot-check).
 - [x] School rotation report: term grid before by-term/alphabetical master lists; 7-program/31-course sample visually reviewed, deduplication/program membership tested, build clean, published live PDF matches all 10 sample pages (authenticated button click unavailable).
 - [x] Trim school PDF to per-program + grid; public Counselor tab with live grid, per-program views, timestamped PDF.
+- [ ] Elective options: per-option terms (admin), expanded in school grids, summarized per program, listed in pathway PDF — built + tests pass; browser check, publish, live check pending.
