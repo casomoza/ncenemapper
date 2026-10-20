@@ -169,8 +169,8 @@ export function createPathwayPdf(
           const selected = options.selectedCourse(course);
           const prerequisite = course.prerequisite ? `\nPrereq: ${course.prerequisite}` : "";
           const group = findElectiveGroup(program, course.code);
-          const options = group?.options.length ? `\nOptions: ${group.options.map((o) => o.code).join(", ")}` : "";
-          return `${selected.code} · ${selected.title} (${course.units})\n${courseLabels(course).join(" | ")}${prerequisite}${options}`;
+          const optionList = group?.options.length ? `\nOptions: ${group.options.map((o) => o.code).join(", ")}` : "";
+          return `${selected.code} · ${selected.title} (${course.units})\n${courseLabels(course).join(" | ")}${prerequisite}${optionList}`;
         }),
       ].join("\n\n");
     });
