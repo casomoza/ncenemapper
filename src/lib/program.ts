@@ -21,6 +21,9 @@ export type Course = {
 
 };
 
+export type ElectiveOption = { code: string; title: string; terms: string[] };
+export type ElectiveGroup = { groupCode: string; title: string; unitsNote: string; options: ElectiveOption[] };
+
 export type Program = {
   id: string;
   name: string;
@@ -32,6 +35,8 @@ export type Program = {
   /** Per-program public visibility (admin toggle). */
   isPublic?: boolean;
   courses: Course[];
+  /** Program-specific elective groups with per-option term availability. */
+  electives?: ElectiveGroup[];
 };
 
 export type GeSystem = "RCCD" | "CalGETC";
@@ -78,4 +83,18 @@ export function findGeArea(slot: string): GeArea | undefined {
 /** Stable unique key for a course row; codes are NOT unique. */
 export function courseKey(c: Pick<Course, "id" | "code" | "year" | "semester">): string {
   return c.id ?? `${c.code}|${c.year}|${c.semester}`;
+}
+
+/** Split an elective option string like "ADJ-12 Introduction to Criminalistics" into code + title. */
+export function parseElectiveOption(raw: string): { code: string; title: string } {
+  const t = raw.trim().replace(/\s+/g, " ");
+  const i = t.indexOf(" ");
+  return i < 0 ? { code: t, title: "" } : { code: t.slice(0, i), title: t.slice(i + 1) };
+}
+
+/** Find the elective group a placeholder slot ("ELEC ADJ-ELEC") refers to. */
+export function findElectiveGroup(program: Pick<Program, "electives">, code: string): ElectiveGroup | undefined {
+  if (!/^ELEC\s/i.test(code)) return undefined;
+  const norm = (c: string) => c.replace(/^ELEC\s+/i, "").trim().toUpperCase();
+  return program.electives?.find((g) => norm(g.groupCode) === norm(code));
 }
