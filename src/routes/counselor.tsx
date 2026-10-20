@@ -3,7 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { fetchPrograms } from "@/lib/api";
 import { NORCO_SCHOOLS, normalizeCluster } from "@/lib/schools";
-import { buildMasterList, masterTermMarks, rotationCourses } from "@/lib/rotation-pdf";
+import { buildMasterList, frequencyLabel, masterTermMarks, programRotationRows } from "@/lib/rotation-pdf";
 import { SiteHeader, SiteFooter } from "@/components/SiteHeader";
 import { Download, FileSpreadsheet } from "lucide-react";
 
@@ -125,14 +125,14 @@ function CounselorPage() {
               <p className="text-sm text-muted-foreground">{master.length} unique courses across {selected.length} programs. ✓ = offered that term.</p>
               <RotationTable
                 head={["Course", "Title", "Units", ...TERMS, "Frequency", "Program(s)"]}
-                rows={master.map((m) => [m.code, m.title, m.units, ...masterTermMarks(m), `${m.terms.length}x/year`, m.programs.join("; ")])}
+                rows={master.map((m) => [m.code, m.title, m.units, ...masterTermMarks(m), m.terms.length ? `${m.terms.length}x/year` : "Not set", m.programs.join("; ")])}
                 termStart={3}
               />
             </section>
             <section className="mt-12">
               <h2 className="text-xl font-bold text-primary">By program</h2>
               {selected.map((p) => {
-                const courses = rotationCourses(p.courses).sort((a, b) => a.year - b.year || a.code.localeCompare(b.code));
+                const courses = programRotationRows(p);
                 return (
                   <div key={p.id} className="mt-6">
                     <h3 className="text-lg font-semibold">
@@ -141,16 +141,7 @@ function CounselorPage() {
                     <p className="text-xs text-muted-foreground">{p.degreeType} · {courses.length} courses</p>
                     <RotationTable
                       head={["Course", "Title", "Units", "Type", "Mapped", ...TERMS, "Frequency"]}
-                      rows={courses.map((c) => {
-                        const off = c.termsOffered ?? [c.semester];
-                        return [
-                          c.code, c.title, String(c.units),
-                          /^ELEC\s/i.test(c.code) ? "Elective" : c.optional ? "Core (optional)" : "Core",
-                          `Y${c.year} ${c.semester}`,
-                          ...TERMS.map((t) => (off.includes(t) ? "X" : "")),
-                          off.length === 1 ? "Once a year" : `${off.length} terms`,
-                        ];
-                      })}
+                      rows={courses.map((c) => [c.code, c.title, c.units, c.type, c.mapped, ...TERMS.map((t) => (c.terms.includes(t) ? "X" : "")), frequencyLabel(c.terms)])}
                       termStart={5}
                     />
                   </div>

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildMasterList, masterTermMarks } from "./rotation-pdf";
+import { buildMasterList, masterTermMarks, programRotationRows } from "./rotation-pdf";
 import type { Course, Program } from "./program";
 
 const course = (overrides: Partial<Course> = {}): Course => ({ code: "ADJ-1", title: "Introduction", units: 3, year: 1, semester: "Fall", category: "core", prerequisite: null, satisfies: [], description: null, ...overrides });
@@ -24,5 +24,31 @@ describe("department rotation master list", () => {
   });
   it("preserves conflicting unit values", () => {
     expect(buildMasterList([program("Alpha", [course()]), program("Beta", [course({ units: 4 })])])[0]?.units).toBe("3 / 4");
+  });
+
+  const elec = { groupCode: "ADJ-ELEC", title: "AJ Elective", unitsNote: "Choose 9 units", options: [
+    { code: "ADJ-12", title: "Criminalistics", terms: ["Spring"] },
+    { code: "SOC-20", title: "Ethnic Relations", terms: [] as string[] },
+  ] };
+  const withElec = (p: Program) => ({ ...p, electives: [elec] });
+  it("expands elective placeholders into options with their own terms, not the placeholder's", () => {
+    const master = buildMasterList([withElec(program("Alpha", [course({ code: "ELEC ADJ-ELEC", termsOffered: ["Fall", "Winter", "Spring", "Summer"] })]))]);
+    expect(master.map((c) => [c.code, c.terms])).toEqual([["ADJ-12", ["Spring"]], ["SOC-20", []]]);
+  });
+  it("merges an elective option with the same course required elsewhere", () => {
+    const master = buildMasterList([
+      withElec(program("Alpha", [course({ code: "ELEC ADJ-ELEC" })])),
+      program("Beta", [course({ code: "ADJ-12", semester: "Fall" })]),
+    ]);
+    const adj = master.filter((c) => c.code === "ADJ-12");
+    expect(adj).toHaveLength(1);
+    expect(adj[0]?.terms).toEqual(["Fall", "Spring"]);
+    expect(adj[0]?.programs).toEqual(["Alpha", "Beta"]);
+  });
+  it("keeps the elective as one summarized slot per program", () => {
+    const rows = programRotationRows(withElec(program("Alpha", [course({ code: "ELEC ADJ-ELEC", termsOffered: ["Fall", "Winter", "Spring", "Summer"] })])));
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.title).toContain("Choose 9 units from: ADJ-12, SOC-20");
+    expect(rows[0]?.terms).toEqual(["Spring"]);
   });
 });

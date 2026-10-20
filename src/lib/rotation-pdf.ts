@@ -1,6 +1,7 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import type { Course, Program } from "@/lib/program";
+import { findElectiveGroup } from "@/lib/program";
 import { normalizeTermsOffered } from "@/lib/api";
 import { BRAND, loadNorcoLogo, addNorcoLogo } from "@/lib/pathway-pdf";
 
@@ -28,28 +29,69 @@ export type MasterCourse = {
   programs: string[];
 };
 
-/** Deduplicate rotation courses across programs by course code (case-insensitive). */
+export type RotationRow = { code: string; title: string; units: string; type: string; mapped: string; terms: string[] };
+
+/** "N terms" / "Once a year" label for a per-program rotation row. */
+export function frequencyLabel(terms: string[]): string {
+  if (terms.length === 0) return "Not set";
+  return terms.length === 1 ? "Once a year" : `${terms.length} terms`;
+}
+
+/**
+ * Per-program rotation rows. Elective placeholders stay as ONE summarized slot
+ * ("Choose 9 units from: ADJ-8, ADJ-12, …") whose terms are the union of the
+ * options' real terms — never the placeholder's own blanket terms.
+ */
+export function programRotationRows(program: Program): RotationRow[] {
+  return rotationCourses(program.courses)
+    .sort((a, b) => a.year - b.year || a.code.localeCompare(b.code))
+    .map((c) => {
+      const group = findElectiveGroup(program, c.code);
+      const base = { code: c.code.replace(/^ELEC\s+/i, "ELEC "), units: String(c.units), type: typeLabel(c), mapped: `Y${c.year} ${c.semester}` };
+      if (group) {
+        const set = new Set(group.options.flatMap((o) => o.terms));
+        const lead = group.unitsNote ? `${group.unitsNote} from` : "Choose from";
+        return { ...base, title: `${group.title || "Elective"} — ${lead}: ${group.options.map((o) => o.code).join(", ")}`, terms: TERMS.filter((t) => set.has(t)) };
+      }
+      return { ...base, title: c.title, terms: normalizeTermsOffered(c.semester, c.termsOffered) };
+    });
+}
+
+/**
+ * Deduplicate rotation courses across programs by course code (case-insensitive).
+ * Elective placeholders are expanded into their individual qualifying courses with
+ * their own term availability; a placeholder with no defined group is kept as-is.
+ */
 export function buildMasterList(programs: Program[]): MasterCourse[] {
   const map = new Map<string, { code: string; title: string; units: Set<string>; terms: Set<string>; programs: Set<string> }>();
+  const add = (rawCode: string, title: string, units: string | null, terms: string[], programName: string) => {
+    const code = rawCode.trim().replace(/\s+/g, " ");
+    const key = code.toUpperCase();
+    let e = map.get(key);
+    if (!e) {
+      e = { code, title, units: new Set(), terms: new Set(), programs: new Set() };
+      map.set(key, e);
+    }
+    if (!e.title && title) e.title = title;
+    if (units !== null) e.units.add(units);
+    for (const term of terms) e.terms.add(term);
+    e.programs.add(programName);
+  };
   for (const p of programs) {
     for (const c of rotationCourses(p.courses)) {
-      const code = c.code.trim().replace(/\s+/g, " ");
-      const key = code.toUpperCase();
-      let e = map.get(key);
-      if (!e) {
-        e = { code, title: c.title, units: new Set(), terms: new Set(), programs: new Set() };
-        map.set(key, e);
+      const group = findElectiveGroup(p, c.code);
+      if (group) {
+        for (const o of group.options) add(o.code, o.title, null, o.terms, p.name);
+      } else {
+        add(c.code, c.title, String(c.units), normalizeTermsOffered(c.semester, c.termsOffered), p.name);
       }
-      e.units.add(String(c.units));
-      for (const term of normalizeTermsOffered(c.semester, c.termsOffered)) e.terms.add(term);
-      e.programs.add(p.name);
     }
   }
   return [...map.values()]
     .map((e) => ({
       code: e.code,
       title: e.title,
-      units: [...e.units].join(" / "),
+      units: e.units.size ? [...e.units].join(" / ") : "—",
       terms: TERMS.filter((t) => e.terms.has(t)),
       programs: [...e.programs].sort((a, b) => a.localeCompare(b)),
     }))
@@ -105,9 +147,7 @@ export async function createRotationPdf(
   let y = 92;
   const sorted = [...programs].sort((a, b) => a.name.localeCompare(b.name));
   sorted.forEach((program, idx) => {
-    const courses = rotationCourses(program.courses).sort(
-      (a, b) => a.year - b.year || a.code.localeCompare(b.code),
-    );
+    const courses = programRotationRows(program);
     if (idx > 0) {
       y = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 26;
       if (y > pageHeight - 120) {
@@ -123,7 +163,7 @@ export async function createRotationPdf(
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8);
     doc.setTextColor(...BRAND.MUTED);
-    const singleTerm = courses.filter((c) => normalizeTermsOffered(c.semester, c.termsOffered).length === 1).length;
+    const singleTerm = courses.filter((c) => c.terms.length === 1).length;
     doc.text(
       `${program.degreeType}  |  ${program.cluster}  |  ${courses.length} courses listed  |  ${singleTerm} offered in only one term`,
       margin,
@@ -131,18 +171,7 @@ export async function createRotationPdf(
     );
 
     const body = courses.length
-      ? courses.map((c) => {
-          const offered = normalizeTermsOffered(c.semester, c.termsOffered);
-          return [
-            c.code.replace(/^ELEC\s+/i, "ELEC "),
-            c.title,
-            String(c.units),
-            typeLabel(c),
-            `Y${c.year} ${c.semester}`,
-            ...TERMS.map((t) => (offered.includes(t) ? "X" : "")),
-            offered.length === 1 ? "Once a year" : `${offered.length} terms`,
-          ];
-        })
+      ? courses.map((c) => [c.code, c.title, c.units, c.type, c.mapped, ...TERMS.map((t) => (c.terms.includes(t) ? "X" : "")), frequencyLabel(c.terms)])
       : [["—", "No required or elective courses on file", "", "", "", "", "", "", "", ""]];
 
     autoTable(doc, {
@@ -207,7 +236,7 @@ export async function createRotationPdf(
       ...tableBase,
       startY: 60,
       head: [["Course", "Title", "Units", ...TERMS, "Frequency", "Program(s)"]],
-      body: master.map((course) => [course.code, course.title, course.units, ...masterTermMarks(course), `${course.terms.length}x/year`, course.programs.join("\n")]),
+      body: master.map((course) => [course.code, course.title, course.units, ...masterTermMarks(course), course.terms.length ? `${course.terms.length}x/year` : "Not set", course.programs.join("\n")]),
       columnStyles: {
         0: { cellWidth: 78, fontStyle: "bold" },
         2: { cellWidth: 32, halign: "center" },

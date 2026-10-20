@@ -1,6 +1,7 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import type { Course, Program } from "@/lib/program";
+import type { Course, ElectiveGroup, Program } from "@/lib/program";
+import { findElectiveGroup } from "@/lib/program";
 import norcoLogo from "@/assets/norco-logo.png";
 
 const CLARET: [number, number, number] = [137, 23, 40];
@@ -69,7 +70,7 @@ type PdfOptions = {
   selectedCourse: (course: Course) => { code: string; title: string };
 };
 
-type PdfProgram = Pick<Program, "id" | "name" | "degreeType" | "cluster" | "description" | "totalUnits">;
+type PdfProgram = Pick<Program, "id" | "name" | "degreeType" | "cluster" | "description" | "totalUnits" | "electives">;
 
 function categoryLabel(course: Course): string {
   if (/^ELEC\s/i.test(course.code)) return "Elective";
@@ -167,7 +168,9 @@ export function createPathwayPdf(
         ...termCourses.map((course) => {
           const selected = options.selectedCourse(course);
           const prerequisite = course.prerequisite ? `\nPrereq: ${course.prerequisite}` : "";
-          return `${selected.code} · ${selected.title} (${course.units})\n${courseLabels(course).join(" | ")}${prerequisite}`;
+          const group = findElectiveGroup(program, course.code);
+          const optionList = group?.options.length ? `\nOptions: ${group.options.map((o) => o.code).join(", ")}` : "";
+          return `${selected.code} · ${selected.title} (${course.units})\n${courseLabels(course).join(" | ")}${prerequisite}${optionList}`;
         }),
       ].join("\n\n");
     });
@@ -212,7 +215,12 @@ export function createPathwayPdf(
   );
   const detailRows = sortedCourses.map((course) => {
     const selected = options.selectedCourse(course);
-    const notes = [...courseLabels(course), ...(course.prerequisite ? [`Prereq: ${course.prerequisite}`] : [])].join("; ");
+    const group = findElectiveGroup(program, course.code);
+    const notes = [
+      ...courseLabels(course),
+      ...(course.prerequisite ? [`Prereq: ${course.prerequisite}`] : []),
+      ...(group?.options.length ? [`${group.options.length} qualifying courses — see Elective options`] : []),
+    ].join("; ");
     return [
       ...(options.showCheckboxes ? ["[  ]"] : []),
       options.showTerms ? `Y${course.year} · ${course.semester}` : `Year ${course.year}`,
@@ -237,6 +245,42 @@ export function createPathwayPdf(
     rowPageBreak: "avoid",
     didDrawPage: addBrand,
   });
+
+  // Elective options appendix: compact code + title list for each elective group used in this pathway.
+  const usedGroups: ElectiveGroup[] = [];
+  for (const course of sortedCourses) {
+    const g = findElectiveGroup(program, course.code);
+    if (g && g.options.length && !usedGroups.includes(g)) usedGroups.push(g);
+  }
+  if (usedGroups.length) {
+    const pageHeight = doc.internal.pageSize.getHeight();
+    let ey = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 24;
+    if (ey > pageHeight - 110) {
+      doc.addPage();
+      addBrand();
+      ey = 32;
+    }
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(11);
+    doc.setTextColor(...BURGUNDY);
+    doc.text("Elective options", margin, ey);
+    autoTable(doc, {
+      startY: ey + 6,
+      head: [["Elective", "Requirement", "Qualifying courses (choose from)"]],
+      body: usedGroups.map((g) => [
+        `ELEC ${g.groupCode.replace(/^ELEC\s+/i, "")}\n${g.title}`,
+        g.unitsNote || "Choose from list",
+        g.options.map((o) => `${o.code} ${o.title}`.trim()).join(";  "),
+      ]),
+      theme: "grid",
+      margin: { left: margin, right: margin, bottom: 30 },
+      styles: { font: "helvetica", fontSize: 6.8, cellPadding: 3, overflow: "linebreak", textColor: INK, valign: "top" },
+      headStyles: { fillColor: CLARET, textColor: [255, 255, 255], fontStyle: "bold" },
+      columnStyles: { 0: { cellWidth: 120, fontStyle: "bold" }, 1: { cellWidth: 90 } },
+      rowPageBreak: "avoid",
+      didDrawPage: addBrand,
+    });
+  }
 
   const pageCount = doc.getNumberOfPages();
   for (let page = 1; page <= pageCount; page += 1) {

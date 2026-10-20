@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
-import type { Course, GeArea, Program } from "@/lib/program";
+import type { Course, ElectiveGroup, GeArea, Program } from "@/lib/program";
+import { parseElectiveOption } from "@/lib/program";
 
 export type DbProgram = {
   id: string;
@@ -95,8 +96,22 @@ export function buildDeTag(hsYear: number, hsSemester: string): string {
   return `DE:${hsYear}:${hsSemester}`;
 }
 
-function toProgram(p: DbProgram, courses: DbCourse[]): Program {
+export function toElectiveGroup(e: DbProgramElective): ElectiveGroup {
+  const terms = (e.option_terms ?? {}) as Record<string, string[]>;
   return {
+    groupCode: e.group_code,
+    title: e.title,
+    unitsNote: e.units_note ?? "",
+    options: (e.courses ?? []).map((raw) => {
+      const { code, title } = parseElectiveOption(raw);
+      return { code, title, terms: ALL_TERMS.filter((t) => (terms[code.toUpperCase()] ?? []).includes(t)) };
+    }),
+  };
+}
+
+function toProgram(p: DbProgram, courses: DbCourse[], electives: DbProgramElective[] = []): Program {
+  return {
+    electives: electives.map(toElectiveGroup),
     id: p.slug,
     name: p.name,
     degreeType: p.degree_type,
@@ -144,10 +159,13 @@ export async function fetchPrograms(): Promise<Program[]> {
     .select("*")
     .order("sort_order");
   if (cErr) throw cErr;
+  const { data: elecs } = await supabase.from("program_electives" as never).select("*").order("sort_order");
+  const electives = (elecs ?? []) as unknown as DbProgramElective[];
   return (progs as DbProgram[]).map((p) =>
     toProgram(
       p,
       (courses as DbCourse[]).filter((c) => c.program_id === p.id),
+      electives.filter((e) => e.program_id === p.id),
     ),
   );
 }
@@ -166,7 +184,8 @@ export async function fetchProgramBySlug(slug: string): Promise<Program | null> 
     .eq("program_id", (prog as DbProgram).id)
     .order("sort_order");
   if (cErr) throw cErr;
-  return toProgram(prog as DbProgram, (courses as DbCourse[]) ?? []);
+  const electives = await fetchProgramElectives((prog as DbProgram).id).catch(() => []);
+  return toProgram(prog as DbProgram, (courses as DbCourse[]) ?? [], electives);
 }
 
 export async function fetchDbProgramBySlug(slug: string): Promise<DbProgram | null> {
@@ -224,6 +243,7 @@ export type DbProgramElective = {
   units_note: string;
   courses: string[];
   course_descriptions: Record<string, string> | null;
+  option_terms?: Record<string, string[]> | null;
   sort_order: number;
 };
 
