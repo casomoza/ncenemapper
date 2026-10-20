@@ -152,6 +152,7 @@ export type Database = {
           created_at: string
           group_code: string
           id: string
+          option_terms: Json
           program_id: string
           sort_order: number
           title: string
@@ -164,6 +165,7 @@ export type Database = {
           created_at?: string
           group_code: string
           id?: string
+          option_terms?: Json
           program_id: string
           sort_order?: number
           title?: string
@@ -176,6 +178,7 @@ export type Database = {
           created_at?: string
           group_code?: string
           id?: string
+          option_terms?: Json
           program_id?: string
           sort_order?: number
           title?: string

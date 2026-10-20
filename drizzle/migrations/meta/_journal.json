@@ -8,6 +8,13 @@
       "when": 1790981832276,
       "tag": "0000_program_public_visibility",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1792512544194,
+      "tag": "0001_elective_option_terms",
+      "breakpoints": true
     }
   ]
 }
