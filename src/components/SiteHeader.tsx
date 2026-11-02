@@ -29,13 +29,6 @@ export function SiteHeader() {
             Programs
           </Link>
           <Link
-            to="/ge"
-            className="text-foreground/80 transition-colors hover:text-primary"
-            activeProps={{ className: "text-primary" }}
-          >
-            GE Requirements
-          </Link>
-          <Link
             to="/counselor"
             search={{ school: undefined }}
             className="text-foreground/80 transition-colors hover:text-primary"
